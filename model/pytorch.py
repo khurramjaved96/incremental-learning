@@ -7,7 +7,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
+from torchnet.meter import confusionmeter
 
+import numpy as np
 import utils
 
 # Training settings
@@ -16,7 +18,7 @@ parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
+parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -48,8 +50,8 @@ train_data = datasets.CIFAR100("../data", train=True, transform=train_transform,
 test_data = datasets.CIFAR100("../data", train=False, transform=test_transform, download=True)
 
 
-trainDataset = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,10,transform=train_transform)
-testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,10,transform=test_transform)
+trainDataset = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,list(range(10)),transform=train_transform)
+testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,list(range(10)),transform=test_transform)
 
 
 
@@ -68,8 +70,9 @@ class Net(nn.Module):
         self.conv1 = nn.Conv2d(3, 10, kernel_size=5)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
         self.conv2_drop = nn.Dropout2d()
+
         self.fc1 = nn.Linear(500, 50)
-        self.fc2 = nn.Linear(50, 10)
+        self.fc2 = nn.Linear(50, 100 )
 
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
@@ -98,8 +101,6 @@ def train(epoch):
         data, target = Variable(data), Variable(target)
         optimizer.zero_grad()
         output = model(data)
-        # print ("output shape", output.shape)
-        # print ("Target shape", target.shape)
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
@@ -108,10 +109,13 @@ def train(epoch):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.data[0]))
 
-def test():
+def test(epoch=0):
     model.eval()
     test_loss = 0
     correct = 0
+    if epoch >0:
+        cMatrix = confusionmeter.ConfusionMeter(100,True)
+
     for data, target in test_loader:
         if args.cuda:
             data, target = data.cuda(), target.cuda()
@@ -120,13 +124,30 @@ def test():
         test_loss += F.nll_loss(output, target, size_average=False).data[0] # sum up batch loss
         pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+        if epoch >0:
+            cMatrix.add(pred, target.data.view_as(pred))
+
 
     test_loss /= len(test_loader.dataset)
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
+    if epoch >0:
+        import cv2
+        img = utils.resizeImage(cMatrix.value(), 10)*255
+        cv2.imwrite("Image"+str(epoch)+".jpg", img)
+
+
 
 
 for epoch in range(1, args.epochs + 1):
+
+    if epoch==100:
+        for a in range(10,20):
+            trainDataset.addClasses(a)
+            testDataset.addClasses(a)
+        for a in range(0,10):
+            trainDataset.limitClass(a,5)
     train(epoch)
-    test()
+    test(epoch)
+
