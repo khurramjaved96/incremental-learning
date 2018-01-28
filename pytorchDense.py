@@ -8,14 +8,17 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
-
-
+import torchvision.models as models
+import model.resnet32 as resnet32
 import numpy as np
 import utils
+import model.densenet as densenet
+
+
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
-parser.add_argument('--batch-size', type=int, default=64, metavar='N',
+parser.add_argument('--batch-size', type=int, default=256, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
@@ -93,15 +96,17 @@ class Net(nn.Module):
         # print ("X Shape", x.shape)
         return F.log_softmax(x)
 
-model = Net()
+# model = Net()
+model = densenet.DenseNet(growthRate=12, depth=10, reduction=0.5,
+                        bottleneck=True, nClasses=100)
 if args.cuda:
     model.cuda()
 
-optimizer = optim.Adam(model.parameters())
 
 
 
-def train(epoch):
+
+def train(epoch, optimizer):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
@@ -109,6 +114,8 @@ def train(epoch):
         data, target = Variable(data), Variable(target)
         optimizer.zero_grad()
         output = model(data)
+        # Crit =torch.nn.CrossEntropyLoss()
+        # loss = Crit(output, target)
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
@@ -143,18 +150,25 @@ def test(epoch=0):
     if epoch >0:
         import cv2
         img = utils.resizeImage(cMatrix.value(), 10)*255
-        cv2.imwrite("../Image"+str(epoch)+".jpg", img)
+        cv2.imwrite("/output/Image"+str(epoch)+".jpg", img)
 
-
-
+optimizer = optim.SGD(model.parameters(), lr=1e-1,
+                      momentum=0.9, weight_decay=1e-4)
 
 # for epoch in range(1, args.epochs + 1):
-stepSize = 10
+allClasses = list(range(100))
+import random
+random.shuffle(allClasses)
+
+stepSize = 20
 for classGroup in range(0, 100, stepSize):
+    optimizer = optim.SGD(model.parameters(), lr=1e-1,
+                          momentum=0.9, weight_decay=1e-4)
     for temp in range(classGroup, classGroup+stepSize):
-        trainDataset.addClasses(temp)
-        testDataset.addClasses(temp)
-    for epoch in range(0,20):
-        train(int(classGroup/stepSize)*20 + epoch)
-        test(int(classGroup/stepSize)*20 + epoch)
+        popVal = allClasses.pop()
+        trainDataset.addClasses(popVal)
+        testDataset.addClasses(popVal)
+    for epoch in range(0,70):
+        train(int(classGroup/stepSize)*70 + epoch,optimizer)
+        test(int(classGroup/stepSize)*70 + epoch)
 
