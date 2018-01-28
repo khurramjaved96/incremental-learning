@@ -142,7 +142,7 @@ def test(epoch=0):
     if epoch >0:
         import cv2
         img = utils.resizeImage(cMatrix.value(), 10)*255
-        cv2.imwrite("/output/Image"+str(epoch)+".jpg", img)
+        cv2.imwrite("../Image"+str(epoch)+".jpg", img)
 
 
 
@@ -159,8 +159,8 @@ for epoch in range(1, args.epochs + 1):
         for a in range(20, 30):
             trainDataset.addClasses(a)
             testDataset.addClasses(a)
-        for a in range(10, 20):
-            trainDataset.limitClass(a, 30)
+#        for a in range(10, 20):
+ #           trainDataset.limitClass(a, 30)
     train(epoch)
     if epoch%10==0:
         test(epoch)
