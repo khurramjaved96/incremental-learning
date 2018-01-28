@@ -50,8 +50,8 @@ train_data = datasets.CIFAR100("data", train=True, transform=train_transform, do
 test_data = datasets.CIFAR100("data", train=False, transform=test_transform, download=True)
 
 
-trainDataset = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,list(range(10)),transform=train_transform)
-testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,list(range(10)),transform=test_transform)
+trainDataset = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
+testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform)
 
 
 
@@ -147,23 +147,13 @@ def test(epoch=0):
 
 
 
-for epoch in range(1, args.epochs + 1):
-
-    if epoch==100:
-        for a in range(10,20):
-            trainDataset.addClasses(a)
-            testDataset.addClasses(a)
-        for a in range(0,10):
-            trainDataset.limitClass(a,30)
-    if epoch == 150:
-        for a in range(20, 30):
-            trainDataset.addClasses(a)
-            testDataset.addClasses(a)
-#        for a in range(10, 20):
- #           trainDataset.limitClass(a, 30)
-    train(epoch)
-    if epoch%10==0:
-        test(epoch)
-    else:
-        test(epoch)
+# for epoch in range(1, args.epochs + 1):
+stepSize = 10
+for classGroup in range(0, 100, stepSize):
+    for temp in range(classGroup, classGroup+stepSize):
+        trainDataset.addClasses(temp)
+        testDataset.addClasses(temp)
+    for epoch in (0,10):
+        train(int(classGroup/stepSize)*10 + epoch)
+        test(int(classGroup/stepSize)*10 + epoch)
 
