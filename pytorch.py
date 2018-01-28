@@ -153,7 +153,7 @@ for classGroup in range(0, 100, stepSize):
     for temp in range(classGroup, classGroup+stepSize):
         trainDataset.addClasses(temp)
         testDataset.addClasses(temp)
-    for epoch in (0,10):
-        train(int(classGroup/stepSize)*10 + epoch)
-        test(int(classGroup/stepSize)*10 + epoch)
+    for epoch in range(0,20):
+        train(int(classGroup/stepSize)*20 + epoch)
+        test(int(classGroup/stepSize)*20 + epoch)
 
