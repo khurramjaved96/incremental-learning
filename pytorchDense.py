@@ -87,7 +87,7 @@ if args.cuda:
 
 
 
-def train(epoch, optimizer):
+def train(epoch, optimizer,verbose=False):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
@@ -100,12 +100,12 @@ def train(epoch, optimizer):
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
-        if batch_idx % args.log_interval == 0:
+        if batch_idx % args.log_interval == 0 and epoch %10==0 and verbose:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.data[0]))
 
-def test(epoch=0):
+def test(epoch=0,verbose=False):
     model.eval()
     test_loss = 0
     correct = 0
@@ -125,12 +125,13 @@ def test(epoch=0):
 
 
     test_loss /= len(test_loader.dataset)
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+    if verbose:
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
     if epoch >0:
         import cv2
-        img = utils.resizeImage(cMatrix.value(), 10)*255
+        img = cMatrix.value()*255
         cv2.imwrite("../Image"+str(epoch)+".jpg", img)
 
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
@@ -142,17 +143,24 @@ allClasses = list(range(100))
 import random
 random.shuffle(allClasses)
 
-stepSize = 20
+stepSize = 10
+leftOver = []
+totalExmp = 2000
+epochsPerClass=60
 for classGroup in range(0, 100, stepSize):	
     for param_group in optimizer.param_groups:
         print ("Setting LR to", args.lr)
         param_group['lr'] = args.lr
         currentLr = args.lr
+    for val in leftOver:
+        #print ("Limiting class", val,"to",int(totalExmp/len(leftOver)))
+        trainDataset.limitClass(val,int(totalExmp/len(leftOver)))
     for temp in range(classGroup, classGroup+stepSize):
         popVal = allClasses.pop()
         trainDataset.addClasses(popVal)
         testDataset.addClasses(popVal)
-    for epoch in range(0,60):
+        leftOver.append(popVal)
+    for epoch in range(0,epochsPerClass):
         for temp in range(0, len(schedule)):
             if schedule[temp]==epoch:
                 for param_group in optimizer.param_groups:
@@ -161,6 +169,6 @@ for classGroup in range(0, 100, stepSize):
                     print("Changing learning rate from", currentLr, "to", currentLr*gammas[temp])
                     currentLr*= gammas[temp]
 
-        train(int(classGroup/stepSize)*60 + epoch,optimizer)
-        test(int(classGroup/stepSize)*60 + epoch)
-
+        train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer)
+        test(int(classGroup/stepSize)*epochsPerClass + epoch)
+    test(int(classGroup/stepSize)*epochsPerClass + epoch, True)
