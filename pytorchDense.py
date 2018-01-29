@@ -25,9 +25,9 @@ parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
 parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
-                    help='learning rate (default: 0.01)')
-parser.add_argument('--schedule', type=int, nargs='+', default=[70, 120,150], help='Decrease learning rate at these epochs.')
-parser.add_argument('--gammas', type=float, nargs='+', default=[0.1, 0.1,0.1], help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
+                    help='learning rate (default: 0.1)')
+parser.add_argument('--schedule', type=int, nargs='+', default=[25,40, 53], help='Decrease learning rate at these epochs.')
+parser.add_argument('--gammas', type=float, nargs='+', default=[0.1,0.1,0.1], help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 
 parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='SGD momentum (default: 0.5)')
@@ -63,8 +63,8 @@ train_data = datasets.CIFAR100("data", train=True, transform=train_transform, do
 test_data = datasets.CIFAR100("data", train=False, transform=test_transform, download=True)
 
 
-trainDataset = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,list(range(100)),transform=train_transform)
-testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,list(range(100)),transform=test_transform)
+trainDataset = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
+testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform)
 
 
 
@@ -131,7 +131,7 @@ def test(epoch=0):
     if epoch >0:
         import cv2
         img = utils.resizeImage(cMatrix.value(), 10)*255
-        cv2.imwrite("/output/Image"+str(epoch)+".jpg", img)
+        cv2.imwrite("../Image"+str(epoch)+".jpg", img)
 
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                 weight_decay=args.decay, nesterov=True)
@@ -143,21 +143,24 @@ import random
 random.shuffle(allClasses)
 
 stepSize = 20
-for classGroup in range(0, 100, stepSize):
-    optimizer = optim.SGD(model.parameters(), lr=1e-1,
-                          momentum=0.9, weight_decay=1e-4)
-#    for temp in range(classGroup, classGroup+stepSize):
- #       popVal = allClasses.pop()
-  #      trainDataset.addClasses(popVal)
-   #     testDataset.addClasses(popVal)
-    for epoch in range(0,200):
+for classGroup in range(0, 100, stepSize):	
+    for param_group in optimizer.param_groups:
+        print ("Setting LR to", args.lr)
+        param_group['lr'] = args.lr
+        currentLr = args.lr
+    for temp in range(classGroup, classGroup+stepSize):
+        popVal = allClasses.pop()
+        trainDataset.addClasses(popVal)
+        testDataset.addClasses(popVal)
+    for epoch in range(0,60):
         for temp in range(0, len(schedule)):
             if schedule[temp]==epoch:
                 for param_group in optimizer.param_groups:
+                    currentLr = param_group['lr']
                     param_group['lr'] = currentLr*gammas[temp]
                     print("Changing learning rate from", currentLr, "to", currentLr*gammas[temp])
                     currentLr*= gammas[temp]
 
-        train(int(classGroup/stepSize)*70 + epoch,optimizer)
-        test(int(classGroup/stepSize)*70 + epoch)
+        train(int(classGroup/stepSize)*60 + epoch,optimizer)
+        test(int(classGroup/stepSize)*60 + epoch)
 
