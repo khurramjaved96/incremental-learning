@@ -54,8 +54,8 @@ train_data = datasets.CIFAR100("data", train=True, transform=train_transform, do
 test_data = datasets.CIFAR100("data", train=False, transform=test_transform, download=True)
 
 
-trainDataset = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
-testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform)
+trainDataset = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,list(range(100)),transform=train_transform)
+testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,list(range(100)),transform=test_transform)
 
 
 
@@ -164,10 +164,10 @@ stepSize = 20
 for classGroup in range(0, 100, stepSize):
     optimizer = optim.SGD(model.parameters(), lr=1e-1,
                           momentum=0.9, weight_decay=1e-4)
-    for temp in range(classGroup, classGroup+stepSize):
-        popVal = allClasses.pop()
-        trainDataset.addClasses(popVal)
-        testDataset.addClasses(popVal)
+#    for temp in range(classGroup, classGroup+stepSize):
+ #       popVal = allClasses.pop()
+  #      trainDataset.addClasses(popVal)
+   #     testDataset.addClasses(popVal)
     for epoch in range(0,70):
         train(int(classGroup/stepSize)*70 + epoch,optimizer)
         test(int(classGroup/stepSize)*70 + epoch)
