@@ -13,20 +13,23 @@ import model.resnet32 as resnet32
 import numpy as np
 import utils
 import model.densenet as densenet
-
+import model.modelFactory as mF
 
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
-parser.add_argument('--batch-size', type=int, default=256, metavar='N',
+parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 10)')
-parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
+parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                     help='learning rate (default: 0.01)')
-parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
+parser.add_argument('--schedule', type=int, nargs='+', default=[70, 120,150], help='Decrease learning rate at these epochs.')
+parser.add_argument('--gammas', type=float, nargs='+', default=[0.1, 0.1,0.1], help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
+
+parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='SGD momentum (default: 0.5)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
@@ -34,9 +37,15 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
+parser.add_argument('--model-type',  default="resnet32",
+                    help='model type to be used')
+parser.add_argument('--decay', type=float, default=0.0005, help='Weight decay (L2 penalty).')
+
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
+schedule = args.schedule
+gammas = args.gammas
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
@@ -68,37 +77,9 @@ test_loader = torch.utils.data.DataLoader(
 
 
 
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 10, kernel_size=5,padding=(2,2))
-        self.conv2 = nn.Conv2d(10, 20, kernel_size=5,padding=(2,2))
-        self.conv2_bn1 = nn.BatchNorm2d(20)
-        self.conv3 = nn.Conv2d(20, 30, kernel_size=5,padding=(2,2))
-        self.conv2_bn2 = nn.BatchNorm2d(30)
-        self.conv4 = nn.Conv2d(30, 40, kernel_size=5,padding=(2,2))
-        self.conv2_bn3 = nn.BatchNorm2d(40)
-        self.conv2_drop = nn.Dropout2d()
-
-        self.fc1 = nn.Linear(640, 100)
-        self.fc2 = nn.Linear(100, 100 )
-
-    def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = self.conv2_bn1(self.conv2(x))
-        x = F.relu(F.max_pool2d(self.conv2_bn2(self.conv3(x)), 2))
-        x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2_bn3(self.conv4(x))), 2))
-        # print ("X after conv", x.shape)
-        x = x.view(-1, 640)
-        x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
-        x = self.fc2(x)
-        # print ("X Shape", x.shape)
-        return F.log_softmax(x)
-
 # model = Net()
-model = densenet.DenseNet(growthRate=12, depth=10, reduction=0.5,
-                        bottleneck=True, nClasses=100)
+myFactory = mF.modelFactory()
+model = myFactory.getModel(args.model_type)
 if args.cuda:
     model.cuda()
 
@@ -152,8 +133,9 @@ def test(epoch=0):
         img = utils.resizeImage(cMatrix.value(), 10)*255
         cv2.imwrite("/output/Image"+str(epoch)+".jpg", img)
 
-optimizer = optim.SGD(model.parameters(), lr=1e-1,
-                      momentum=0.9, weight_decay=1e-4)
+optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
+                weight_decay=args.decay, nesterov=True)
+currentLr = args.lr
 
 # for epoch in range(1, args.epochs + 1):
 allClasses = list(range(100))
@@ -168,7 +150,14 @@ for classGroup in range(0, 100, stepSize):
  #       popVal = allClasses.pop()
   #      trainDataset.addClasses(popVal)
    #     testDataset.addClasses(popVal)
-    for epoch in range(0,70):
+    for epoch in range(0,200):
+        for temp in range(0, len(schedule)):
+            if schedule[temp]==epoch:
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = currentLr*gammas[temp]
+                    print("Changing learning rate from", currentLr, "to", currentLr*gammas[temp])
+                    currentLr*= gammas[temp]
+
         train(int(classGroup/stepSize)*70 + epoch,optimizer)
         test(int(classGroup/stepSize)*70 + epoch)
 
