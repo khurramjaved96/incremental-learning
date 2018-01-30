@@ -40,8 +40,9 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
 parser.add_argument('--model-type',  default="resnet32",
                     help='model type to be used')
 parser.add_argument('--decay', type=float, default=0.0005, help='Weight decay (L2 penalty).')
-parser.add_argument('--step-size', type=float, default=10, help='How many classes to add in each increment')
-parser.add_argument('--memory-budget', type=float, default=2000, help='How many images can we store at max')
+parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
+parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
+parser.add_argument('--epochs-class', type=int, default=60, help='How many images can we store at max')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -153,7 +154,7 @@ random.shuffle(allClasses)
 stepSize = args.step_size
 leftOver = []
 totalExmp = args.memory_budget
-epochsPerClass=60
+epochsPerClass=args.epochs_class
 distillLoss = False
 
 for classGroup in range(0, 100, stepSize):
