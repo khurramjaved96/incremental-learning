@@ -89,6 +89,10 @@ if args.cuda:
 
 modelFixed = None
 
+def cross_entropy(pred, soft_targets):
+    logsoftmax = nn.LogSoftmax()
+    return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
+
 
 def train(epoch, optimizer,verbose=False):
     model.train()
@@ -102,13 +106,15 @@ def train(epoch, optimizer,verbose=False):
         # loss = Crit(output, target)
         loss = F.nll_loss(output, target)
         if modelFixed is not None:
-            print ("Using Distillation loss")
+            #print ("Using Distillation loss")
             outpu2 = modelFixed(data)
-            loss2 = F.nll_loss(output,outpu2)
+            #print (outpu2.shape, output.shape, target.shape)
+            loss2 = F.multilabel_soft_margin_loss(nn.LogSoftmax()(output),nn.LogSoftmax()(outpu2))
             loss = loss + loss2
+        #print (loss)
         loss.backward()
         optimizer.step()
-        if batch_idx % args.log_interval == 0 and epoch %10==0 and verbose:
+        if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.data[0]))
@@ -187,5 +193,5 @@ for classGroup in range(0, 100, stepSize):
                     currentLr*= gammas[temp]
 
         train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer)
-        test(int(classGroup/stepSize)*epochsPerClass + epoch)
+        test(int(classGroup/stepSize)*epochsPerClass + epoch,True)
     test(int(classGroup/stepSize)*epochsPerClass + epoch, True)
