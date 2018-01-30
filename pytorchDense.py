@@ -14,7 +14,7 @@ import numpy as np
 import utils
 import model.densenet as densenet
 import model.modelFactory as mF
-
+import copy
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
@@ -40,6 +40,8 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
 parser.add_argument('--model-type',  default="resnet32",
                     help='model type to be used')
 parser.add_argument('--decay', type=float, default=0.0005, help='Weight decay (L2 penalty).')
+parser.add_argument('--step-size', type=float, default=10, help='How many classes to add in each increment')
+parser.add_argument('--memory-budget', type=float, default=2000, help='How many images can we store at max')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -84,7 +86,7 @@ if args.cuda:
     model.cuda()
 
 
-
+modelFixed = None
 
 
 def train(epoch, optimizer,verbose=False):
@@ -98,6 +100,11 @@ def train(epoch, optimizer,verbose=False):
         # Crit =torch.nn.CrossEntropyLoss()
         # loss = Crit(output, target)
         loss = F.nll_loss(output, target)
+        if modelFixed is not None:
+            print ("Using Distillation loss")
+            outpu2 = modelFixed(data)
+            loss2 = F.nll_loss(output,outpu2)
+            loss = loss + loss2
         loss.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0 and epoch %10==0 and verbose:
@@ -143,11 +150,20 @@ allClasses = list(range(100))
 import random
 random.shuffle(allClasses)
 
-stepSize = 10
+stepSize = args.step_size
 leftOver = []
-totalExmp = 2000
+totalExmp = args.memory_budget
 epochsPerClass=60
-for classGroup in range(0, 100, stepSize):	
+distillLoss = False
+
+for classGroup in range(0, 100, stepSize):
+    if classGroup ==0:
+        distillLoss=False
+    else:
+        distillLoss=True
+        modelFixed = copy.deepcopy(model)
+        for param in modelFixed.parameters():
+            param.requires_grad = False
     for param_group in optimizer.param_groups:
         print ("Setting LR to", args.lr)
         param_group['lr'] = args.lr
