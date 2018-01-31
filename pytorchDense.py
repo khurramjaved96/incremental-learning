@@ -136,11 +136,12 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             target2.unsqueeze_(1)
             y_onehot.scatter_(1, target2, 1)
             loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
-        if len(leftover) >0 and torch.sum(weightVectorDis)>0:
-            dataDis = data[weightVectorDis]
-            targetDis = target[weightVectorDis]
+        if len(leftover) >0 and torch.sum(weightVectorDis)>0 and args.distill:
+            dataDis = Variable(data[weightVectorDis])
+            #targetDis = Variable(target[weightVectorDis])
             outpu2 = modelFixed(dataDis)
             output = model(dataDis)
+            print ("Fixed Model", F.softmax(outpu2),"Changing model", F.softmax(output))
             loss2 = F.binary_cross_entropy(F.softmax(output),F.softmax(outpu2))
             loss = loss + loss2
         loss.backward()
