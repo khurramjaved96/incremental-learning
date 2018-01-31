@@ -188,7 +188,7 @@ currentLr = args.lr
 
 # for epoch in range(1, args.epochs + 1):
 allClasses = list(range(args.classes))
-allClasses.sort()
+allClasses.sort(reverse=True)
 import random
 # random.shuffle(allClasses)
 
