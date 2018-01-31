@@ -93,7 +93,7 @@ def cross_entropy(pred, soft_targets):
     logsoftmax = nn.LogSoftmax()
     return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
 
-y_onehot = torch.FloatTensor(args.batch_size, 100)
+y_onehot = torch.FloatTensor(args.batch_size, 100).cuda()
 
 
 def train(epoch, optimizer,verbose=False):
@@ -111,8 +111,6 @@ def train(epoch, optimizer,verbose=False):
         # loss = F.nll_loss(output, target)
         y_onehot.zero_()
         target2.unsqueeze_(1)
-        print (target2.shape)
-        print (y_onehot.shape)
         y_onehot.scatter_(1, target2, 1)
         loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
         if modelFixed is not None:
