@@ -101,20 +101,25 @@ def train(epoch, optimizer,verbose=False):
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
+        target2= target
         data, target = Variable(data), Variable(target)
+
         optimizer.zero_grad()
         output = model(data)
         # Crit =torch.nn.CrossEntropyLoss()
         # loss = Crit(output, target)
         # loss = F.nll_loss(output, target)
         y_onehot.zero_()
-        y_onehot.scatter_(1, target, 1)
-        loss = F.binary_cross_entropy(output, y_onehot)
+        target2.unsqueeze_(1)
+        print (target2.shape)
+        print (y_onehot.shape)
+        y_onehot.scatter_(1, target2, 1)
+        loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
         if modelFixed is not None:
             #print ("Using Distillation loss")
             outpu2 = modelFixed(data)
             #print (outpu2.shape, output.shape, target.shape)
-            loss2 = F.binary_cross_entropy(output,outpu2)
+            loss2 = F.binary_cross_entropy(F.softmax(output),F.softmax(outpu2))
             loss = loss + loss2
         #print (loss)
         loss.backward()
