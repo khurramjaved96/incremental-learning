@@ -26,8 +26,8 @@ parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                     help='learning rate (default: 0.1)')
-parser.add_argument('--schedule', type=int, nargs='+', default=[25,40, 53], help='Decrease learning rate at these epochs.')
-parser.add_argument('--gammas', type=float, nargs='+', default=[0.1,0.1,0.1], help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
+parser.add_argument('--schedule', type=int, nargs='+', default=[15,25, 33], help='Decrease learning rate at these epochs.')
+parser.add_argument('--gammas', type=float, nargs='+', default=[0.2,0.2,0.2], help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 
 parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='SGD momentum (default: 0.5)')
@@ -119,13 +119,13 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
         weightVectorDis = torch.squeeze(torch.nonzero((weightVector>0)).long())
         weightVectorNor = torch.squeeze(torch.nonzero((weightVector==0)).long())
         loss = None
+        optimizer.zero_grad()
         if torch.sum(weightVectorNor)>0:
             dataNorm = data[weightVectorNor]
             targetNorm = target[weightVectorNor]
             target2 = targetNorm
             dataNorm, target = Variable(dataNorm), Variable(targetNorm)
 
-            optimizer.zero_grad()
             output = model(dataNorm)
 
             y_onehot = torch.FloatTensor(len(dataNorm), args.classes)
@@ -142,9 +142,12 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             #targetDis = Variable(target[weightVectorDis])
             outpu2 = modelFixed(dataDis)
             output = model(dataDis)
-            print ("Fixed Model", F.softmax(outpu2)[:,0:4],"Changing model", F.softmax(output)[:,0:6])
+#            print ("Fixed Model", F.softmax(outpu2)[:,0:4],"Changing model", F.softmax(output)[:,0:4])
             loss2 = F.binary_cross_entropy(F.softmax(output),F.softmax(outpu2))
-            loss = loss + loss2
+            if loss is None:
+                loss=loss2
+            else:
+                loss = loss + loss2
         loss.backward()
         optimizer.step()
 
