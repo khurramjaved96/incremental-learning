@@ -126,9 +126,10 @@ def train(epoch, optimizer, train_loader,exemp = False, verbose=False):
             #print (outpu2.shape, output.shape, target.shape)
             loss2 = F.binary_cross_entropy(F.softmax(output),F.softmax(outpu2))
             loss = loss2
-        #print (loss)
-        loss.backward()
-        optimizer.step()
+        else:
+            #print (loss)
+            loss.backward()
+            optimizer.step()
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
