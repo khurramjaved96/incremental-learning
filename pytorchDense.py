@@ -126,6 +126,8 @@ def train(epoch, optimizer, train_loader,exemp = False, verbose=False):
             #print (outpu2.shape, output.shape, target.shape)
             loss2 = F.binary_cross_entropy(F.softmax(output),F.softmax(outpu2))
             loss = loss2
+            loss.backward()
+            optimizer.step()
         else:
             #print (loss)
             loss.backward()
@@ -211,6 +213,7 @@ for classGroup in range(0, 100, stepSize):
                     currentLr*= gammas[temp]
 
         train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full)
-        train(int(classGroup / stepSize) * epochsPerClass + epoch, optimizer, train_loader_exemplars,exemp=True)
+        if modelFixed is not None:
+            train(int(classGroup / stepSize) * epochsPerClass + epoch, optimizer, train_loader_exemplars,exemp=True)
         test(int(classGroup/stepSize)*epochsPerClass + epoch,True)
     test(int(classGroup/stepSize)*epochsPerClass + epoch, True)
