@@ -126,6 +126,12 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 
             optimizer.zero_grad()
             output = model(dataNorm)
+
+            y_onehot = torch.FloatTensor(len(dataNorm), 100)
+            if args.cuda:
+                y_onehot = y_onehot.cuda()
+
+
             y_onehot.zero_()
             target2.unsqueeze_(1)
             y_onehot.scatter_(1, target2, 1)
