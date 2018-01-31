@@ -18,9 +18,9 @@ import copy
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
-parser.add_argument('--batch-size', type=int, default=128, metavar='N',
+parser.add_argument('--batch-size', type=int, default=100, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=100, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 10)')
@@ -66,13 +66,18 @@ train_data = datasets.CIFAR100("data", train=True, transform=train_transform, do
 test_data = datasets.CIFAR100("data", train=False, transform=test_transform, download=True)
 
 
-trainDataset = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
+trainDatasetFull = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
+trainDatasetExemp = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
 testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform)
 
 
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-train_loader = torch.utils.data.DataLoader(trainDataset,
+
+train_loader_full = torch.utils.data.DataLoader(trainDatasetFull,
+    batch_size=args.batch_size, shuffle=True, **kwargs)
+
+train_loader_exemplars = torch.utils.data.DataLoader(trainDatasetExemp,
     batch_size=args.batch_size, shuffle=True, **kwargs)
 test_loader = torch.utils.data.DataLoader(
     testDataset,
@@ -93,10 +98,12 @@ def cross_entropy(pred, soft_targets):
     logsoftmax = nn.LogSoftmax()
     return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
 
-y_onehot = torch.FloatTensor(args.batch_size, 100).cuda()
+y_onehot = torch.FloatTensor(args.batch_size, 100)
+if args.cuda:
+    y_onehot = y_onehot.cuda()
 
 
-def train(epoch, optimizer,verbose=False):
+def train(epoch, optimizer, train_loader,exemp = False, verbose=False):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
@@ -113,12 +120,12 @@ def train(epoch, optimizer,verbose=False):
         target2.unsqueeze_(1)
         y_onehot.scatter_(1, target2, 1)
         loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
-        if modelFixed is not None:
+        if modelFixed is not None and exemp:
             #print ("Using Distillation loss")
             outpu2 = modelFixed(data)
             #print (outpu2.shape, output.shape, target.shape)
             loss2 = F.binary_cross_entropy(F.softmax(output),F.softmax(outpu2))
-            loss = loss + loss2
+            loss = loss2
         #print (loss)
         loss.backward()
         optimizer.step()
@@ -185,10 +192,12 @@ for classGroup in range(0, 100, stepSize):
         currentLr = args.lr
     for val in leftOver:
         #print ("Limiting class", val,"to",int(totalExmp/len(leftOver)))
-        trainDataset.limitClass(val,int(totalExmp/len(leftOver)))
+        trainDatasetExemp.addClasses(val)
+        trainDatasetExemp.limitClass(val,int(totalExmp/len(leftOver)))
+        trainDatasetFull.removeClass(val)
     for temp in range(classGroup, classGroup+stepSize):
         popVal = allClasses.pop()
-        trainDataset.addClasses(popVal)
+        trainDatasetFull.addClasses(popVal)
         testDataset.addClasses(popVal)
         leftOver.append(popVal)
     for epoch in range(0,epochsPerClass):
@@ -200,6 +209,7 @@ for classGroup in range(0, 100, stepSize):
                     print("Changing learning rate from", currentLr, "to", currentLr*gammas[temp])
                     currentLr*= gammas[temp]
 
-        train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer)
+        train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full)
+        train(int(classGroup / stepSize) * epochsPerClass + epoch, optimizer, train_loader_exemplars,exemp=True)
         test(int(classGroup/stepSize)*epochsPerClass + epoch,True)
     test(int(classGroup/stepSize)*epochsPerClass + epoch, True)

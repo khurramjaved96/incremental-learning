@@ -18,6 +18,8 @@ class incrementalLoaderCifar(td.Dataset):
 
 
     def addClasses(self, n):
+        if n in self.activeClasses:
+            return
         self.activeClasses.append(n)
         self.len = self.classSize * len(self.activeClasses)
         print ("Classes", self.activeClasses)
@@ -26,6 +28,10 @@ class incrementalLoaderCifar(td.Dataset):
         self.limitedClasses[n] = k
         print ("Limit on classes", self.limitedClasses)
 
+    def removeClass(self, n):
+        while n in self.activeClasses:
+            self.activeClasses.remove(n)
+        self.len = self.classSize * len(self.activeClasses)
 
     def __len__(self):
         return self.len
