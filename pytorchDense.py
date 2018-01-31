@@ -33,6 +33,8 @@ parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='SGD momentum (default: 0.5)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
+parser.add_argument('--distill', action='store_true', default=False,
+                    help='weather to use distillation lose or not')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
@@ -103,35 +105,32 @@ if args.cuda:
     y_onehot = y_onehot.cuda()
 
 
-def train(epoch, optimizer, train_loader,exemp = False, verbose=False):
+def train(epoch, optimizer, train_loader, leftover, verbose=False):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         target2= target
+        weightVector = (target*0).int()
+        for elem in leftover:
+            weightVector = weightVector + (target==elem).int()
+        weightVectorDis = (weightVector>0).int()
+        weightVectorNor = (weightVector==0).int()
         data, target = Variable(data), Variable(target)
 
         optimizer.zero_grad()
         output = model(data)
-        # Crit =torch.nn.CrossEntropyLoss()
-        # loss = Crit(output, target)
-        # loss = F.nll_loss(output, target)
         y_onehot.zero_()
         target2.unsqueeze_(1)
         y_onehot.scatter_(1, target2, 1)
-        loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
-        if modelFixed is not None and exemp:
-            #print ("Using Distillation loss")
+        loss = F.binary_cross_entropy(F.softmax(output[weightVectorNor.long()]), Variable(y_onehot[weightVectorNor.long()]))
+        if len(leftover) >0 and torch.sum(weightVectorDis)>0:
             outpu2 = modelFixed(data)
-            #print (outpu2.shape, output.shape, target.shape)
-            loss2 = F.binary_cross_entropy(F.softmax(output),F.softmax(outpu2))
-            loss = loss2
-            loss.backward()
-            optimizer.step()
-        else:
-            #print (loss)
-            loss.backward()
-            optimizer.step()
+            loss2 = F.binary_cross_entropy(F.softmax(output[weightVectorDis.long()]),F.softmax(outpu2[weightVectorDis.long()]))
+            loss = loss + loss2
+        loss.backward()
+        optimizer.step()
+
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
@@ -177,6 +176,7 @@ random.shuffle(allClasses)
 
 stepSize = args.step_size
 leftOver = []
+limitedset=[]
 totalExmp = args.memory_budget
 epochsPerClass=args.epochs_class
 distillLoss = False
@@ -195,9 +195,8 @@ for classGroup in range(0, 100, stepSize):
         currentLr = args.lr
     for val in leftOver:
         #print ("Limiting class", val,"to",int(totalExmp/len(leftOver)))
-        trainDatasetExemp.addClasses(val)
-        trainDatasetExemp.limitClass(val,int(totalExmp/len(leftOver)))
-        trainDatasetFull.removeClass(val)
+        trainDatasetFull.limitClass(val,int(totalExmp/len(leftOver)))
+        limitedset.append(val)
     for temp in range(classGroup, classGroup+stepSize):
         popVal = allClasses.pop()
         trainDatasetFull.addClasses(popVal)
@@ -212,8 +211,6 @@ for classGroup in range(0, 100, stepSize):
                     print("Changing learning rate from", currentLr, "to", currentLr*gammas[temp])
                     currentLr*= gammas[temp]
 
-        train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full)
-        if modelFixed is not None:
-            train(int(classGroup / stepSize) * epochsPerClass + epoch, optimizer, train_loader_exemplars,exemp=True)
+        train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset)
         test(int(classGroup/stepSize)*epochsPerClass + epoch,True)
     test(int(classGroup/stepSize)*epochsPerClass + epoch, True)
