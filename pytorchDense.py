@@ -69,9 +69,9 @@ train_data = datasets.CIFAR100("data", train=True, transform=train_transform, do
 test_data = datasets.CIFAR100("data", train=False, transform=test_transform, download=True)
 
 
-trainDatasetFull = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,args.classes,[],transform=train_transform)
-trainDatasetExemp = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,args.classes,[],transform=train_transform)
-testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,args.classes,[],transform=test_transform)
+trainDatasetFull = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
+trainDatasetExemp = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
+testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform)
 
 
 
