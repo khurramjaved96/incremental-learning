@@ -104,12 +104,13 @@ def train(epoch, optimizer,verbose=False):
         output = model(data)
         # Crit =torch.nn.CrossEntropyLoss()
         # loss = Crit(output, target)
-        loss = F.nll_loss(output, target)
+        # loss = F.nll_loss(output, target)
+        loss = F.binary_cross_entropy(output, target)
         if modelFixed is not None:
             #print ("Using Distillation loss")
             outpu2 = modelFixed(data)
             #print (outpu2.shape, output.shape, target.shape)
-            loss2 = F.multilabel_soft_margin_loss(nn.LogSoftmax()(output),nn.LogSoftmax()(outpu2))
+            loss2 = F.binary_cross_entropy(output,outpu2)
             loss = loss + loss2
         #print (loss)
         loss.backward()
