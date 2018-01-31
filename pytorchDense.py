@@ -142,7 +142,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             #targetDis = Variable(target[weightVectorDis])
             outpu2 = modelFixed(dataDis)
             output = model(dataDis)
-            print ("Fixed Model", F.softmax(outpu2)[:,0:4],"Changing model", F.softmax(output)[0:6])
+            print ("Fixed Model", F.softmax(outpu2)[:,0:4],"Changing model", F.softmax(output)[:,0:6])
             loss2 = F.binary_cross_entropy(F.softmax(output),F.softmax(outpu2))
             loss = loss + loss2
         loss.backward()
