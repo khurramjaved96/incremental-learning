@@ -93,6 +93,8 @@ def cross_entropy(pred, soft_targets):
     logsoftmax = nn.LogSoftmax()
     return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
 
+y_onehot = torch.FloatTensor(args.batch_size, 100)
+
 
 def train(epoch, optimizer,verbose=False):
     model.train()
@@ -105,7 +107,9 @@ def train(epoch, optimizer,verbose=False):
         # Crit =torch.nn.CrossEntropyLoss()
         # loss = Crit(output, target)
         # loss = F.nll_loss(output, target)
-        loss = F.binary_cross_entropy(output, target)
+        y_onehot.zero_()
+        y_onehot.scatter_(1, target, 1)
+        loss = F.binary_cross_entropy(output, y_onehot)
         if modelFixed is not None:
             #print ("Using Distillation loss")
             outpu2 = modelFixed(data)
