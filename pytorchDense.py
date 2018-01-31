@@ -110,23 +110,32 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
-        target2= target
+
         weightVector = (target*0).int()
         for elem in leftover:
             weightVector = weightVector + (target==elem).int()
-        weightVectorDis = (weightVector>0).int()
-        weightVectorNor = (weightVector==0).int()
-        data, target = Variable(data), Variable(target)
 
-        optimizer.zero_grad()
-        output = model(data)
-        y_onehot.zero_()
-        target2.unsqueeze_(1)
-        y_onehot.scatter_(1, target2, 1)
-        loss = F.binary_cross_entropy(F.softmax(output[weightVectorNor.long()]), Variable(y_onehot[weightVectorNor.long()]))
+        weightVectorDis = torch.squeeze(torch.nonzero((weightVector>0)).long())
+        weightVectorNor = torch.squeeze(torch.nonzero((weightVector==0)).long())
+        loss = None
+        if torch.sum(weightVectorNor)>0:
+            dataNorm = data[weightVectorNor]
+            targetNorm = target[weightVectorNor]
+            target2 = targetNorm
+            dataNorm, target = Variable(dataNorm), Variable(targetNorm)
+
+            optimizer.zero_grad()
+            output = model(dataNorm)
+            y_onehot.zero_()
+            target2.unsqueeze_(1)
+            y_onehot.scatter_(1, target2, 1)
+            loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
         if len(leftover) >0 and torch.sum(weightVectorDis)>0:
-            outpu2 = modelFixed(data)
-            loss2 = F.binary_cross_entropy(F.softmax(output[weightVectorDis.long()]),F.softmax(outpu2[weightVectorDis.long()]))
+            dataDis = data[weightVectorDis]
+            targetDis = target[weightVectorDis]
+            outpu2 = modelFixed(dataDis)
+            output = model(dataDis)
+            loss2 = F.binary_cross_entropy(F.softmax(output),F.softmax(outpu2))
             loss = loss + loss2
         loss.backward()
         optimizer.step()
