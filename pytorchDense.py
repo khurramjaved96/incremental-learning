@@ -45,6 +45,7 @@ parser.add_argument('--decay', type=float, default=0.0005, help='Weight decay (L
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
 parser.add_argument('--epochs-class', type=int, default=60, help='How many images can we store at max')
+parser.add_argument('--classes', type=int, default=100, help='How many images can we store at max')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -68,9 +69,9 @@ train_data = datasets.CIFAR100("data", train=True, transform=train_transform, do
 test_data = datasets.CIFAR100("data", train=False, transform=test_transform, download=True)
 
 
-trainDatasetFull = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
-trainDatasetExemp = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
-testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform)
+trainDatasetFull = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,args.classes,[],transform=train_transform)
+trainDatasetExemp = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,args.classes,[],transform=train_transform)
+testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,args.classes,[],transform=test_transform)
 
 
 
@@ -89,7 +90,7 @@ test_loader = torch.utils.data.DataLoader(
 
 # model = Net()
 myFactory = mF.modelFactory()
-model = myFactory.getModel(args.model_type)
+model = myFactory.getModel(args.model_type,args.classes)
 if args.cuda:
     model.cuda()
 
@@ -100,7 +101,7 @@ def cross_entropy(pred, soft_targets):
     logsoftmax = nn.LogSoftmax()
     return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
 
-y_onehot = torch.FloatTensor(args.batch_size, 100)
+y_onehot = torch.FloatTensor(args.batch_size, args.classes)
 if args.cuda:
     y_onehot = y_onehot.cuda()
 
@@ -127,7 +128,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             optimizer.zero_grad()
             output = model(dataNorm)
 
-            y_onehot = torch.FloatTensor(len(dataNorm), 100)
+            y_onehot = torch.FloatTensor(len(dataNorm), args.classes)
             if args.cuda:
                 y_onehot = y_onehot.cuda()
 
@@ -157,7 +158,7 @@ def test(epoch=0,verbose=False):
     test_loss = 0
     correct = 0
     if epoch >0:
-        cMatrix = confusionmeter.ConfusionMeter(100,True)
+        cMatrix = confusionmeter.ConfusionMeter(args.classes,True)
 
     for data, target in test_loader:
         if args.cuda:
@@ -186,7 +187,7 @@ optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
 currentLr = args.lr
 
 # for epoch in range(1, args.epochs + 1):
-allClasses = list(range(100))
+allClasses = list(range(args.classes))
 import random
 random.shuffle(allClasses)
 
@@ -197,7 +198,7 @@ totalExmp = args.memory_budget
 epochsPerClass=args.epochs_class
 distillLoss = False
 
-for classGroup in range(0, 100, stepSize):
+for classGroup in range(0, args.classes, stepSize):
     if classGroup ==0:
         distillLoss=False
     else:
