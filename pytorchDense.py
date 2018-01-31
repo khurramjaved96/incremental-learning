@@ -187,7 +187,7 @@ optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
 currentLr = args.lr
 
 # for epoch in range(1, args.epochs + 1):
-allClasses = list(range(args.classes))
+allClasses = np.sort(list(range(args.classes)))
 import random
 # random.shuffle(allClasses)
 
