@@ -129,18 +129,20 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 
             output = model(dataNorm)
 
-            y_onehot = torch.FloatTensor(len(dataNorm), args.classes)
+            output = model(Variable(data))
+
+            y_onehot = torch.FloatTensor(len(data), args.classes)
             if args.cuda:
                 y_onehot = y_onehot.cuda()
 
 
             y_onehot.zero_()
-            target2.unsqueeze_(1)
-            y_onehot.scatter_(1, target2, 1)
+            targetTemp.unsqueeze_(1)
+            y_onehot.scatter_(1, targetTemp, 1)
             loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
         if len(leftover) >0 and torch.sum(weightVectorDis)>0 and args.distill:
             dataDis = Variable(data[weightVectorDis])
-            targetDis2 = Variable(targetTemp[weightVectorDis])
+            targetDis2 = targetTemp[weightVectorDis]
 
             ## TThis is temporary
             y_onehot = torch.FloatTensor(len(dataDis), args.classes)
@@ -148,7 +150,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
                 y_onehot = y_onehot.cuda()
 
             y_onehot.zero_()
-            target2.unsqueeze_(1)
+            targetDis2.unsqueeze_(1)
             y_onehot.scatter_(1, targetDis2, 1)
 
             ## Temp end
@@ -224,7 +226,7 @@ for classGroup in range(0, args.classes, stepSize):
         modelFixed = copy.deepcopy(model)
         for param in modelFixed.parameters():
             param.requires_grad = False
-        model.classifier = nn.Linear(64, 100).cuda()
+        #model.classifier = nn.Linear(64, 100).cuda()
     for param_group in optimizer.param_groups:
         print ("Setting LR to", args.lr)
         param_group['lr'] = args.lr
