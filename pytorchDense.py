@@ -145,7 +145,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             targetDis2 = targetTemp[weightVectorDis]
 
             ## TThis is temporary
-            y_onehot = torch.FloatTensor(len(dataDis), args.classes)
+            y_onehot = torch.FloatTensor(len(data), args.classes)
             if args.cuda:
                 y_onehot = y_onehot.cuda()
 
