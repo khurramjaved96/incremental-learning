@@ -119,8 +119,9 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
         weightVectorDis = torch.squeeze(torch.nonzero((weightVector>0)).long())
         weightVectorNor = torch.squeeze(torch.nonzero((weightVector==0)).long())
         loss = None
-        optimizer.zero_grad()
+
         if torch.sum(weightVectorNor)>0:
+            optimizer.zero_grad()
             dataNorm = data[weightVectorNor]
             targetTemp = target
             targetNorm = target[weightVectorNor]
@@ -129,23 +130,24 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 
             output = model(dataNorm)
 
-            output = model(Variable(data))
 
-            y_onehot = torch.FloatTensor(len(data), args.classes)
+            y_onehot = torch.FloatTensor(len(dataNorm), args.classes)
             if args.cuda:
                 y_onehot = y_onehot.cuda()
 
 
             y_onehot.zero_()
-            targetTemp.unsqueeze_(1)
-            y_onehot.scatter_(1, targetTemp, 1)
+            target2.unsqueeze_(1)
+            y_onehot.scatter_(1, target2, 1)
             loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
+            loss.backward()
+            optimizer.step()
         if len(leftover) >0 and torch.sum(weightVectorDis)>0 and args.distill:
             dataDis = Variable(data[weightVectorDis])
             targetDis2 = targetTemp[weightVectorDis]
 
             ## TThis is temporary
-            y_onehot = torch.FloatTensor(len(data), args.classes)
+            y_onehot = torch.FloatTensor(len(dataDis), args.classes)
             if args.cuda:
                 y_onehot = y_onehot.cuda()
 
@@ -160,12 +162,12 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 #            print ("Fixed Model", F.softmax(outpu2)[:,0:4],"Changing model", F.softmax(output)[:,0:4])
             loss2 = F.binary_cross_entropy(F.softmax(output),F.softmax(outpu2))
             loss2 = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
-            if loss is None:
-                loss=loss2
-            else:
-                loss = loss + loss2
-        loss.backward()
-        optimizer.step()
+            # if loss is None:
+            #     loss=loss2
+            # else:
+            #     loss = loss + loss2
+            loss2.backward()
+            optimizer.step()
 
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
