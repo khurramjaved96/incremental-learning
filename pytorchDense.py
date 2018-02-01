@@ -143,6 +143,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             loss.backward()
             optimizer.step()
         if len(leftover) >0 and torch.sum(weightVectorDis)>0 and args.distill:
+            optimizer.zero_grad()
             dataDis = Variable(data[weightVectorDis])
             targetDis2 = targetTemp[weightVectorDis]
 
