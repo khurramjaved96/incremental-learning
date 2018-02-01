@@ -210,6 +210,7 @@ for classGroup in range(0, args.classes, stepSize):
         modelFixed = copy.deepcopy(model)
         for param in modelFixed.parameters():
             param.requires_grad = False
+        model.classifier = nn.Linear(64, 100)
     for param_group in optimizer.param_groups:
         print ("Setting LR to", args.lr)
         param_group['lr'] = args.lr
@@ -226,6 +227,9 @@ for classGroup in range(0, args.classes, stepSize):
     for epoch in range(0,epochsPerClass):
         for temp in range(0, len(schedule)):
             if schedule[temp]==epoch:
+                if epoch==20:
+                    print("Resetting classifier weigths")
+                    model.classifier = nn.Linear(64, 100)
                 for param_group in optimizer.param_groups:
                     currentLr = param_group['lr']
                     param_group['lr'] = currentLr*gammas[temp]
