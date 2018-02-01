@@ -122,6 +122,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
         optimizer.zero_grad()
         if torch.sum(weightVectorNor)>0:
             dataNorm = data[weightVectorNor]
+            targetTemp = target
             targetNorm = target[weightVectorNor]
             target2 = targetNorm
             dataNorm, target = Variable(dataNorm), Variable(targetNorm)
@@ -139,11 +140,24 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
         if len(leftover) >0 and torch.sum(weightVectorDis)>0 and args.distill:
             dataDis = Variable(data[weightVectorDis])
-            #targetDis = Variable(target[weightVectorDis])
+            targetDis2 = Variable(targetTemp[weightVectorDis])
+
+            ## TThis is temporary
+            y_onehot = torch.FloatTensor(len(dataDis), args.classes)
+            if args.cuda:
+                y_onehot = y_onehot.cuda()
+
+            y_onehot.zero_()
+            target2.unsqueeze_(1)
+            y_onehot.scatter_(1, targetDis2, 1)
+
+            ## Temp end
+
             outpu2 = modelFixed(dataDis)
             output = model(dataDis)
 #            print ("Fixed Model", F.softmax(outpu2)[:,0:4],"Changing model", F.softmax(output)[:,0:4])
             loss2 = F.binary_cross_entropy(F.softmax(output),F.softmax(outpu2))
+            loss2 = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
             if loss is None:
                 loss=loss2
             else:
