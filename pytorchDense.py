@@ -225,9 +225,6 @@ for classGroup in range(0, args.classes, stepSize):
         testDataset.addClasses(popVal)
         leftOver.append(popVal)
     for epoch in range(0,epochsPerClass):
-        if epoch == 20:
-            print("Resetting classifier weigths")
-            model.classifier = nn.Linear(64, 100).cuda()
         for temp in range(0, len(schedule)):
             if schedule[temp]==epoch:
                 for param_group in optimizer.param_groups:
