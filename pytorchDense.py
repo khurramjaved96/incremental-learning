@@ -26,8 +26,8 @@ parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                     help='learning rate (default: 0.1)')
-parser.add_argument('--schedule', type=int, nargs='+', default=[15,25, 33], help='Decrease learning rate at these epochs.')
-parser.add_argument('--gammas', type=float, nargs='+', default=[0.2,0.2,0.2], help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
+parser.add_argument('--schedule', type=int, nargs='+', default=[10,20, 33,50], help='Decrease learning rate at these epochs.')
+parser.add_argument('--gammas', type=float, nargs='+', default=[0.2,0.2,0.2,0.2], help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 
 parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='SGD momentum (default: 0.5)')
@@ -137,7 +137,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             y_onehot.zero_()
             target2.unsqueeze_(1)
             y_onehot.scatter_(1, target2, 1)
-            loss = F.binary_cross_entropy(F.sigmoid(output), Variable(y_onehot))
+            loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
 
         elif len(leftover) >0 and torch.sum(weightVectorDis)>0 and args.distill:
           # optimizer.zero_grad()
@@ -155,12 +155,12 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 
             ## Temp end
 
-            outpu2 = modelFixed(dataDis)
+            outpu2 = F.softmax(modelFixed(dataDis))
             output = model(Variable(data))
             y_onehot[weightVectorDis] = outpu2.data
 #            print ("Fixed Model", F.softmax(outpu2)[:,0:4],"Changing model", F.softmax(output)[:,0:4])
 #             loss2 = F.binary_cross_entropy(F.sigmoid(output),F.softmax(outpu2))
-            loss2 = F.binary_cross_entropy(F.sigmoid(output), Variable(y_onehot))
+            loss2 = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
             if loss is None:
                 loss=loss2
             else:
