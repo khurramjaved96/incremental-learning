@@ -121,7 +121,8 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
         loss = None
         # print ("Norm vector", weightVectorNor, "Dis vector", weightVectorDis)
         optimizer.zero_grad()
-        if torch.sum(weightVectorNor)>0:
+        targetTemp = target
+        if len(weightVectorDis)==0:
             dataNorm = data[weightVectorNor]
             targetTemp = target
             targetNorm = target[weightVectorNor]
@@ -129,26 +130,22 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             dataNorm, target = Variable(dataNorm), Variable(targetNorm)
 
             output = model(dataNorm)
-
-
             y_onehot = torch.FloatTensor(len(dataNorm), args.classes)
             if args.cuda:
                 y_onehot = y_onehot.cuda()
-
 
             y_onehot.zero_()
             target2.unsqueeze_(1)
             y_onehot.scatter_(1, target2, 1)
             loss = F.binary_cross_entropy(F.sigmoid(output), Variable(y_onehot))
-   #        loss.backward()
-   #        optimizer.step()
-        if len(leftover) >0 and torch.sum(weightVectorDis)>0 and args.distill:
+
+        elif len(leftover) >0 and torch.sum(weightVectorDis)>0 and args.distill:
           # optimizer.zero_grad()
             dataDis = Variable(data[weightVectorDis])
-            targetDis2 = targetTemp[weightVectorDis]
+            targetDis2 = targetTemp
 
             ## TThis is temporary
-            y_onehot = torch.FloatTensor(len(dataDis), args.classes)
+            y_onehot = torch.FloatTensor(len(data), args.classes)
             if args.cuda:
                 y_onehot = y_onehot.cuda()
 
@@ -158,8 +155,9 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 
             ## Temp end
 
-            # outpu2 = modelFixed(dataDis)
-            output = model(dataDis)
+            outpu2 = modelFixed(dataDis)
+            output = model(Variable(data))
+            y_onehot[weightVectorDis] = outpu2.data
 #            print ("Fixed Model", F.softmax(outpu2)[:,0:4],"Changing model", F.softmax(output)[:,0:4])
 #             loss2 = F.binary_cross_entropy(F.sigmoid(output),F.softmax(outpu2))
             loss2 = F.binary_cross_entropy(F.sigmoid(output), Variable(y_onehot))
@@ -230,7 +228,7 @@ for classGroup in range(0, args.classes, stepSize):
         modelFixed = copy.deepcopy(model)
         for param in modelFixed.parameters():
             param.requires_grad = False
-        model.classifier = nn.Linear(64, 100).cuda()
+        # model.classifier = nn.Linear(64, 100).cuda()
     for param_group in optimizer.param_groups:
         print ("Setting LR to", args.lr)
         param_group['lr'] = args.lr
