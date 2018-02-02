@@ -119,9 +119,8 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
         weightVectorDis = torch.squeeze(torch.nonzero((weightVector>0)).long())
         weightVectorNor = torch.squeeze(torch.nonzero((weightVector==0)).long())
         loss = None
-
+        optimizer.zero_grad()
         if torch.sum(weightVectorNor)>0:
-            optimizer.zero_grad()
             dataNorm = data[weightVectorNor]
             targetTemp = target
             targetNorm = target[weightVectorNor]
@@ -141,9 +140,9 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             y_onehot.scatter_(1, target2, 1)
             loss = F.binary_cross_entropy(F.sigmoid(output), Variable(y_onehot))
             loss.backward()
-            optimizer.step()
+            # optimizer.step()
         if len(leftover) >0 and torch.sum(weightVectorDis)>0 and args.distill:
-            optimizer.zero_grad()
+            # optimizer.zero_grad()
             dataDis = Variable(data[weightVectorDis])
             targetDis2 = targetTemp[weightVectorDis]
 
@@ -168,12 +167,13 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             # else:
             #     loss = loss + loss2
             loss2.backward()
-            optimizer.step()
+        optimizer.step()
 
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.data[0]))
+            print ("Left Over set", leftover)
 
 def test(epoch=0,verbose=False):
     model.eval()
