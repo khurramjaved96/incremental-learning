@@ -140,10 +140,10 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             target2.unsqueeze_(1)
             y_onehot.scatter_(1, target2, 1)
             loss = F.binary_cross_entropy(F.sigmoid(output), Variable(y_onehot))
-            loss.backward()
-            optimizer.step()
+   #        loss.backward()
+   #        optimizer.step()
         if len(leftover) >0 and torch.sum(weightVectorDis)>0 and args.distill:
-            optimizer.zero_grad()
+          # optimizer.zero_grad()
             dataDis = Variable(data[weightVectorDis])
             targetDis2 = targetTemp[weightVectorDis]
 
@@ -163,12 +163,12 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 #            print ("Fixed Model", F.softmax(outpu2)[:,0:4],"Changing model", F.softmax(output)[:,0:4])
 #             loss2 = F.binary_cross_entropy(F.sigmoid(output),F.softmax(outpu2))
             loss2 = F.binary_cross_entropy(F.sigmoid(output), Variable(y_onehot))
-            # if loss is None:
-            #     loss=loss2
-            # else:
-            #     loss = loss + loss2
-            loss2.backward()
-            optimizer.step()
+            if loss is None:
+                loss=loss2
+            else:
+                loss = 0.5*loss + 0.5*loss2
+        loss.backward()
+        optimizer.step()
 
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -238,7 +238,7 @@ for classGroup in range(0, args.classes, stepSize):
     for val in leftOver:
         #print ("Limiting class", val,"to",int(totalExmp/len(leftOver)))
         trainDatasetFull.limitClass(val,int(totalExmp/len(leftOver)))
-       #limitedset.append(val)
+        limitedset.append(val)
     for temp in range(classGroup, classGroup+stepSize):
         popVal = allClasses.pop()
         trainDatasetFull.addClasses(popVal)
