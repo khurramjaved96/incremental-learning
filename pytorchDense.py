@@ -229,7 +229,7 @@ for classGroup in range(0, args.classes, stepSize):
         modelFixed = copy.deepcopy(model)
         for param in modelFixed.parameters():
             param.requires_grad = False
-        #model.classifier = nn.Linear(64, 100).cuda()
+        model.classifier = nn.Linear(64, 100).cuda()
     for param_group in optimizer.param_groups:
         print ("Setting LR to", args.lr)
         param_group['lr'] = args.lr
