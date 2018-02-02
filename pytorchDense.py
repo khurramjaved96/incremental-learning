@@ -119,6 +119,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
         weightVectorDis = torch.squeeze(torch.nonzero((weightVector>0)).long())
         weightVectorNor = torch.squeeze(torch.nonzero((weightVector==0)).long())
         loss = None
+        print ("Norm vector", weightVectorNor, "Dis vector", weightVectorDis)
         optimizer.zero_grad()
         if torch.sum(weightVectorNor)>0:
             dataNorm = data[weightVectorNor]
