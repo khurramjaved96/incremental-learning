@@ -1,4 +1,3 @@
-import pickle
 import numpy as np
 import torch.utils.data as td
 from PIL import Image
@@ -16,17 +15,14 @@ class incrementalLoaderCifar(td.Dataset):
         self.limitedClasses={}
         self.totalClasses = classes
 
-
     def addClasses(self, n):
         if n in self.activeClasses:
             return
         self.activeClasses.append(n)
         self.len = self.classSize * len(self.activeClasses)
-        print ("Classes", self.activeClasses)
 
     def limitClass(self,n,k):
         self.limitedClasses[n] = k
-        print ("Limit on classes", self.limitedClasses)
 
     def removeClass(self, n):
         while n in self.activeClasses:
@@ -41,7 +37,6 @@ class incrementalLoaderCifar(td.Dataset):
         incre = index%self.classSize
         if self.activeClasses[classNo] in self.limitedClasses:
             incre = incre%self.limitedClasses[self.activeClasses[classNo]]
-            # print (incre)
 
         base = self.activeClasses[classNo]*self.classSize
 
@@ -54,6 +49,8 @@ class incrementalLoaderCifar(td.Dataset):
 
         return img, self.labels[index]
 
+    def sortByImportance(self):
+        pass
 
 def resizeImage(img,factor):
     '''

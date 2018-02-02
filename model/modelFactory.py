@@ -1,5 +1,6 @@
 import model.densenet as dn
 import model.resnet32 as res
+import model.testModel as tm
 class modelFactory():
     def __init__(self):
         pass
@@ -9,3 +10,5 @@ class modelFactory():
                         bottleneck=True, nClasses=classes)
         elif modelType=="resnet32":
             return res.resnet32(classes)
+        elif modelType=="test":
+            return tm.Net(classes)
