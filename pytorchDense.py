@@ -143,7 +143,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             loss.backward()
             optimizer.step()
         if len(leftover) >0 and torch.sum(weightVectorDis)>0 and args.distill:
-            # optimizer.zero_grad()
+            optimizer.zero_grad()
             dataDis = Variable(data[weightVectorDis])
             targetDis2 = targetTemp[weightVectorDis]
 
@@ -238,7 +238,7 @@ for classGroup in range(0, args.classes, stepSize):
     for val in leftOver:
         #print ("Limiting class", val,"to",int(totalExmp/len(leftOver)))
         trainDatasetFull.limitClass(val,int(totalExmp/len(leftOver)))
-        limitedset.append(val)
+       #limitedset.append(val)
     for temp in range(classGroup, classGroup+stepSize):
         popVal = allClasses.pop()
         trainDatasetFull.addClasses(popVal)
@@ -252,7 +252,6 @@ for classGroup in range(0, args.classes, stepSize):
                     param_group['lr'] = currentLr*gammas[temp]
                     print("Changing learning rate from", currentLr, "to", currentLr*gammas[temp])
                     currentLr*= gammas[temp]
-
         train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset)
         test(int(classGroup/stepSize)*epochsPerClass + epoch,True)
     test(int(classGroup/stepSize)*epochsPerClass + epoch, True)
