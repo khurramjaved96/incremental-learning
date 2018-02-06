@@ -281,7 +281,7 @@ for classGroup in range(0, args.classes, stepSize):
                     currentLr*= gammas[temp]
         train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset)
         test(int(classGroup / stepSize) * epochsPerClass + epoch, True)
-    nmc.updateMeans(model, train_loader_full)
+    nmc.updateMeans(model, trainDatasetFull)
     nmc.classify(model,test_loader)
     saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,"../")
     y.append(test(int(classGroup/stepSize)*epochsPerClass + epoch, True))

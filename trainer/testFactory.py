@@ -52,6 +52,7 @@ class NearestMeanClassifier():
             else:
                 limit = dataLoader.classSize
             allImages = dataLoader.data[base:base+limit]
+            print ("Shape of images", allImages.shape) 
             allFeatures = model.forward(allImages, True)
             self.means.append(np.mean(allFeatures, axis=0))
         self.means = np.array(self.means)
