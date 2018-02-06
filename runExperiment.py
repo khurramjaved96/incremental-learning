@@ -12,7 +12,7 @@ import utils
 import model.modelFactory as mF
 import copy
 import plotter.plotter as plt
-
+import trainer.testFactory as tF
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--batch-size', type=int, default=100, metavar='N',
@@ -243,6 +243,9 @@ distillLoss = False
 x = []
 y = []
 
+myTestFactory= tF.testFactory()
+nmc = myTestFactory.getTester("nmc", args.cuda)
+
 myPlotter = plt.plotter()
 overallEpoch = 0
 for classGroup in range(0, args.classes, stepSize):
@@ -278,6 +281,8 @@ for classGroup in range(0, args.classes, stepSize):
                     currentLr*= gammas[temp]
         train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset)
         test(int(classGroup / stepSize) * epochsPerClass + epoch, True)
+    nmc.updateMeans(model, train_loader_full)
+    nmc.classify(model,test_loader)
     saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,"../")
     y.append(test(int(classGroup/stepSize)*epochsPerClass + epoch, True))
     x.append(classGroup+stepSize)

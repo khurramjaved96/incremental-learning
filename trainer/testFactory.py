@@ -6,9 +6,9 @@ import numpy as np
 class testFactory():
     def __init__(self):
         pass
-    def getTester(self, testType="nmc"):
+    def getTester(self, testType="nmc", cuda=True):
         if testType=="nmc":
-            return NearestMeanClassifier()
+            return NearestMeanClassifier(cuda)
 
 
 
@@ -28,7 +28,8 @@ class NearestMeanClassifier():
             data, target = Variable(data, volatile=True), Variable(target)
             output = model(data, True)
             print ("Shape of output", output.shape)
-            print ("Shape of means"),
+            print ("Shape of means", self.means.shape)
+            0/0
             test_loss += F.nll_loss(output, target, size_average=False).data[0]  # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
