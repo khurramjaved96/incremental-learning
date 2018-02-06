@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 
 class plotter():
     def  __init__(self):
@@ -10,6 +11,8 @@ class plotter():
         self.yLabel = yLabel
     def saveFig(self, path):
         plt.plot(self.x, self.y)
+        plt.ylim( (0, 100) )
+        plt.xlim((0,100))
         plt.ylabel(self.yLabel)
         plt.xlabel(self.xLabel)
         plt.savefig(path)

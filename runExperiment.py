@@ -137,7 +137,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
             loss.backward()
             optimizer.step()
-        elif len(leftover) >0 and torch.sum(weightVectorDis)>0:
+        elif len(leftover) >0:
           # optimizer.zero_grad()
             dataDis = Variable(data[weightVectorDis])
             targetDis2 = targetTemp
