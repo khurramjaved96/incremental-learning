@@ -67,7 +67,6 @@ test_data = datasets.CIFAR100("data", train=False, transform=test_transform, dow
 
 
 trainDatasetFull = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
-trainDatasetExemp = utils.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
 testDataset = utils.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform)
 
 
@@ -77,8 +76,7 @@ kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 train_loader_full = torch.utils.data.DataLoader(trainDatasetFull,
     batch_size=args.batch_size, shuffle=True, **kwargs)
 
-train_loader_exemplars = torch.utils.data.DataLoader(trainDatasetExemp,
-    batch_size=args.batch_size, shuffle=True, **kwargs)
+
 test_loader = torch.utils.data.DataLoader(
     testDataset,
     batch_size=args.test_batch_size, shuffle=True, **kwargs)
@@ -94,15 +92,12 @@ if args.cuda:
 
 modelFixed = None
 
-def cross_entropy(pred, soft_targets):
-    logsoftmax = nn.LogSoftmax()
-    return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
-
 y_onehot = torch.FloatTensor(args.batch_size, args.classes)
 if args.cuda:
     y_onehot = y_onehot.cuda()
 
 
+## Training code. To be moved to the trainer class
 def train(epoch, optimizer, train_loader, leftover, verbose=False):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -116,9 +111,10 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
         weightVectorDis = torch.squeeze(torch.nonzero((weightVector>0)).long())
         weightVectorNor = torch.squeeze(torch.nonzero((weightVector==0)).long())
         loss = None
-        # print ("Norm vector", weightVectorNor, "Dis vector", weightVectorDis)
         optimizer.zero_grad()
         targetTemp = target
+
+        # Before incremental learing (without any distillation loss.)
         if len(weightVectorDis)==0:
             dataNorm = data[weightVectorNor]
             targetTemp = target
@@ -137,12 +133,13 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
             loss.backward()
             optimizer.step()
+
+        # After first increment. With distillation loss.
         elif len(leftover) >0:
           # optimizer.zero_grad()
             dataDis = Variable(data[weightVectorDis])
             targetDis2 = targetTemp
 
-            ## TThis is temporary
             y_onehot = torch.FloatTensor(len(data), args.classes)
             if args.cuda:
                 y_onehot = y_onehot.cuda()
@@ -151,13 +148,11 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             targetDis2.unsqueeze_(1)
             y_onehot.scatter_(1, targetDis2, 1)
 
-            ## Temp end
 
             outpu2 = F.softmax(modelFixed(dataDis))
             output = model(Variable(data))
             y_onehot[weightVectorDis] = outpu2.data
-#            print ("Fixed Model", F.softmax(outpu2)[:,0:4],"Changing model", F.softmax(output)[:,0:4])
-#             loss2 = F.binary_cross_entropy(F.sigmoid(output),F.softmax(outpu2))
+#
             loss2 = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
             if loss is None:
                 loss=loss2
@@ -171,6 +166,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.data[0]))
 
+# Function to save confusion matrix. Can be helpful in visualizing what is going on.
 def saveConfusionMatrix(epoch, path):
     model.eval()
     test_loss = 0
@@ -231,6 +227,8 @@ currentLr = args.lr
 # for epoch in range(1, args.epochs + 1):
 allClasses = list(range(args.classes))
 allClasses.sort(reverse=True)
+
+# Will be important when computing confidence intervals.
 import random
 # random.shuffle(allClasses)
 
