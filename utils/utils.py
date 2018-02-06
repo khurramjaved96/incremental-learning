@@ -14,12 +14,14 @@ class incrementalLoaderCifar(td.Dataset):
         self.activeClasses=activeClasses
         self.limitedClasses={}
         self.totalClasses = classes
+        self.means = {}
 
     def addClasses(self, n):
         if n in self.activeClasses:
             return
         self.activeClasses.append(n)
         self.len = self.classSize * len(self.activeClasses)
+
 
     def limitClass(self,n,k):
         self.limitedClasses[n] = k
@@ -49,7 +51,10 @@ class incrementalLoaderCifar(td.Dataset):
 
         return img, self.labels[index]
 
-    def sortByImportance(self):
+    def sortByImportance(self, model):
+
+        pass
+    def getBottlenecks(self):
         pass
 
 def resizeImage(img,factor):

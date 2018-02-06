@@ -96,7 +96,7 @@ class CifarResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x, feature=False):
         x = self.conv_1_3x3(x)
         x = F.relu(self.bn_1(x), inplace=True)
         x = self.stage_1(x)
@@ -104,8 +104,13 @@ class CifarResNet(nn.Module):
         x = self.stage_3(x)
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
+        if feature:
+            return x
+        
         return F.log_softmax(self.classifier(x))
 
+    def forwardFeature(self,x):
+        pass
 
 def resnet20(num_classes=10):
     """Constructs a ResNet-20 model for CIFAR-10 (by default)
