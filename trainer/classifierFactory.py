@@ -41,7 +41,7 @@ class NearestMeanClassifier():
         test_loss /= len(test_loader.dataset)
         print ("Correct pred", correct, "Total Pre", len(test_loader.dataset))
         if verbose:
-            print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+            print('\nTNCM est set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
                 test_loss, correct, len(test_loader.dataset),
                 100. * correct / len(test_loader.dataset)))
 

@@ -1,7 +1,7 @@
 
 import torch.nn as nn
 import torch.nn.functional as F
-
+import torch
 
 class Net(nn.Module):
     def __init__(self, noClasses):
@@ -25,7 +25,8 @@ class Net(nn.Module):
         # print ("X after conv", x.shape)
         x = x.view(-1, 640)
         if feature:
-            return x
+            # print ("Size = ",torch.norm(x, 2, 1).unsqueeze(1).shape)
+            return x / torch.norm(x, 2, 1).unsqueeze(1)
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)
