@@ -283,8 +283,9 @@ for classGroup in range(0, args.classes, stepSize):
         train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset)
         test(int(classGroup / stepSize) * epochsPerClass + epoch, True)
     nmc.updateMeans(model, train_loader_full, args.cuda, args.classes)
-
+    print ("Train Error", nmc.classify(model,train_loader_full,args.cuda, True))
     saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,"../")
+    print ("Test Error")
     y.append(nmc.classify(model,test_loader,args.cuda, True))
     x.append(classGroup+stepSize)
     myPlotter.plot(x,y)
