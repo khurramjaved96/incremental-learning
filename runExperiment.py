@@ -13,7 +13,7 @@ import dataHandler.incrementalLoaderCifar as dL
 import model.modelFactory as mF
 import copy
 import plotter.plotter as plt
-import trainer.testFactory as tF
+import trainer.classifierFactory as tF
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--batch-size', type=int, default=100, metavar='N',
@@ -244,7 +244,7 @@ distillLoss = False
 x = []
 y = []
 
-myTestFactory= tF.testFactory()
+myTestFactory= tF.classifierFactory()
 nmc = myTestFactory.getTester("nmc", args.cuda)
 
 myPlotter = plt.plotter()
