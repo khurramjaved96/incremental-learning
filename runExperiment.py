@@ -284,7 +284,9 @@ for classGroup in range(0, args.classes, stepSize):
                     currentLr*= gammas[temp]
         train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset)
         if epoch%5==0:
+            print("Train")
             test(int(classGroup / stepSize) * epochsPerClass + epoch, train_loader_full,  True)
+            print ("Test")
             test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, True)
     nmc.updateMeans(model, train_loader_full, args.cuda, args.classes)
     print ("Train Error", nmc.classify(model,train_loader_full,args.cuda, True))
