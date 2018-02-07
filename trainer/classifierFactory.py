@@ -33,6 +33,7 @@ class NearestMeanClassifier():
 
             result = (output.data - self.means.float())
             result = torch.norm(result, 2, 2)
+            print (result)
             _, pred = torch.min(result, 1)
             print (pred)
             print (target)
