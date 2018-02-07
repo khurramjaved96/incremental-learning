@@ -8,7 +8,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
-import utils
+
 import dataHandler.incrementalLoaderCifar as dL
 import model.modelFactory as mF
 import copy
@@ -282,8 +282,8 @@ for classGroup in range(0, args.classes, stepSize):
                     currentLr*= gammas[temp]
         train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset)
         test(int(classGroup / stepSize) * epochsPerClass + epoch, True)
-    nmc.updateMeans(model, trainDatasetFull)
-    nmc.classify(model,test_loader)
+    nmc.updateMeans(model, train_loader_full)
+    nmc.classify(model,test_loader,args.cuda)
     saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,"../")
     y.append(test(int(classGroup/stepSize)*epochsPerClass + epoch, True))
     x.append(classGroup+stepSize)
