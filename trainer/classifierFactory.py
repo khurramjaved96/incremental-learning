@@ -34,7 +34,8 @@ class NearestMeanClassifier():
             result = (output.data - self.means.float())
             result = torch.norm(result, 2, 2)
             _, pred = torch.min(result, 1)
-
+            print (pred)
+            print (target)
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
             cMatrix.add(pred, target.data.view_as(pred))
 
