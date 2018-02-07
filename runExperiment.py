@@ -9,6 +9,8 @@ from torchvision import datasets, transforms
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
 
+import torchvision
+
 import dataHandler.incrementalLoaderCifar as dL
 import model.modelFactory as mF
 import copy
@@ -58,7 +60,7 @@ mean = [x / 255 for x in [125.3, 123.0, 113.9]]
 std = [x / 255 for x in [63.0, 62.1, 66.7]]
 
 train_transform = transforms.Compose(
-    [transforms.RandomHorizontalFlip(), transforms.RandomCrop(32, padding=4), transforms.ToTensor(),
+    [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.5,0.5,0.5,0.5), transforms.RandomCrop(32, padding=4), transforms.ToTensor(),
      transforms.Normalize(mean, std)])
 test_transform = transforms.Compose(
     [transforms.ToTensor(), transforms.Normalize(mean, std)])
@@ -193,14 +195,14 @@ def saveConfusionMatrix(epoch, path):
     return 100. * correct / len(test_loader.dataset)
 
 
-def test(epoch=0,verbose=False):
+def test(epoch, loader, verbose=False):
     model.eval()
     test_loss = 0
     correct = 0
     if epoch >0:
         cMatrix = confusionmeter.ConfusionMeter(args.classes,True)
 
-    for data, target in test_loader:
+    for data, target in loader:
         if args.cuda:
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data, volatile=True), Variable(target)
@@ -212,13 +214,13 @@ def test(epoch=0,verbose=False):
             cMatrix.add(pred, target.data.view_as(pred))
 
 
-    test_loss /= len(test_loader.dataset)
+    test_loss /= len(loader.dataset)
     if verbose:
         print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
+        test_loss, correct, len(loader.dataset),
+        100. * correct / len(loader.dataset)))
 
-    return 100. * correct / len(test_loader.dataset)
+    return 100. * correct / len(loader.dataset)
 
 
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
@@ -281,7 +283,9 @@ for classGroup in range(0, args.classes, stepSize):
                     print("Changing learning rate from", currentLr, "to", currentLr*gammas[temp])
                     currentLr*= gammas[temp]
         train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset)
-        test(int(classGroup / stepSize) * epochsPerClass + epoch, True)
+        if epoch%5==0:
+            test(int(classGroup / stepSize) * epochsPerClass + epoch, train_loader_full,  True)
+            test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, True)
     nmc.updateMeans(model, train_loader_full, args.cuda, args.classes)
     print ("Train Error", nmc.classify(model,train_loader_full,args.cuda, True))
     saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,"../")
