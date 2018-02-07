@@ -48,13 +48,15 @@ class NearestMeanClassifier():
 
         return 100. * correct / len(test_loader.dataset)
 
-    def updateMeans(self, model, train_loader):
+    def updateMeans(self, model, train_loader,cuda):
         #Set the mean to zero
         self.means*=0
         print ("Computing means")
         #Iterate over all train dataset
         for batch_id, (data, target) in enumerate(train_loader):
             #Get features for a minibactch
+            if cuda:
+                data = data.cuda()
             features = model.forward(Variable(data), True)
             #Convert result into a numpy array
             featuresNp = features.data.numpy()
