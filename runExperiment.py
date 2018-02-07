@@ -283,7 +283,7 @@ for classGroup in range(0, args.classes, stepSize):
         train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset)
         test(int(classGroup / stepSize) * epochsPerClass + epoch, True)
     nmc.updateMeans(model, train_loader_full, args.cuda)
-    nmc.classify(model,test_loader,args.cuda)
+    nmc.classify(model,test_loader,args.cuda, True)
     saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,"../")
     y.append(test(int(classGroup/stepSize)*epochsPerClass + epoch, True))
     x.append(classGroup+stepSize)
