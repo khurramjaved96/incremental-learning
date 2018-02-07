@@ -22,7 +22,7 @@ class NearestMeanClassifier():
         model.eval()
         test_loss = 0
         correct = 0
-        cMatrix = confusionmeter.ConfusionMeter(100, True)
+        cMatrix = confusionmeter.ConfusionMeter(self.classes, True)
 
         for data, target in test_loader:
             if cuda:
@@ -51,7 +51,9 @@ class NearestMeanClassifier():
     def updateMeans(self, model, train_loader,cuda, classes=100):
         #Set the mean to zero
         self.means*=0
+        self.classes = classes
         self.means = np.zeros((classes, 64)) + 1e5
+        self.totalFeatures = np.zeros((classes, 1))
         print ("Computing means")
         #Iterate over all train dataset
         for batch_id, (data, target) in enumerate(train_loader):
