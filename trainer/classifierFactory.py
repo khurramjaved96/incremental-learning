@@ -59,7 +59,7 @@ class NearestMeanClassifier():
                 data = data.cuda()
             features = model.forward(Variable(data), True)
             #Convert result into a numpy array
-            featuresNp = features.data.numpy()
+            featuresNp = features.data.cpu().numpy()
             # Accumulate the results in the means array
             np.add.at(self.means,target, featuresNp)
             # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
