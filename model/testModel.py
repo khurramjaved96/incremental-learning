@@ -17,13 +17,15 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(640, 100)
         self.fc2 = nn.Linear(100, noClasses)
 
-    def forward(self, x):
+    def forward(self, x, feature=False):
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
         x = self.conv2_bn1(self.conv2(x))
         x = F.relu(F.max_pool2d(self.conv2_bn2(self.conv3(x)), 2))
         x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2_bn3(self.conv4(x))), 2))
         # print ("X after conv", x.shape)
         x = x.view(-1, 640)
+        if feature:
+            return x
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)

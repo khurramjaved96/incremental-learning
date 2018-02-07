@@ -16,7 +16,7 @@ class classifierFactory():
 class NearestMeanClassifier():
     def __init__(self, cuda):
         self.cuda = cuda
-        self.means=np.zeros((100, 64))+1e5
+        self.means=np.zeros((100, 64))
         self.totalFeatures = np.zeros((100,1))
     def classify(self, model, test_loader, cuda, verbose=False):
         model.eval()
@@ -30,16 +30,14 @@ class NearestMeanClassifier():
                 self.means = self.means.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
             output = model(data, True).unsqueeze(1)
-
             result = (output.data - self.means.float())
             result = torch.norm(result, 2, 2)
-            print (result)
+
             _, pred = torch.min(result, 1)
-            print (pred)
-            print (target)
+
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
             cMatrix.add(pred, target.data.view_as(pred))
-
+            # 0/0
         test_loss /= len(test_loader.dataset)
         print ("Correct pred", correct, "Total Pre", len(test_loader.dataset))
         if verbose:
@@ -53,8 +51,8 @@ class NearestMeanClassifier():
         #Set the mean to zero
         self.means*=0
         self.classes = classes
-        self.means = np.zeros((classes, 64)) + 1e5
-        self.totalFeatures = np.zeros((classes, 1))
+        self.means = np.zeros((classes, 64))
+        self.totalFeatures = np.zeros((classes, 1))+1
         print ("Computing means")
         #Iterate over all train dataset
         for batch_id, (data, target) in enumerate(train_loader):
@@ -65,11 +63,17 @@ class NearestMeanClassifier():
             #Convert result into a numpy array
             featuresNp = features.data.cpu().numpy()
             # Accumulate the results in the means array
+            # print ("Menas before adding", self.means)
+            # print ("Features", featuresNp)
             np.add.at(self.means,target, featuresNp)
+            # print ("Means after adding", self.means)
+            # 0/0
             # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
             np.add.at(self.totalFeatures, target, 1)
 
         # Divide the means array with total number of instaces to get the average
+        # print ("Total features = ", self.totalFeatures)
+        # 0/0
         self.means=self.means/self.totalFeatures
         # Compute and divide by the L2 norm
         # self.norms = np.linalg.norm(self.means, axis=1)
