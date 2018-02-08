@@ -3,15 +3,21 @@ plt.switch_backend('agg')
 
 class plotter():
     def  __init__(self):
-        pass
-    def plot(self,x,y, xLabel="Number of Classes",yLabel = "Accuracy"):
+        import itertools
+        self.marker = itertools.cycle((',', '+', '.', 'o', '*'))
+        self.handles=[]
+    def plot(self,x,y, xLabel="Number of Classes",yLabel = "Accuracy", legend="none",title="none"):
         self.x = x
         self.y = y
-        plt.plot(x,y)
+        plt.grid(color='r', linestyle='-', linewidth=2)
+        self.handles.append(plt.plot(x,y,linestyle='--', marker=next(self.marker), label=legend))
+
         self.xLabel = xLabel
         self.yLabel = yLabel
-    def saveFig(self, path):
+        plt.title(title)
 
+    def saveFig(self, path):
+        plt.legend(handles=self.handles)
         plt.ylim( (0, 100) )
         plt.xlim((0,100))
         plt.ylabel(self.yLabel)

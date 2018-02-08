@@ -58,6 +58,11 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
+
+experimentName = args.name+"_"+args.model_type+str(args.step_size)+str(args.memory_budget)
+if args.no_distill:
+    experimentName+= "_noDistill"
+
 # Mean and STD of Cifar-100 dataset.
 # To do : Remove the hard-coded mean and just compute it once using the data
 mean = [x / 255 for x in [125.3, 123.0, 113.9]]
@@ -290,6 +295,7 @@ for classGroup in range(0, args.classes, stepSize):
         trainDatasetFull.addClasses(popVal)
         testDataset.addClasses(popVal)
         leftOver.append(popVal)
+    epoch=0
     for epoch in range(0,epochsPerClass):
         overallEpoch+=1
         for temp in range(0, len(schedule)):
@@ -315,4 +321,4 @@ for classGroup in range(0, args.classes, stepSize):
     myPlotter.plot(x,y)
     myPlotter.plot(x, y1)
 
-    myPlotter.saveFig("../"+args.name+".jpg")
+    myPlotter.saveFig("../"+experimentName+".jpg")
