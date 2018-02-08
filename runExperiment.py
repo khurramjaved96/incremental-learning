@@ -26,8 +26,8 @@ parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                     help='learning rate (default: 0.1)')
-parser.add_argument('--schedule', type=int, nargs='+', default=[10,20, 33,50], help='Decrease learning rate at these epochs.')
-parser.add_argument('--gammas', type=float, nargs='+', default=[0.2,0.2,0.2,0.2], help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
+parser.add_argument('--schedule', type=int, nargs='+', default=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75], help='Decrease learning rate at these epochs.')
+parser.add_argument('--gammas', type=float, nargs='+', default=[0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7], help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 
 parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='SGD momentum (default: 0.5)')
@@ -60,7 +60,7 @@ mean = [x / 255 for x in [125.3, 123.0, 113.9]]
 std = [x / 255 for x in [63.0, 62.1, 66.7]]
 
 train_transform = transforms.Compose(
-    [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.5,0.5,0.5,0.5), transforms.RandomCrop(32, padding=4), transforms.ToTensor(),
+    [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.1,0.1,0.1,0.1), transforms.RandomCrop(32, padding=4), transforms.ToTensor(),
      transforms.Normalize(mean, std)])
 test_transform = transforms.Compose(
     [transforms.ToTensor(), transforms.Normalize(mean, std)])
