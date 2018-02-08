@@ -7,10 +7,11 @@ class plotter():
     def plot(self,x,y, xLabel="Number of Classes",yLabel = "Accuracy"):
         self.x = x
         self.y = y
+        plt.plot(x,y)
         self.xLabel = xLabel
         self.yLabel = yLabel
     def saveFig(self, path):
-        plt.plot(self.x, self.y)
+
         plt.ylim( (0, 100) )
         plt.xlim((0,100))
         plt.ylabel(self.yLabel)

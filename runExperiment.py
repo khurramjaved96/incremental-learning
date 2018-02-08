@@ -245,6 +245,7 @@ distillLoss = False
 
 x = []
 y = []
+y1 = []
 
 myTestFactory= tF.classifierFactory()
 nmc = myTestFactory.getTester("nmc", args.cuda)
@@ -293,6 +294,9 @@ for classGroup in range(0, args.classes, stepSize):
     saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,"../")
     print ("Test Error")
     y.append(nmc.classify(model,test_loader,args.cuda, True))
+    y1.append(test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, True))
     x.append(classGroup+stepSize)
     myPlotter.plot(x,y)
+    myPlotter.plot(x, y1)
+
     myPlotter.saveFig("../"+args.name+".jpg")
