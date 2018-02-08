@@ -119,7 +119,6 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             weightVector = weightVector + (target==elem).int()
 
         weightVectorDis = torch.squeeze(torch.nonzero((weightVector>0)).long())
-        print ("Length of vector", len(weightVectorDis))
         weightVectorNor = torch.squeeze(torch.nonzero((weightVector==0)).long())
         optimizer.zero_grad()
         targetTemp = target
@@ -271,7 +270,6 @@ y1 = []
 myTestFactory= tF.classifierFactory()
 nmc = myTestFactory.getTester("nmc", args.cuda)
 
-myPlotter = plt.plotter()
 overallEpoch = 0
 for classGroup in range(0, args.classes, stepSize):
     if classGroup ==0:
@@ -318,7 +316,9 @@ for classGroup in range(0, args.classes, stepSize):
     y.append(nmc.classify(model,test_loader,args.cuda, True))
     y1.append(test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, True))
     x.append(classGroup+stepSize)
-    myPlotter.plot(x,y)
-    myPlotter.plot(x, y1)
+
+    myPlotter = plt.plotter()
+    myPlotter.plot(x,y, title=experimentName, legend="NCM")
+    myPlotter.plot(x, y1, title=experimentName, legend="Trained Classifier")
 
     myPlotter.saveFig("../"+experimentName+".jpg")
