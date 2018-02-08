@@ -33,6 +33,8 @@ parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='SGD momentum (default: 0.5)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
+parser.add_argument('--no-distill', action='store_true', default=False,
+                    help='argument to enable/disable distillation loss')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
@@ -56,6 +58,8 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
+# Mean and STD of Cifar-100 dataset.
+# To do : Remove the hard-coded mean and just compute it once using the data
 mean = [x / 255 for x in [125.3, 123.0, 113.9]]
 std = [x / 255 for x in [63.0, 62.1, 66.7]]
 
@@ -73,7 +77,6 @@ trainDatasetFull = dL.incrementalLoaderCifar(train_data.train_data,train_data.tr
 testDataset = dL.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform)
 
 
-
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
 train_loader_full = torch.utils.data.DataLoader(trainDatasetFull,
@@ -85,8 +88,7 @@ test_loader = torch.utils.data.DataLoader(
     batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
 
-
-# model = Net()
+# Selecting model
 myFactory = mF.modelFactory()
 model = myFactory.getModel(args.model_type,args.classes)
 if args.cuda:
@@ -113,7 +115,6 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 
         weightVectorDis = torch.squeeze(torch.nonzero((weightVector>0)).long())
         weightVectorNor = torch.squeeze(torch.nonzero((weightVector==0)).long())
-        loss = None
         optimizer.zero_grad()
         targetTemp = target
 
@@ -138,7 +139,24 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             optimizer.step()
 
         # After first increment. With distillation loss.
-        elif len(leftover) >0:
+        elif args.no_distill:
+            targetDis2 = targetTemp
+
+            y_onehot = torch.FloatTensor(len(data), args.classes)
+            if args.cuda:
+                y_onehot = y_onehot.cuda()
+
+            y_onehot.zero_()
+            targetDis2.unsqueeze_(1)
+            y_onehot.scatter_(1, targetDis2, 1)
+
+            output = model(Variable(data))
+            # y_onehot[weightVectorDis] = outpu2.data
+            #
+            loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
+            loss.backward()
+            optimizer.step()
+        else:
           # optimizer.zero_grad()
             dataDis = Variable(data[weightVectorDis])
             targetDis2 = targetTemp
@@ -156,11 +174,8 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             output = model(Variable(data))
             y_onehot[weightVectorDis] = outpu2.data
 #
-            loss2 = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
-            if loss is None:
-                loss=loss2
-            else:
-                loss = 0.5*loss + 0.5*loss2
+            loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
+
             loss.backward()
             optimizer.step()
 
