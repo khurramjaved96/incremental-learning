@@ -43,7 +43,7 @@ parser.add_argument('--model-type',  default="resnet32",
                     help='model type to be used')
 parser.add_argument('--name',  default="noname",
                     help='Name of the experiment')
-parser.add_argument('--decay', type=float, default=0.0005, help='Weight decay (L2 penalty).')
+parser.add_argument('--decay', type=float, default=0.00001 , help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
 parser.add_argument('--epochs-class', type=int, default=60, help='How many images can we store at max')
@@ -114,6 +114,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             weightVector = weightVector + (target==elem).int()
 
         weightVectorDis = torch.squeeze(torch.nonzero((weightVector>0)).long())
+        print ("Length of vector", len(weightVectorDis))
         weightVectorNor = torch.squeeze(torch.nonzero((weightVector==0)).long())
         optimizer.zero_grad()
         targetTemp = target
@@ -134,7 +135,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             y_onehot.zero_()
             target2.unsqueeze_(1)
             y_onehot.scatter_(1, target2, 1)
-            loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
+            loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
             optimizer.step()
 
@@ -153,7 +154,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             output = model(Variable(data))
             # y_onehot[weightVectorDis] = outpu2.data
             #
-            loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
+            loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
             optimizer.step()
         else:
@@ -170,11 +171,11 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             y_onehot.scatter_(1, targetDis2, 1)
 
 
-            outpu2 = F.softmax(modelFixed(dataDis))
+            outpu2 = modelFixed(dataDis)
             output = model(Variable(data))
             y_onehot[weightVectorDis] = outpu2.data
 #
-            loss = F.binary_cross_entropy(F.softmax(output), Variable(y_onehot))
+            loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
             loss.backward()
             optimizer.step()
