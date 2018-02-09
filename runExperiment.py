@@ -26,11 +26,11 @@ parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                     help='learning rate (default: 0.1)')
-parser.add_argument('--schedule', type=int, nargs='+', default=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75], help='Decrease learning rate at these epochs.')
-parser.add_argument('--gammas', type=float, nargs='+', default=[0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7,0.7], help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
+parser.add_argument('--schedule', type=int, nargs='+', default=[20,30,40,50,57], help='Decrease learning rate at these epochs.')
+parser.add_argument('--gammas', type=float, nargs='+', default=[0.2,0.2,0.2,0.2,0.2], help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 
 parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
-                    help='SGD momentum (default: 0.5)')
+                    help='SGD momentum (default: 0.9)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--no-distill', action='store_true', default=False,
@@ -46,8 +46,8 @@ parser.add_argument('--name',  default="noname",
 parser.add_argument('--decay', type=float, default=0.00001 , help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
-parser.add_argument('--epochs-class', type=int, default=60, help='How many images can we store at max')
-parser.add_argument('--classes', type=int, default=100, help='How many images can we store at max')
+parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
+parser.add_argument('--classes', type=int, default=100, help='Total classes (after all the increments)')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
