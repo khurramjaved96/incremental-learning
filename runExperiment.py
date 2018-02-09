@@ -118,21 +118,21 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
         for elem in leftover:
             weightVector = weightVector + (target==elem).int()
 
-        weightVectorDis = torch.squeeze(torch.nonzero((weightVector>0)).long())
-        weightVectorNor = torch.squeeze(torch.nonzero((weightVector==0)).long())
+        oldClassesIndices = torch.squeeze(torch.nonzero((weightVector>0)).long())
+        newClassesIndices = torch.squeeze(torch.nonzero((weightVector==0)).long())
         optimizer.zero_grad()
         targetTemp = target
 
         # Before incremental learing (without any distillation loss.)
-        if len(weightVectorDis)==0:
-            dataNorm = data[weightVectorNor]
+        if len(oldClassesIndices)==0:
+            dataOldClasses = data[newClassesIndices]
             targetTemp = target
-            targetNorm = target[weightVectorNor]
-            target2 = targetNorm
-            dataNorm, target = Variable(dataNorm), Variable(targetNorm)
+            targetsOldClasses = target[newClassesIndices]
+            target2 = targetsOldClasses
+            dataOldClasses, target = Variable(dataOldClasses), Variable(targetsOldClasses)
 
-            output = model(dataNorm)
-            y_onehot = torch.FloatTensor(len(dataNorm), args.classes)
+            output = model(dataOldClasses)
+            y_onehot = torch.FloatTensor(len(dataOldClasses), args.classes)
             if args.cuda:
                 y_onehot = y_onehot.cuda()
 
@@ -163,7 +163,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             optimizer.step()
         else:
           # optimizer.zero_grad()
-            dataDis = Variable(data[weightVectorDis])
+            dataDis = Variable(data[oldClassesIndices])
             targetDis2 = targetTemp
 
             y_onehot = torch.FloatTensor(len(data), args.classes)
@@ -177,7 +177,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 
             outpu2 = modelFixed(dataDis)
             output = model(Variable(data))
-            y_onehot[weightVectorDis] = outpu2.data
+            y_onehot[oldClassesIndices] = outpu2.data
 #
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
