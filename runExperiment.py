@@ -50,6 +50,8 @@ parser.add_argument('--step-size', type=int, default=10, help='How many classes 
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--classes', type=int, default=100, help='Total classes (after all the increments)')
+parser.add_argument('--depth', type=int, default=32, help='depth of the model; only valid for resnet')
+
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
