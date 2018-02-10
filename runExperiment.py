@@ -35,6 +35,8 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--no-distill', action='store_true', default=False,
                     help='argument to enable/disable distillation loss')
+parser.add_argument('--no-upsampling', action='store_true', default=False,
+                    help='argument to enable/disable upsampling')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
@@ -69,7 +71,7 @@ mean = [x / 255 for x in [125.3, 123.0, 113.9]]
 std = [x / 255 for x in [63.0, 62.1, 66.7]]
 
 train_transform = transforms.Compose(
-    [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.1,0.1,0.1,0.1), transforms.RandomCrop(32, padding=4), transforms.ToTensor(),
+    [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.3,0.3,0.3,0.3), transforms.RandomCrop(32, padding=4), transforms.ToTensor(),
      transforms.Normalize(mean, std)])
 test_transform = transforms.Compose(
     [transforms.ToTensor(), transforms.Normalize(mean, std)])
@@ -265,7 +267,7 @@ distillLoss = False
 x = []
 y = []
 y1 = []
-
+trainY= []
 myTestFactory= tF.classifierFactory()
 nmc = myTestFactory.getTester("nmc", args.cuda)
 
@@ -304,14 +306,15 @@ for classGroup in range(0, args.classes, stepSize):
                     currentLr*= gammas[temp]
         train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset)
         if epoch%5==0:
-            print("Train")
-            test(int(classGroup / stepSize) * epochsPerClass + epoch, train_loader_full,  True)
-            print ("Test")
-            test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, True)
+            print("Train Classifier", test(int(classGroup / stepSize) * epochsPerClass + epoch, train_loader_full,  False))
+            print ("Test Classifier", test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, False))
     nmc.updateMeans(model, train_loader_full, args.cuda, args.classes)
-    print ("Train Error", nmc.classify(model,train_loader_full,args.cuda, True))
-    saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,"../")
-    print ("Test Error")
+
+    tempTrain = nmc.classify(model,train_loader_full,args.cuda, True)
+    trainY.append(tempTrain)
+    print("Train NMC", tempTrain)
+    saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,"../"+experimentName)
+    print ("Test NMC")
     y.append(nmc.classify(model,test_loader,args.cuda, True))
     y1.append(test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, True))
     x.append(classGroup+stepSize)

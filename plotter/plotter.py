@@ -4,7 +4,7 @@ plt.switch_backend('agg')
 class plotter():
     def  __init__(self):
         import itertools
-        self.marker = itertools.cycle((',', '+', '.', 'o', '*'))
+        self.marker = itertools.cycle(('o', '+', '.', '*', '*'))
         self.handles=[]
     def plot(self,x,y, xLabel="Number of Classes",yLabel = "Accuracy", legend="none",title="none"):
         self.x = x
@@ -24,6 +24,7 @@ class plotter():
         plt.ylabel(self.yLabel)
         plt.xlabel(self.xLabel)
         plt.yticks(list(range(0,105,10)))
+        plt.xticks(list(range(0, 105, 10)))
         plt.savefig(path)
 
 if __name__=="__main__":
