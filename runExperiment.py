@@ -256,7 +256,7 @@ allClasses.sort(reverse=True)
 
 # Will be important when computing confidence intervals.
 import random
-# random.shuffle(allClasses)
+random.shuffle(allClasses)
 
 stepSize = args.step_size
 leftOver = []
