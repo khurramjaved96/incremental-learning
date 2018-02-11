@@ -73,7 +73,7 @@ mean = [x / 255 for x in [125.3, 123.0, 113.9]]
 std = [x / 255 for x in [63.0, 62.1, 66.7]]
 
 train_transform = transforms.Compose(
-    [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.3,0.3,0.3,0.3), transforms.RandomCrop(32, padding=4), transforms.ToTensor(),
+    [transforms.RandomHorizontalFlip(), torchvision.transforms.RandomRotation((-20,20)), torchvision.transforms.ColorJitter(0.5,0.5,0.5,0.5), transforms.RandomCrop(32, padding=4), transforms.ToTensor(),
      transforms.Normalize(mean, std)])
 
 # train_transform = transforms.Compose(
