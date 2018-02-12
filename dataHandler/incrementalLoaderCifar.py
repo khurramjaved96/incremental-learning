@@ -6,6 +6,7 @@ from torch.autograd import Variable
 import model.modelFactory as mF
 from torchvision import datasets, transforms
 import torchvision
+import copy
 
 class incrementalLoaderCifar(td.Dataset):
     def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False):
@@ -22,12 +23,23 @@ class incrementalLoaderCifar(td.Dataset):
         self.totalClasses = classes
         self.means = {}
         self.cuda = cuda
+        self.weights = np.zeros(self.totalClasses)
 
     def addClasses(self, n):
         if n in self.activeClasses:
             return
         self.activeClasses.append(n)
+        self.weights[n]=1
         self.len = self.classSize * len(self.activeClasses)
+
+    def updateLen(self):
+        len=0
+        for a in self.activeClasses:
+            if a in self.limitedClasses:
+                len += min(self.classSize, self.limitedClasses[a])
+            else:
+                len+= self.classSize
+        self.len = len
 
     def preprocessImages(self):
         '''
@@ -47,6 +59,8 @@ class incrementalLoaderCifar(td.Dataset):
 
     def limitClass(self, n, k):
         self.limitedClasses[n] = k
+        print (self.weights.shape)
+        self.weights[n] = max(1,float(self.classSize)/k)
 
     def limitClassAndSort(self, n, k, model):
         ''' This function should only be called the first time a class is limited. To change the limitation, 
@@ -58,7 +72,7 @@ class incrementalLoaderCifar(td.Dataset):
         :return: 
         '''
 
-        self.limitedClasses[n]=k
+        self.limitClass(n,k)
         start = self.getStartIndex(n)
         end = start+self.classSize
         buff =  np.zeros(self.data[start:end].shape)
@@ -71,17 +85,27 @@ class incrementalLoaderCifar(td.Dataset):
                 img = self.transform(img)
             images.append(img)
         dataTensor = torch.stack(images)
-        print ("Limit class sort data shape", dataTensor.shape)
         features = model.forward(Variable(dataTensor), True)
+        featuresCopy = copy.deepcopy(features.data)
         mean = torch.mean(features, 0, True)
+        listOfSelected = []
         for exmp_no in range(0, min(k,self.classSize)):
-
-
-            print ("Features shape", features.shape)
-
-
-            print ("Mean shape", mean.shape)
-        0/0
+            if exmp_no>0:
+                toAdd = torch.sum(featuresCopy[0:exmp_no],dim=0).unsqueeze(0)
+                featuresTemp = (features+Variable(toAdd))/(exmp_no+1) - mean
+            else:
+                featuresTemp = features - mean
+            featuresNorm = featuresTemp.norm(dim=1)
+            argMin = np.argmin(featuresNorm.data)
+            if argMin in listOfSelected:
+                assert(False)
+            listOfSelected.append(argMin)
+            buff[exmp_no] = self.data[start+argMin]
+            featuresCopy[exmp_no] = features.data[argMin]
+            # print (featuresCopy[exmp_no])
+            features[argMin] = features[argMin] + 1000
+        print ("Exmp shape",buff[0:min(k,self.classSize)].shape)
+        self.data[start:start+min(k,self.classSize)] = buff[0:min(k,self.classSize)]
 
 
     def removeClass(self, n):
@@ -146,4 +170,5 @@ if __name__ == "__main__":
     myFactory = mF.modelFactory()
     model = myFactory.getModel("test", 100)
 
-    trainDatasetFull.limitClassAndSort(2,40, model)
+    trainDatasetFull.addClasses(2)
+    trainDatasetFull.limitClassAndSort(2,60, model)

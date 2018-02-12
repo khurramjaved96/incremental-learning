@@ -295,7 +295,8 @@ for classGroup in range(0, args.classes, stepSize):
         currentLr = args.lr 
     for val in leftOver:
         #print ("Limiting class", val,"to",int(totalExmp/len(leftOver)))
-        trainDatasetFull.limitClass(val,int(totalExmp/len(leftOver)))
+        # trainDatasetFull.limitClass(val,int(totalExmp/len(leftOver)))
+        trainDatasetFull.limitClassAndSort(val,int(totalExmp/len(leftOver)),modelFixed)
         limitedset.append(val)
     for temp in range(classGroup, classGroup+stepSize):
         popVal = allClasses.pop()
