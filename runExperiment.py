@@ -35,6 +35,8 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--no-distill', action='store_true', default=False,
                     help='argument to enable/disable distillation loss')
+parser.add_argument('--no-random', action='store_true', default=False,
+                    help='Do not shuffle the classes')
 parser.add_argument('--no-herding', action='store_true', default=False,
                     help='To do herding or not to do herding')
 parser.add_argument('--no-upsampling', action='store_true', default=False,
@@ -264,7 +266,9 @@ allClasses.sort(reverse=True)
 
 # Will be important when computing confidence intervals.
 import random
-random.shuffle(allClasses)
+if not args.no_random:
+    print ("Randomly shuffling classes")
+    random.shuffle(allClasses)
 
 stepSize = args.step_size
 leftOver = []
