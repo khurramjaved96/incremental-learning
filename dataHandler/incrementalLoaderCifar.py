@@ -58,9 +58,15 @@ class incrementalLoaderCifar(td.Dataset):
         self.data = np.array(self.data)
 
     def limitClass(self, n, k):
-        self.limitedClasses[n] = k
-        print (self.weights.shape)
-        self.weights[n] = max(1,float(self.classSize)/k)
+        if n in self.limitedClasses:
+            self.limitedClasses[n] = k
+            self.weights[n] = max(1,float(self.classSize)/k)
+            return False
+        else:
+            self.limitedClasses[n] = k
+            self.weights[n] = max(1, float(self.classSize) / k)
+            return True
+
 
     def limitClassAndSort(self, n, k, model):
         ''' This function should only be called the first time a class is limited. To change the limitation, 
@@ -72,44 +78,44 @@ class incrementalLoaderCifar(td.Dataset):
         :return: 
         '''
 
-        self.limitClass(n,k)
-        start = self.getStartIndex(n)
-        end = start+self.classSize
-        buff =  np.zeros(self.data[start:end].shape)
-        images = [ ]
-        for ind in range(start, end):
-            img = self.data[ind]
-            img = Image.fromarray(img)
+        if self.limitClass(n,k):
+            start = self.getStartIndex(n)
+            end = start+self.classSize
+            buff =  np.zeros(self.data[start:end].shape)
+            images = [ ]
+            for ind in range(start, end):
+                img = self.data[ind]
+                img = Image.fromarray(img)
 
-            if self.transform is not None:
-                img = self.transform(img)
-            images.append(img)
-        dataTensor = torch.stack(images)
-        if self.cuda:
-            dataTensor = dataTensor.cuda()
-        features = model.forward(Variable(dataTensor), True)
-        featuresCopy = copy.deepcopy(features.data)
-        mean = torch.mean(features, 0, True)
-        listOfSelected = []
-        for exmp_no in range(0, min(k,self.classSize)):
-            if exmp_no>0:
-                toAdd = torch.sum(featuresCopy[0:exmp_no],dim=0).unsqueeze(0)
-                if self.cuda:
-                    toAdd = toAdd.cuda()
-                featuresTemp = (features+Variable(toAdd))/(exmp_no+1) - mean
-            else:
-                featuresTemp = features - mean
-            featuresNorm = featuresTemp.norm(dim=1)
-            argMin = np.argmin(featuresNorm.data)
-            if argMin in listOfSelected:
-                assert(False)
-            listOfSelected.append(argMin)
-            buff[exmp_no] = self.data[start+argMin]
-            featuresCopy[exmp_no] = features.data[argMin]
-            # print (featuresCopy[exmp_no])
-            features[argMin] = features[argMin] + 1000
-        print ("Exmp shape",buff[0:min(k,self.classSize)].shape)
-        self.data[start:start+min(k,self.classSize)] = buff[0:min(k,self.classSize)]
+                if self.transform is not None:
+                    img = self.transform(img)
+                images.append(img)
+            dataTensor = torch.stack(images)
+            if self.cuda:
+                dataTensor = dataTensor.cuda()
+            features = model.forward(Variable(dataTensor), True)
+            featuresCopy = copy.deepcopy(features.data)
+            mean = torch.mean(features, 0, True)
+            listOfSelected = []
+            for exmp_no in range(0, min(k,self.classSize)):
+                if exmp_no>0:
+                    toAdd = torch.sum(featuresCopy[0:exmp_no],dim=0).unsqueeze(0)
+                    if self.cuda:
+                        toAdd = toAdd.cuda()
+                    featuresTemp = (features+Variable(toAdd))/(exmp_no+1) - mean
+                else:
+                    featuresTemp = features - mean
+                featuresNorm = featuresTemp.norm(dim=1)
+                argMin = np.argmin(featuresNorm.data)
+                if argMin in listOfSelected:
+                    assert(False)
+                listOfSelected.append(argMin)
+                buff[exmp_no] = self.data[start+argMin]
+                featuresCopy[exmp_no] = features.data[argMin]
+                # print (featuresCopy[exmp_no])
+                features[argMin] = features[argMin] + 1000
+            print ("Exmp shape",buff[0:min(k,self.classSize)].shape)
+            self.data[start:start+min(k,self.classSize)] = buff[0:min(k,self.classSize)]
 
 
     def removeClass(self, n):
