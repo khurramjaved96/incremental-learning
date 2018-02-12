@@ -57,7 +57,7 @@ class incrementalLoaderCifar(td.Dataset):
         :param model: Features extracted from this model for sorting. 
         :return: 
         '''
-        
+
         self.limitedClasses[n]=k
         start = self.getStartIndex(n)
         end = start+self.classSize
