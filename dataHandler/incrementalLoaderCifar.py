@@ -85,6 +85,8 @@ class incrementalLoaderCifar(td.Dataset):
                 img = self.transform(img)
             images.append(img)
         dataTensor = torch.stack(images)
+        if self.cuda:
+            dataTensor = dataTensor.cuda()
         features = model.forward(Variable(dataTensor), True)
         featuresCopy = copy.deepcopy(features.data)
         mean = torch.mean(features, 0, True)
@@ -92,6 +94,8 @@ class incrementalLoaderCifar(td.Dataset):
         for exmp_no in range(0, min(k,self.classSize)):
             if exmp_no>0:
                 toAdd = torch.sum(featuresCopy[0:exmp_no],dim=0).unsqueeze(0)
+                if self.cuda:
+                    toAdd = toAdd.cuda()
                 featuresTemp = (features+Variable(toAdd))/(exmp_no+1) - mean
             else:
                 featuresTemp = features - mean

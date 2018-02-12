@@ -88,8 +88,8 @@ train_data = datasets.CIFAR100("data", train=True, transform=train_transform, do
 test_data = datasets.CIFAR100("data", train=False, transform=test_transform, download=True)
 
 
-trainDatasetFull = dL.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform)
-testDataset = dL.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform)
+trainDatasetFull = dL.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform,cuda= args.cuda)
+testDataset = dL.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform, cuda= args.cuda)
 
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
