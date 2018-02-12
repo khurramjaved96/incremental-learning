@@ -35,6 +35,8 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--no-distill', action='store_true', default=False,
                     help='argument to enable/disable distillation loss')
+parser.add_argument('--no-herding', action='store_true', default=False,
+                    help='To do herding or not to do herding')
 parser.add_argument('--no-upsampling', action='store_true', default=False,
                     help='argument to enable/disable upsampling')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
@@ -295,8 +297,10 @@ for classGroup in range(0, args.classes, stepSize):
         currentLr = args.lr 
     for val in leftOver:
         #print ("Limiting class", val,"to",int(totalExmp/len(leftOver)))
-        # trainDatasetFull.limitClass(val,int(totalExmp/len(leftOver)))
-        trainDatasetFull.limitClassAndSort(val,int(totalExmp/len(leftOver)),modelFixed)
+        if args.no_herding:
+            trainDatasetFull.limitClass(val,int(totalExmp/len(leftOver)))
+        else:
+            trainDatasetFull.limitClassAndSort(val,int(totalExmp/len(leftOver)),modelFixed)
         limitedset.append(val)
     for temp in range(classGroup, classGroup+stepSize):
         popVal = allClasses.pop()
