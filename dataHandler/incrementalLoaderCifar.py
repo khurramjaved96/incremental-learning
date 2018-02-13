@@ -9,7 +9,7 @@ import torchvision
 import copy
 
 class incrementalLoaderCifar(td.Dataset):
-    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False):
+    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False, oversampling=True):
 
         self.len = classSize * len(activeClasses)
         sortIndex = np.argsort(labels)
@@ -24,6 +24,7 @@ class incrementalLoaderCifar(td.Dataset):
         self.means = {}
         self.cuda = cuda
         self.weights = np.zeros(self.totalClasses)
+        self.overSampling = oversampling
 
     def addClasses(self, n):
         if n in self.activeClasses:
@@ -41,6 +42,8 @@ class incrementalLoaderCifar(td.Dataset):
             else:
                 len+= self.classSize
         self.len = len
+        if self.overSampling:
+            self.len= len(self.activeClasses)*self.classSize
 
     def preprocessImages(self):
         '''
@@ -152,26 +155,27 @@ class incrementalLoaderCifar(td.Dataset):
         :param index: 
         :return: 
         '''
-        len = 0
-        old = 0
-        for a in self.activeClasses:
-            oldLen = len
-            if a in self.limitedClasses:
-                len += min(self.classSize, self.limitedClasses[a])
-            else:
-                len += self.classSize
-            if len>index:
-                break
-        base = a*self.classSize
-        incre = index - oldLen
+        if not self.overSampling:
+            len = 0
+            old = 0
+            for a in self.activeClasses:
+                oldLen = len
+                if a in self.limitedClasses:
+                    len += min(self.classSize, self.limitedClasses[a])
+                else:
+                    len += self.classSize
+                if len>index:
+                    break
+            base = a*self.classSize
+            incre = index - oldLen
+        else:
+            assert (index < self.len)
+            classNo = int(index / self.classSize)
+            incre = index % self.classSize
+            if self.activeClasses[classNo] in self.limitedClasses:
+                incre = incre % self.limitedClasses[self.activeClasses[classNo]]
 
-        # assert (index < self.len)
-        # classNo = int(index / self.classSize)
-        # incre = index % self.classSize
-        # if self.activeClasses[classNo] in self.limitedClasses:
-        #     incre = incre % self.limitedClasses[self.activeClasses[classNo]]
-        #
-        # base = self.activeClasses[classNo] * self.classSize
+            base = self.activeClasses[classNo] * self.classSize
 
         index = base + incre
         img = self.data[index]

@@ -42,6 +42,8 @@ parser.add_argument('--no-herding', action='store_true', default=False,
                     help='To do herding or not to do herding')
 parser.add_argument('--no-upsampling', action='store_true', default=False,
                     help='argument to enable/disable upsampling')
+parser.add_argument('--oversampling', action='store_true', default=False,
+                    help='Should we use oversampling')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
@@ -104,8 +106,8 @@ train_data = datasets.CIFAR100("data", train=True, transform=train_transform, do
 test_data = datasets.CIFAR100("data", train=False, transform=test_transform, download=True)
 
 
-trainDatasetFull = dL.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform,cuda= args.cuda)
-testDataset = dL.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform, cuda= args.cuda)
+trainDatasetFull = dL.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform,cuda= args.cuda,  oversampling=args.oversampling)
+testDataset = dL.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform, cuda= args.cuda,  oversampling=args.oversampling)
 
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
