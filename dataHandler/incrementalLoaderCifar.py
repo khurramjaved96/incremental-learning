@@ -184,9 +184,32 @@ class incrementalLoaderCifar(td.Dataset):
             img = self.transform(img)
         return img, self.labels[index]
 
-    def sortByImportance(self, model):
+    def sortByImportance(self, algorithm = "Kennard-Stone"):
+        if algorithm == "LDIS":
+            dataFile = "selectedCIFARIndicesForTrainingDataK1.txt"
+        elif algorithm == "Kennard-Stone":
+            dataFile = "selectedCIFARIndicesForTrainingDataKenStone.txt"
 
-        pass
+        # load sorted (training) data indices
+        lines = [line.rstrip('\n') for line in open(dataFile)]
+        sortedData = []
+
+        # iterate for each class
+        h = 0
+        classNum = 0
+        for line in lines:
+            line = line[(line.find(":")+1):]
+            # select instances based on priority
+            prioritizedIndices = line.split(",")
+            for index in prioritizedIndices:
+                sortedData.append(self.data[int(index)])
+            # select remaining instances
+            for i in range(classNum*self.classSize,(classNum+1)*self.classSize):
+                if str(i) not in prioritizedIndices:
+                    sortedData.append(self.data[i])
+                    h += 1
+            classNum += 1
+        self.data = np.concatenate(sortedData).reshape(self.data.shape)
 
     def getBottlenecks(self):
         pass
