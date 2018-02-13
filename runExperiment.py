@@ -157,8 +157,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 
         # Before incremental learing (without any distillation loss.)
 
-        if args.cuda:
-            weights = weights.cuda()
+     
         # print ("Weights = ", weights)
         if len(oldClassesIndices)==0:
             dataOldClasses = data[newClassesIndices]
