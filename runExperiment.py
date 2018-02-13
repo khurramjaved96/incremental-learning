@@ -190,7 +190,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             output = model(Variable(data))
             # y_onehot[weightVectorDis] = outpu2.data
             #
-            loss = F.binary_cross_entropy(output, Variable(y_onehot), torch.from_numpy(weights).float())
+            loss = F.binary_cross_entropy(output, Variable(y_onehot), weights)
             loss.backward()
             optimizer.step()
         else:
@@ -211,7 +211,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             output = model(Variable(data))
             y_onehot[oldClassesIndices] = outpu2.data
 #
-            loss = F.binary_cross_entropy(output, Variable(y_onehot),torch.from_numpy(weights).float())
+            loss = F.binary_cross_entropy(output, Variable(y_onehot),weights)
 
             loss.backward()
             optimizer.step()
