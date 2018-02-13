@@ -141,7 +141,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
     # print ("Len",int(train_loader.dataset.len/args.batch_size))
     if not args.oversampling:
         # print (train_loader.dataset.weights)
-        train_loader = torch.utils.data.DataLoader(train_loader.dataset, sampler=torch.utils.data.sampler.WeightedRandomSampler(train_loader.dataset.weights.tolist(),int(train_loader.dataset.len/args.batch_size)), batch_size=args.batch_size, **kwargs)
+        train_loader = torch.utils.data.DataLoader(train_loader.dataset, sampler=torch.utils.data.sampler.WeightedRandomSampler(train_loader.dataset.weights.tolist(),int(train_loader.dataset.len)), batch_size=args.batch_size, **kwargs)
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
@@ -157,7 +157,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 
         # Before incremental learing (without any distillation loss.)
 
-     
+
         # print ("Weights = ", weights)
         if len(oldClassesIndices)==0:
             dataOldClasses = data[newClassesIndices]
