@@ -150,7 +150,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
         targetTemp = target
 
         # Before incremental learing (without any distillation loss.)
-        weights = train_loader.dataset.weights.float()
+        weights = train_loader.dataset.weights
         weights = torch.from_numpy(weights).float()
         if args.cuda:
             weights = weights.cuda()
