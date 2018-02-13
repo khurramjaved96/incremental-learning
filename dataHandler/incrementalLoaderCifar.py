@@ -35,13 +35,13 @@ class incrementalLoaderCifar(td.Dataset):
         self.updateLen()
 
     def updateLen(self):
-        len=0
+        lenVar=0
         for a in self.activeClasses:
             if a in self.limitedClasses:
-                len += min(self.classSize, self.limitedClasses[a])
+                lenVar += min(self.classSize, self.limitedClasses[a])
             else:
-                len+= self.classSize
-        self.len = len
+                lenVar+= self.classSize
+        self.len = lenVar
         if self.overSampling:
             self.len= len(self.activeClasses)*self.classSize
 
