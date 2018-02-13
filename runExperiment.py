@@ -138,6 +138,10 @@ if args.cuda:
 ## Training code. To be moved to the trainer class
 def train(epoch, optimizer, train_loader, leftover, verbose=False):
     model.train()
+    # print ("Len",int(train_loader.dataset.len/args.batch_size))
+    if not args.oversampling:
+        # print (train_loader.dataset.weights)
+        train_loader = torch.utils.data.DataLoader(train_loader.dataset, sampler=torch.utils.data.sampler.WeightedRandomSampler(train_loader.dataset.weights.tolist(),int(train_loader.dataset.len/args.batch_size)), batch_size=args.batch_size, **kwargs)
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
             data, target = data.cuda(), target.cuda()
@@ -152,8 +156,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
         targetTemp = target
 
         # Before incremental learing (without any distillation loss.)
-        weights = train_loader.dataset.weights
-        weights = torch.from_numpy(weights).float()
+
         if args.cuda:
             weights = weights.cuda()
         # print ("Weights = ", weights)
@@ -192,7 +195,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             output = model(Variable(data))
             # y_onehot[weightVectorDis] = outpu2.data
             #
-            loss = F.binary_cross_entropy(output, Variable(y_onehot), weights)
+            loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
             optimizer.step()
         else:
@@ -213,7 +216,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             output = model(Variable(data))
             y_onehot[oldClassesIndices] = outpu2.data
 #
-            loss = F.binary_cross_entropy(output, Variable(y_onehot),weights)
+            loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
             loss.backward()
             optimizer.step()

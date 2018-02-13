@@ -23,14 +23,14 @@ class incrementalLoaderCifar(td.Dataset):
         self.totalClasses = classes
         self.means = {}
         self.cuda = cuda
-        self.weights = np.zeros(self.totalClasses)
+        self.weights = np.zeros(self.totalClasses*self.classSize)
         self.overSampling = oversampling
 
     def addClasses(self, n):
         if n in self.activeClasses:
             return
         self.activeClasses.append(n)
-        self.weights[n]=1
+        self.weights[n*self.classSize:(n+1)*self.classSize]=1.0/float(self.classSize)
         self.len = self.classSize * len(self.activeClasses)
         self.updateLen()
 
@@ -62,6 +62,10 @@ class incrementalLoaderCifar(td.Dataset):
         self.data = np.array(self.data)
 
     def limitClass(self, n, k):
+        if k>self.classSize:
+            k = self.classSize
+        self.weights[n * self.classSize:(n + 1) * self.classSize] = 0
+        self.weights[n * self.classSize:n*self.classSize+k] = max(1.0 / float(self.classSize), 1.0/float(k))
         if n in self.limitedClasses:
             self.limitedClasses[n] = k
             self.weights[n] = max(1,float(self.classSize)/k)
