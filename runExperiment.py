@@ -9,6 +9,7 @@ from torchvision import datasets, transforms
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
 
+import os
 import torchvision
 
 import dataHandler.incrementalLoaderCifar as dL
@@ -57,6 +58,18 @@ parser.add_argument('--classes', type=int, default=100, help='Total classes (aft
 parser.add_argument('--depth', type=int, default=32, help='depth of the model; only valid for resnet')
 
 
+def constructExperimentName(args):
+    name = [args.model_type, str(args.epochs_class), str(args.step_size)]
+    if not args.no_herding:
+        name.append("herding")
+    if not args.no_distill:
+        name.append("distillation")
+    if not os.path.exists("../"+args.name):
+        os.makedirs("../"+args.name)
+
+    return "../"+args.name+"/"+"_".join(name)
+
+
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -67,9 +80,8 @@ if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
 
-experimentName = args.name+"_"+args.model_type+str(args.step_size)+str(args.memory_budget)
-if args.no_distill:
-    experimentName+= "_noDistill"
+experimentName = constructExperimentName(args)
+
 
 # Mean and STD of Cifar-100 dataset.
 # To do : Remove the hard-coded mean and just compute it once using the data
@@ -138,6 +150,8 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
         targetTemp = target
 
         # Before incremental learing (without any distillation loss.)
+        weights = train_loader.dataset.weights
+        print ("Weights = ", weights)
         if len(oldClassesIndices)==0:
             dataOldClasses = data[newClassesIndices]
             targetTemp = target
@@ -159,6 +173,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 
         # After first increment. With distillation loss.
         elif args.no_distill:
+            weights = data
             targetDis2 = targetTemp
 
             y_onehot = torch.FloatTensor(len(data), args.classes)
@@ -172,7 +187,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             output = model(Variable(data))
             # y_onehot[weightVectorDis] = outpu2.data
             #
-            loss = F.binary_cross_entropy(output, Variable(y_onehot))
+            loss = F.binary_cross_entropy(output, Variable(y_onehot), torch.from_numpy(weights).float())
             loss.backward()
             optimizer.step()
         else:
@@ -193,7 +208,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
             output = model(Variable(data))
             y_onehot[oldClassesIndices] = outpu2.data
 #
-            loss = F.binary_cross_entropy(output, Variable(y_onehot))
+            loss = F.binary_cross_entropy(output, Variable(y_onehot),torch.from_numpy(weights).float())
 
             loss.backward()
             optimizer.step()
@@ -306,6 +321,7 @@ for classGroup in range(0, args.classes, stepSize):
         else:
             trainDatasetFull.limitClassAndSort(val,int(totalExmp/len(leftOver)),modelFixed)
         limitedset.append(val)
+
     for temp in range(classGroup, classGroup+stepSize):
         popVal = allClasses.pop()
         trainDatasetFull.addClasses(popVal)
@@ -330,14 +346,14 @@ for classGroup in range(0, args.classes, stepSize):
     tempTrain = nmc.classify(model,train_loader_full,args.cuda, True)
     trainY.append(tempTrain)
     print("Train NMC", tempTrain)
-    saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,"../"+experimentName)
+    saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,experimentName+"CONFUSION")
     print ("Test NMC")
     y.append(nmc.classify(model,test_loader,args.cuda, True))
     y1.append(test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, True))
     x.append(classGroup+stepSize)
 
     myPlotter = plt.plotter()
-    myPlotter.plot(x,y, title=experimentName, legend="NCM")
-    myPlotter.plot(x, y1, title=experimentName, legend="Trained Classifier")
+    myPlotter.plot(x,y, title=args.name, legend="NCM")
+    myPlotter.plot(x, y1, title=args.name, legend="Trained Classifier")
 
-    myPlotter.saveFig("../"+experimentName+".jpg")
+    myPlotter.saveFig(experimentName+".jpg")

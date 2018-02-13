@@ -31,6 +31,7 @@ class incrementalLoaderCifar(td.Dataset):
         self.activeClasses.append(n)
         self.weights[n]=1
         self.len = self.classSize * len(self.activeClasses)
+        self.updateLen()
 
     def updateLen(self):
         len=0
@@ -61,11 +62,14 @@ class incrementalLoaderCifar(td.Dataset):
         if n in self.limitedClasses:
             self.limitedClasses[n] = k
             self.weights[n] = max(1,float(self.classSize)/k)
+            self.updateLen()
             return False
         else:
             self.limitedClasses[n] = k
             self.weights[n] = max(1, float(self.classSize) / k)
+            self.updateLen()
             return True
+
 
 
     def limitClassAndSort(self, n, k, model):
@@ -83,6 +87,7 @@ class incrementalLoaderCifar(td.Dataset):
             end = start+self.classSize
             buff =  np.zeros(self.data[start:end].shape)
             images = [ ]
+            # Get input features of all the images of the class
             for ind in range(start, end):
                 img = self.data[ind]
                 img = Image.fromarray(img)
@@ -93,10 +98,14 @@ class incrementalLoaderCifar(td.Dataset):
             dataTensor = torch.stack(images)
             if self.cuda:
                 dataTensor = dataTensor.cuda()
+
+            # Get features
             features = model.forward(Variable(dataTensor), True)
             featuresCopy = copy.deepcopy(features.data)
             mean = torch.mean(features, 0, True)
             listOfSelected = []
+
+            # Select exemplars
             for exmp_no in range(0, min(k,self.classSize)):
                 if exmp_no>0:
                     toAdd = torch.sum(featuresCopy[0:exmp_no],dim=0).unsqueeze(0)
@@ -117,11 +126,14 @@ class incrementalLoaderCifar(td.Dataset):
             print ("Exmp shape",buff[0:min(k,self.classSize)].shape)
             self.data[start:start+min(k,self.classSize)] = buff[0:min(k,self.classSize)]
 
+        self.updateLen()
+
 
     def removeClass(self, n):
         while n in self.activeClasses:
             self.activeClasses.remove(n)
         self.len = self.classSize * len(self.activeClasses)
+        self.updateLen()
 
     def __len__(self):
         return self.len
@@ -135,18 +147,35 @@ class incrementalLoaderCifar(td.Dataset):
         return n*self.classSize
 
     def __getitem__(self, index):
-        assert (index < self.len)
-        classNo = int(index / self.classSize)
-        incre = index % self.classSize
-        if self.activeClasses[classNo] in self.limitedClasses:
-            incre = incre % self.limitedClasses[self.activeClasses[classNo]]
+        '''
+        Replacing this with a more efficient implemnetation selection; removing upsampling
+        :param index: 
+        :return: 
+        '''
+        len = 0
+        old = 0
+        for a in self.activeClasses:
+            oldLen = len
+            if a in self.limitedClasses:
+                len += min(self.classSize, self.limitedClasses[a])
+            else:
+                len += self.classSize
+            if len>index:
+                break
+        base = a*self.classSize
+        incre = index - oldLen
 
-        base = self.activeClasses[classNo] * self.classSize
+        # assert (index < self.len)
+        # classNo = int(index / self.classSize)
+        # incre = index % self.classSize
+        # if self.activeClasses[classNo] in self.limitedClasses:
+        #     incre = incre % self.limitedClasses[self.activeClasses[classNo]]
+        #
+        # base = self.activeClasses[classNo] * self.classSize
 
         index = base + incre
         img = self.data[index]
         img = Image.fromarray(img)
-
         if self.transform is not None:
             img = self.transform(img)
         return img, self.labels[index]
