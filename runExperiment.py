@@ -151,7 +151,7 @@ def train(epoch, optimizer, train_loader, leftover, verbose=False):
 
         # Before incremental learing (without any distillation loss.)
         weights = train_loader.dataset.weights
-        print ("Weights = ", weights)
+        # print ("Weights = ", weights)
         if len(oldClassesIndices)==0:
             dataOldClasses = data[newClassesIndices]
             targetTemp = target
