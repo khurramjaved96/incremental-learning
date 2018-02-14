@@ -202,9 +202,9 @@ class incrementalLoaderCifar(td.Dataset):
 
     def sortByImportance(self, algorithm = "Kennard-Stone"):
         if algorithm == "LDIS":
-            dataFile = "selectedCIFARIndicesForTrainingDataK1.txt"
+            dataFile = "data/selectedCIFARIndicesForTrainingDataK1.txt"
         elif algorithm == "Kennard-Stone":
-            dataFile = "selectedCIFARIndicesForTrainingDataKenStone.txt"
+            dataFile = "data/selectedCIFARIndicesForTrainingDataKenStone.txt"
 
         # load sorted (training) data indices
         lines = [line.rstrip('\n') for line in open(dataFile)]
