@@ -30,20 +30,30 @@ class incrementalLoaderCifar(td.Dataset):
         if n in self.activeClasses:
             return
         self.activeClasses.append(n)
-        self.weights[n*self.classSize:(n+1)*self.classSize]=1.0/float(self.classSize)
         self.len = self.classSize * len(self.activeClasses)
         self.updateLen()
 
     def updateLen(self):
+        '''
+        Function to compute length of the active elements of the data. 
+        :return: 
+        '''
+        # Computing len if no oversampling
         lenVar=0
         for a in self.activeClasses:
             if a in self.limitedClasses:
                 lenVar += min(self.classSize, self.limitedClasses[a])
+                self.weights[lenVar:lenVar + min(self.classSize, self.limitedClasses[a])] = 1.0 / float(self.limitedClasses[a])
+                if self.classSize > self.limitedClasses[a]:
+                    self.weights[lenVar + self.limitedClasses[a]:lenVar + self.classSize] = 0
             else:
                 lenVar+= self.classSize
+                self.weights[lenVar:lenVar+self.classSize] = 1.0/float(self.classSize)
         self.len = lenVar
+        # Computing len if oversampling is turned on.
         if self.overSampling:
             self.len= len(self.activeClasses)*self.classSize
+        return
 
     def preprocessImages(self):
         '''
@@ -64,8 +74,8 @@ class incrementalLoaderCifar(td.Dataset):
     def limitClass(self, n, k):
         if k>self.classSize:
             k = self.classSize
-        self.weights[n * self.classSize:(n + 1) * self.classSize] = 0
-        self.weights[n * self.classSize:n*self.classSize+k] = max(1.0 / float(self.classSize), 1.0/float(k))
+        # self.weights[n * self.classSize:(n + 1) * self.classSize] = 0
+        # self.weights[n * self.classSize:n*self.classSize+k] = max(1.0 / float(self.classSize), 1.0/float(k))
         if n in self.limitedClasses:
             self.limitedClasses[n] = k
             self.weights[n] = max(1,float(self.classSize)/k)
