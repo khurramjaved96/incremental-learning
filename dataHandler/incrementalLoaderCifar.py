@@ -42,13 +42,15 @@ class incrementalLoaderCifar(td.Dataset):
         lenVar=0
         for a in self.activeClasses:
             if a in self.limitedClasses:
-                lenVar += min(self.classSize, self.limitedClasses[a])
                 self.weights[lenVar:lenVar + min(self.classSize, self.limitedClasses[a])] = 1.0 / float(self.limitedClasses[a])
                 if self.classSize > self.limitedClasses[a]:
                     self.weights[lenVar + self.limitedClasses[a]:lenVar + self.classSize] = 0
+                lenVar += min(self.classSize, self.limitedClasses[a])
+
             else:
+                self.weights[lenVar:lenVar + self.classSize] = 1.0 / float(self.classSize)
                 lenVar+= self.classSize
-                self.weights[lenVar:lenVar+self.classSize] = 1.0/float(self.classSize)
+
         self.len = lenVar
         # Computing len if oversampling is turned on.
         if self.overSampling:
@@ -78,12 +80,12 @@ class incrementalLoaderCifar(td.Dataset):
         # self.weights[n * self.classSize:n*self.classSize+k] = max(1.0 / float(self.classSize), 1.0/float(k))
         if n in self.limitedClasses:
             self.limitedClasses[n] = k
-            self.weights[n] = max(1,float(self.classSize)/k)
+            # self.weights[n] = max(1,float(self.classSize)/k)
             self.updateLen()
             return False
         else:
             self.limitedClasses[n] = k
-            self.weights[n] = max(1, float(self.classSize) / k)
+            # self.weights[n] = max(1, float(self.classSize) / k)
             self.updateLen()
             return True
 
