@@ -341,8 +341,8 @@ for classGroup in range(0, args.classes, stepSize):
         popVal = allClasses.pop()
         trainDatasetFull.addClasses(popVal)
         testDataset.addClasses(popVal)
-        trainDatasetFull.limitClass(popVal,50)
-        # leftOver.append(popVal)
+        # trainDatasetFull.limitClass(popVal,50)
+        leftOver.append(popVal)
     epoch=0
     for epoch in range(0,epochsPerClass):
         overallEpoch+=1
