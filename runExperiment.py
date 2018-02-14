@@ -334,6 +334,7 @@ for classGroup in range(0, args.classes, stepSize):
         if args.no_herding:
             trainDatasetFull.limitClass(val,int(totalExmp/len(leftOver)))
         else:
+            print ("Sorting by herding")
             trainDatasetFull.limitClassAndSort(val,int(totalExmp/len(leftOver)),modelFixed)
         limitedset.append(val)
 
