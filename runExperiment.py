@@ -52,6 +52,8 @@ parser.add_argument('--model-type',  default="resnet32",
                     help='model type to be used')
 parser.add_argument('--name',  default="noname",
                     help='Name of the experiment')
+parser.add_argument('--sortby',  default="Kennard-Stone",
+                    help='Name of the experiment')
 parser.add_argument('--decay', type=float, default=0.00001 , help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
@@ -307,7 +309,13 @@ trainY= []
 myTestFactory= tF.classifierFactory()
 nmc = myTestFactory.getTester("nmc", args.cuda)
 
+if not args.sortby == "none":
+    print ("Sorting by", args.sortby)
+    trainDatasetFull.sortByImportance(args.sortby)
+
 overallEpoch = 0
+
+
 for classGroup in range(0, args.classes, stepSize):
     if classGroup ==0:
         distillLoss=False
@@ -333,7 +341,8 @@ for classGroup in range(0, args.classes, stepSize):
         popVal = allClasses.pop()
         trainDatasetFull.addClasses(popVal)
         testDataset.addClasses(popVal)
-        leftOver.append(popVal)
+        trainDatasetFull.limitClass(popVal,50)
+        # leftOver.append(popVal)
     epoch=0
     for epoch in range(0,epochsPerClass):
         overallEpoch+=1
