@@ -213,5 +213,5 @@ for classGroup in range(0, args.classes, stepSize):
     myPlotter.plot(x,y, title=args.name, legend="NCM")
     myPlotter.plot(x, y1, title=args.name, legend="Trained Classifier")
 
-    myPlotter.saveFig(myExperiment.path+"Overall"+".jpg")
+    myPlotter.saveFig(myExperiment.path+"Overall"+".jpg", args.classes+1)
 

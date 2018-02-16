@@ -17,7 +17,7 @@ class plotter():
         self.yLabel = yLabel
         plt.title(title)
 
-    def saveFig(self, path):
+    def saveFig(self, path, xticks=105):
         plt.legend(handles=self.handles)
         plt.ylim( (0, 100) )
         plt.xlim((0,100))
