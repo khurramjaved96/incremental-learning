@@ -89,8 +89,8 @@ train_data = datasets.MNIST("data", train=True, transform=train_transform, downl
 test_data = datasets.MNIST("data", train=False, transform=test_transform, download=True)
 
 
-trainDatasetFull = dL.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform,cuda= args.cuda,  oversampling=args.oversampling)
-testDataset = dL.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 100,100,[],transform=test_transform, cuda= args.cuda,  oversampling=args.oversampling)
+trainDatasetFull = dL.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 600,args.classes,[],transform=train_transform,cuda= args.cuda,  oversampling=args.oversampling)
+testDataset = dL.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 10000,args.classes,[],transform=test_transform, cuda= args.cuda,  oversampling=args.oversampling)
 
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}

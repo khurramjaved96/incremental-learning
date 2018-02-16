@@ -171,7 +171,7 @@ class incrementalLoaderCifar(td.Dataset):
 
     def __getitem__(self, index):
         '''
-        Replacing this with a more efficient implemnetation selection; removing upsampling
+        Replacing this with a more efficient implemnetation selection; removing c
         :param index: 
         :return: 
         '''
@@ -206,6 +206,7 @@ class incrementalLoaderCifar(td.Dataset):
             img = self.transform(img)
 
         if not self.labels[index] in self.activeClasses:
+            print ("Active classes", self.activeClasses)
             print ("Label ", self.labels[index])
         return img, self.labels[index]
 
