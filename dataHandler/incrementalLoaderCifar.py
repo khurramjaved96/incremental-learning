@@ -196,6 +196,7 @@ class incrementalLoaderCifar(td.Dataset):
         index = base + incre
         img = self.data[index]
         if "torch" in str(type(img)):
+            print ("Gers here")
             img = img.numpy()
         img = Image.fromarray(img)
         if self.transform is not None:
