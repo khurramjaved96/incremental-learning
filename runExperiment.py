@@ -11,7 +11,7 @@ import trainer.classifierFactory as tF
 import trainer.trainer as t
 import utils.utils as ut
 import experiment.experiment as ex
-import data.datasetFactory as dF
+import dataHandler.datasetFactory as dF
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=100, metavar='N',
