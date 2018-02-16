@@ -42,6 +42,7 @@ def saveConfusionMatrix(epoch, path, model, args, test_loader):
     return 100. * correct / len(test_loader.dataset)
 
 def constructExperimentName(args):
+    import os
     name = [args.model_type, str(args.epochs_class), str(args.step_size)]
     if not args.no_herding:
         name.append("herding")

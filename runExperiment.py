@@ -12,6 +12,7 @@ import plotter.plotter as plt
 import trainer.classifierFactory as tF
 import trainer.trainer as t
 import utils.utils as ut
+import experiment.experiment as ex
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=100, metavar='N',
@@ -67,6 +68,7 @@ if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
 
+
 experimentName = ut.constructExperimentName(args)
 
 # Mean and STD of Cifar-100 dataset.
@@ -106,6 +108,8 @@ model = myFactory.getModel(args.model_type,args.classes)
 if args.cuda:
     model.cuda()
 
+myExperiment = ex.experiment(vars(args))
+myExperiment.constructExperimentName(args)
 
 modelFixed = None
 
@@ -196,6 +200,13 @@ for classGroup in range(0, args.classes, stepSize):
     y1.append(t.test(test_loader, model, args))
     x.append(classGroup+stepSize)
 
+    myExperiment.results["NCM"] = [x,y]
+    myExperiment.results["Trained Classifier"] = [x,y1]
+
+    with open(myExperiment.path+"result", "wb") as f:
+        import pickle
+        pickle.dump(myExperiment, f)
+        
     myPlotter = plt.plotter()
     myPlotter.plot(x,y, title=args.name, legend="NCM")
     myPlotter.plot(x, y1, title=args.name, legend="Trained Classifier")
