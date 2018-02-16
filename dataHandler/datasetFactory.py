@@ -15,10 +15,10 @@ class datasetFactory():
                 [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
                  transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-10, 10)),
                  transforms.ToTensor(),
-                 transforms.Normalize(mean, std)])
+                 transforms.Normalize((0.1307,), (0.3081,))])
 
             test_transform = transforms.Compose(
-                [transforms.RandomCrop(32, padding=6), transforms.ToTensor(), transforms.Normalize(mean, std)])
+                [transforms.RandomCrop(32, padding=6), transforms.ToTensor(),transforms.Normalize((0.1307,), (0.3081,))])
 
             if train:
                 train_data = datasets.MNIST("data", train=True, transform=train_transform, download=True)

@@ -175,6 +175,7 @@ class incrementalLoaderCifar(td.Dataset):
         :param index: 
         :return: 
         '''
+        assert(index<self.classSize*self.totalClasses)
         if not self.overSampling:
             len = 0
             old = 0
