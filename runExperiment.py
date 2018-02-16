@@ -194,7 +194,7 @@ for classGroup in range(0, args.classes, stepSize):
     tempTrain = nmc.classify(model,train_loader_full,args.cuda, True)
     trainY.append(tempTrain)
     print("Train NMC", tempTrain)
-    ut.saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,experimentName+"CONFUSION", model, args, test_loader)
+    ut.saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,myExperiment.path+"CONFUSION", model, args, test_loader)
     print ("Test NMC")
     y.append(nmc.classify(model,test_loader,args.cuda, True))
     y1.append(t.test(test_loader, model, args))
@@ -206,9 +206,10 @@ for classGroup in range(0, args.classes, stepSize):
     with open(myExperiment.path+"result", "wb") as f:
         import pickle
         pickle.dump(myExperiment, f)
-        
+
     myPlotter = plt.plotter()
     myPlotter.plot(x,y, title=args.name, legend="NCM")
     myPlotter.plot(x, y1, title=args.name, legend="Trained Classifier")
 
-    myPlotter.saveFig(experimentName+".jpg")
+    myPlotter.saveFig(myExperiment.path+"Overall"+".jpg")
+
