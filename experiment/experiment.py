@@ -15,10 +15,12 @@ class experiment:
         if not args.no_distill:
             name.append("distillation")
         ver = 0
-        while not os.path.exists("../" + args.name+str(ver)):
-            os.makedirs("../" + args.name+str(ver))
+        while os.path.exists("../" + args.name+"_"+str(ver)):
+            ver+=1
 
-        self.name = "_".join(name) + str(ver)
-        self.path = "../" + args.name +str(ver)+ "/" + "_".join(name)
+        os.makedirs("../" + args.name+"_"+str(ver))
 
-        return "../" + args.name +str(ver)+ "/" + "_".join(name)
+        self.name = "_".join(name) +"_"+str(ver)
+        self.path = "../" + args.name +"_"+str(ver)+ "/" + "_".join(name)
+
+        return "../" + args.name +"_"+str(ver)+ "/" + "_".join(name)

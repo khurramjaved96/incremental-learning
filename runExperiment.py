@@ -14,6 +14,7 @@ import trainer.trainer as t
 import utils.utils as ut
 import experiment.experiment as ex
 
+
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=100, metavar='N',
                     help='input batch size for training (default: 64)')
@@ -68,8 +69,6 @@ if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
 
-
-experimentName = ut.constructExperimentName(args)
 
 # Mean and STD of Cifar-100 dataset.
 # To do : Remove the hard-coded mean and just compute it once using the data
