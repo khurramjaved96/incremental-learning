@@ -205,7 +205,8 @@ class incrementalLoaderCifar(td.Dataset):
         if self.transform is not None:
             img = self.transform(img)
 
-        assert(self.labels[index] in self.activeClasses)
+        if not self.labels[index] in self.activeClasses:
+            print ("Label ", self.labels[index])
         return img, self.labels[index]
 
     def sortByImportance(self, algorithm = "Kennard-Stone"):
