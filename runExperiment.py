@@ -83,7 +83,7 @@ train_transform = transforms.Compose(
      transforms.Normalize(mean, std)])
 
 test_transform = transforms.Compose(
-    [transforms.ToTensor(), transforms.RandomCrop(32, padding=4),transforms.Normalize(mean, std)])
+    [transforms.ToTensor(), transforms.Resize(32),transforms.Normalize(mean, std)])
 
 train_data = datasets.MNIST("data", train=True, transform=train_transform, download=True)
 test_data = datasets.MNIST("data", train=False, transform=test_transform, download=True)
