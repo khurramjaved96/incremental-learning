@@ -20,11 +20,11 @@ class plotter():
     def saveFig(self, path, xticks=105):
         plt.legend(handles=self.handles)
         plt.ylim( (0, 100) )
-        plt.xlim((0,100))
+        plt.xlim((0,xticks))
         plt.ylabel(self.yLabel)
         plt.xlabel(self.xLabel)
         plt.yticks(list(range(0,105,10)))
-        plt.xticks(list(range(0, 105, 10)))
+        plt.xticks(list(range(0, xticks, 10)))
         plt.savefig(path)
 
 if __name__=="__main__":

@@ -3,9 +3,7 @@ import argparse
 import torch.utils.data as td
 import torch
 import torch.optim as optim
-from torchvision import datasets, transforms
-import torchvision
-import dataHandler.incrementalLoaderCifar as dL
+
 import model.modelFactory as mF
 import copy
 import plotter.plotter as plt
@@ -13,7 +11,7 @@ import trainer.classifierFactory as tF
 import trainer.trainer as t
 import utils.utils as ut
 import experiment.experiment as ex
-
+import data.datasetFactory as dF
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=100, metavar='N',
@@ -49,7 +47,7 @@ parser.add_argument('--model-type',  default="resnet32",
                     help='model type to be used')
 parser.add_argument('--name',  default="noname",
                     help='Name of the experiment')
-parser.add_argument('--sortby',  default="Kennard-Stone",
+parser.add_argument('--sortby',  default="none",
                     help='Name of the experiment')
 parser.add_argument('--decay', type=float, default=0.00001 , help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
@@ -57,7 +55,7 @@ parser.add_argument('--memory-budget', type=int, default=2000, help='How many im
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--classes', type=int, default=100, help='Total classes (after all the increments)')
 parser.add_argument('--depth', type=int, default=32, help='depth of the model; only valid for resnet')
-parser.add_argument('--dataset', default="CIFAR", help='dataset to be used; example CIFAR, MNISTT')
+parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNISTT')
 
 
 args = parser.parse_args()
@@ -71,27 +69,8 @@ if args.cuda:
 
 
 
-# Mean and STD of Cifar-100 dataset.
-# To do : Remove the hard-coded mean and just compute it once using the data
-mean = [x / 255 for x in [125.3, 123.0, 113.9]]
-std = [x / 255 for x in [63.0, 62.1, 66.7]]
-
-
-
-train_transform = transforms.Compose(
-    [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.5,0.5,0.5,0.5), transforms.RandomCrop(32, padding=6),torchvision.transforms.RandomRotation((-10,10)), transforms.ToTensor(),
-     transforms.Normalize(mean, std)])
-
-test_transform = transforms.Compose(
-    [ transforms.RandomCrop(32, padding=6),transforms.ToTensor(),transforms.Normalize(mean, std)])
-
-train_data = datasets.MNIST("data", train=True, transform=train_transform, download=True)
-test_data = datasets.MNIST("data", train=False, transform=test_transform, download=True)
-
-
-trainDatasetFull = dL.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 6000,args.classes,[],transform=train_transform,cuda= args.cuda,  oversampling=args.oversampling)
-testDataset = dL.incrementalLoaderCifar(test_data.test_data,test_data.test_labels, 1000,args.classes,[],transform=test_transform, cuda= args.cuda,  oversampling=args.oversampling)
-
+train_data, trainDatasetFull = dF.datasetFactory.getDataset(args.dataset, args, True)
+test_data, testDataset = dF.datasetFactory.getDataset(args.dataset, args, False)
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
