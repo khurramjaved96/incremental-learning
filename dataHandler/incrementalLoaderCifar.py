@@ -14,6 +14,8 @@ class incrementalLoaderCifar(td.Dataset):
         self.len = classSize * len(activeClasses)
         sortIndex = np.argsort(labels)
         self.classSize = classSize
+        if "torch" in type(data):
+            data = data.numpy()
         self.data = data[sortIndex]
         labels = np.array(labels)
         self.labels = labels[sortIndex]
