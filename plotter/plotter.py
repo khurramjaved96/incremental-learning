@@ -24,7 +24,7 @@ class plotter():
         plt.ylabel(self.yLabel)
         plt.xlabel(self.xLabel)
         plt.yticks(list(range(0,105,10)))
-        plt.xticks(list(range(0, xticks, 10)))
+        plt.xticks(list(range(0, xticks, xticks/10)))
         plt.savefig(path)
 
 if __name__=="__main__":
