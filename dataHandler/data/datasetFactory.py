@@ -6,4 +6,6 @@ class datasetFactory():
     @staticmethod
     def getDataset(name, transform, train=True):
         if name=="MNIST":
-            data = datasets.MNIST("data", train=train, transform=transform,  download=True)
+            return datasets.MNIST("data", train=train, transform=transform,  download=True)
+        else:
+            return datasets.CIFAR100("data", train=train, transform=transform, download=True)
