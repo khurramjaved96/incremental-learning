@@ -75,8 +75,6 @@ if args.cuda:
 mean = [x / 255 for x in [125.3, 123.0, 113.9]]
 std = [x / 255 for x in [63.0, 62.1, 66.7]]
 
-mean = [x / 255 for x in [0,0,0]]
-std = [x / 255 for x in [1,1,1]]
 
 
 train_transform = transforms.Compose(
@@ -86,8 +84,8 @@ train_transform = transforms.Compose(
 test_transform = transforms.Compose(
     [transforms.ToTensor(), transforms.Normalize(mean, std)])
 
-train_data = datasets.CIFAR100("data", train=True, transform=train_transform, download=True)
-test_data = datasets.CIFAR100("data", train=False, transform=test_transform, download=True)
+train_data = datasets.MNIST("data", train=True, transform=train_transform, download=True)
+test_data = datasets.MNIST("data", train=False, transform=test_transform, download=True)
 
 
 trainDatasetFull = dL.incrementalLoaderCifar(train_data.train_data,train_data.train_labels, 500,100,[],transform=train_transform,cuda= args.cuda,  oversampling=args.oversampling)
