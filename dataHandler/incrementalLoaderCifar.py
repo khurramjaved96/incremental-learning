@@ -109,6 +109,8 @@ class incrementalLoaderCifar(td.Dataset):
             # Get input features of all the images of the class
             for ind in range(start, end):
                 img = self.data[ind]
+                if "torch" in str(type(img)):
+                    img = img.numpy()
                 img = Image.fromarray(img)
 
                 if self.transform is not None:
