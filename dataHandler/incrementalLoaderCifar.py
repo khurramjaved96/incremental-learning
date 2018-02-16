@@ -195,6 +195,7 @@ class incrementalLoaderCifar(td.Dataset):
 
         index = base + incre
         img = self.data[index]
+        print ("Type of img", type(img))
         img = Image.fromarray(img)
         if self.transform is not None:
             img = self.transform(img)
