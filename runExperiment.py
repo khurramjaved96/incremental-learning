@@ -2,7 +2,6 @@ from __future__ import print_function
 import argparse
 import torch.utils.data as td
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
@@ -17,6 +16,9 @@ import model.modelFactory as mF
 import copy
 import plotter.plotter as plt
 import trainer.classifierFactory as tF
+
+import trainer.trainer as t
+import utils.utils as ut
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--batch-size', type=int, default=100, metavar='N',
@@ -96,11 +98,6 @@ train_transform = transforms.Compose(
     [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.5,0.5,0.5,0.5), transforms.RandomCrop(32, padding=6),torchvision.transforms.RandomRotation((-10,10)), transforms.ToTensor(),
      transforms.Normalize(mean, std)])
 
-# train_transform = transforms.Compose(
-#     [transforms.RandomHorizontalFlip(), transforms.ToTensor(),
-#      transforms.Normalize(mean, std)])
-
-
 test_transform = transforms.Compose(
     [transforms.ToTensor(), transforms.Normalize(mean, std)])
 
@@ -137,147 +134,6 @@ if args.cuda:
     y_onehot = y_onehot.cuda()
 
 
-## Training code. To be moved to the trainer class
-def train(epoch, optimizer, train_loader, leftover, verbose=False):
-    model.train()
-    # print ("Len",int(train_loader.dataset.len/args.batch_size))
-    if not args.oversampling:
-        # print (train_loader.dataset.weights)
-        train_loader = torch.utils.data.DataLoader(train_loader.dataset, sampler=torch.utils.data.sampler.WeightedRandomSampler(train_loader.dataset.weights.tolist(),int(train_loader.dataset.len)), batch_size=args.batch_size, **kwargs)
-    for batch_idx, (data, target) in enumerate(train_loader):
-        if args.cuda:
-            data, target = data.cuda(), target.cuda()
-
-        weightVector = (target*0).int()
-        for elem in leftover:
-            weightVector = weightVector + (target==elem).int()
-
-        oldClassesIndices = torch.squeeze(torch.nonzero((weightVector>0)).long())
-        newClassesIndices = torch.squeeze(torch.nonzero((weightVector==0)).long())
-        optimizer.zero_grad()
-        targetTemp = target
-
-        # Before incremental learing (without any distillation loss.)
-
-
-        # print ("Weights = ", weights)
-        if len(oldClassesIndices)==0:
-            dataOldClasses = data[newClassesIndices]
-            targetTemp = target
-            targetsOldClasses = target[newClassesIndices]
-            target2 = targetsOldClasses
-            dataOldClasses, target = Variable(dataOldClasses), Variable(targetsOldClasses)
-
-            output = model(dataOldClasses)
-            y_onehot = torch.FloatTensor(len(dataOldClasses), args.classes)
-            if args.cuda:
-                y_onehot = y_onehot.cuda()
-
-            y_onehot.zero_()
-            target2.unsqueeze_(1)
-            y_onehot.scatter_(1, target2, 1)
-            loss = F.binary_cross_entropy(output, Variable(y_onehot))
-            loss.backward()
-            optimizer.step()
-
-        # After first increment. With distillation loss.
-        elif args.no_distill:
-            weights = data
-            targetDis2 = targetTemp
-
-            y_onehot = torch.FloatTensor(len(data), args.classes)
-            if args.cuda:
-                y_onehot = y_onehot.cuda()
-
-            y_onehot.zero_()
-            targetDis2.unsqueeze_(1)
-            y_onehot.scatter_(1, targetDis2, 1)
-
-            output = model(Variable(data))
-            # y_onehot[weightVectorDis] = outpu2.data
-            #
-            loss = F.binary_cross_entropy(output, Variable(y_onehot))
-            loss.backward()
-            optimizer.step()
-        else:
-          # optimizer.zero_grad()
-            dataDis = Variable(data[oldClassesIndices])
-            targetDis2 = targetTemp
-
-            y_onehot = torch.FloatTensor(len(data), args.classes)
-            if args.cuda:
-                y_onehot = y_onehot.cuda()
-
-            y_onehot.zero_()
-            targetDis2.unsqueeze_(1)
-            y_onehot.scatter_(1, targetDis2, 1)
-
-
-            outpu2 = modelFixed(dataDis)
-            output = model(Variable(data))
-            y_onehot[oldClassesIndices] = outpu2.data
-#
-            loss = F.binary_cross_entropy(output, Variable(y_onehot))
-
-            loss.backward()
-            optimizer.step()
-
-        if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.data[0]))
-
-# Function to save confusion matrix. Can be helpful in visualizing what is going on.
-def saveConfusionMatrix(epoch, path):
-    model.eval()
-    test_loss = 0
-    correct = 0
-    cMatrix = confusionmeter.ConfusionMeter(args.classes, True)
-
-    for data, target in test_loader:
-        if args.cuda:
-            data, target = data.cuda(), target.cuda()
-        data, target = Variable(data, volatile=True), Variable(target)
-        output = model(data)
-        test_loss += F.nll_loss(output, target, size_average=False).data[0]  # sum up batch loss
-        pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-        if epoch > 0:
-            cMatrix.add(pred, target.data.view_as(pred))
-
-    test_loss /= len(test_loader.dataset)
-    import cv2
-    img = cMatrix.value() * 255
-    cv2.imwrite(path + str(epoch) + ".jpg", img)
-    return 100. * correct / len(test_loader.dataset)
-
-
-def test(epoch, loader, verbose=False):
-    model.eval()
-    test_loss = 0
-    correct = 0
-    if epoch >0:
-        cMatrix = confusionmeter.ConfusionMeter(args.classes,True)
-
-    for data, target in loader:
-        if args.cuda:
-            data, target = data.cuda(), target.cuda()
-        data, target = Variable(data, volatile=True), Variable(target)
-        output = model(data)
-        test_loss += F.nll_loss(output, target, size_average=False).data[0] # sum up batch loss
-        pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-        if epoch >0:
-            cMatrix.add(pred, target.data.view_as(pred))
-
-
-    test_loss /= len(loader.dataset)
-    if verbose:
-        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(loader.dataset),
-        100. * correct / len(loader.dataset)))
-
-    return 100. * correct / len(loader.dataset)
 
 
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
@@ -354,19 +210,19 @@ for classGroup in range(0, args.classes, stepSize):
                     param_group['lr'] = currentLr*gammas[temp]
                     print("Changing learning rate from", currentLr, "to", currentLr*gammas[temp])
                     currentLr*= gammas[temp]
-        train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset)
+        t.train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset, model, modelFixed, args)
         if epoch%5==0:
-            print("Train Classifier", test(int(classGroup / stepSize) * epochsPerClass + epoch, train_loader_full,  False))
-            print ("Test Classifier", test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, False))
+            print("Train Classifier", t.test(int(classGroup / stepSize) * epochsPerClass + epoch, train_loader_full, model, args))
+            print ("Test Classifier", t.test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, model, args))
     nmc.updateMeans(model, train_loader_full, args.cuda, args.classes)
 
     tempTrain = nmc.classify(model,train_loader_full,args.cuda, True)
     trainY.append(tempTrain)
     print("Train NMC", tempTrain)
-    saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,experimentName+"CONFUSION")
+    ut.saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,experimentName+"CONFUSION", model, args, test_loader)
     print ("Test NMC")
     y.append(nmc.classify(model,test_loader,args.cuda, True))
-    y1.append(test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, True))
+    y1.append(t.test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, model, args))
     x.append(classGroup+stepSize)
 
     myPlotter = plt.plotter()
