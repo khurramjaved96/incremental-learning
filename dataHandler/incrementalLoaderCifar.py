@@ -196,7 +196,7 @@ class incrementalLoaderCifar(td.Dataset):
         index = base + incre
         img = self.data[index]
         if "torch.ByteTensor" in str(type(img)):
-            img = img.data.numpy()
+            img = img.numpy()
         img = Image.fromarray(img)
         if self.transform is not None:
             img = self.transform(img)
