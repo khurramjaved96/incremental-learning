@@ -57,6 +57,7 @@ parser.add_argument('--memory-budget', type=int, default=2000, help='How many im
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--classes', type=int, default=100, help='Total classes (after all the increments)')
 parser.add_argument('--depth', type=int, default=32, help='depth of the model; only valid for resnet')
+parser.add_argument('--dataset', default="CIFAR", help='dataset to be used; example CIFAR, MNISTT')
 
 
 args = parser.parse_args()
@@ -82,7 +83,7 @@ train_transform = transforms.Compose(
      transforms.Normalize(mean, std)])
 
 test_transform = transforms.Compose(
-    [transforms.ToTensor(), transforms.Normalize(mean, std)])
+    [transforms.ToTensor(), transforms.RandomCrop(32, padding=4),transforms.Normalize(mean, std)])
 
 train_data = datasets.MNIST("data", train=True, transform=train_transform, download=True)
 test_data = datasets.MNIST("data", train=False, transform=test_transform, download=True)
