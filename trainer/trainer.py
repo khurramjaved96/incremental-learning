@@ -17,7 +17,7 @@ def train(optimizer, train_loader, leftover, model ,modelFixed, args, verbose=Fa
         train_loader = torch.utils.data.DataLoader(train_loader.dataset,
                                                    sampler=torch.utils.data.sampler.WeightedRandomSampler(
                                                        train_loader.dataset.weights.tolist(),
-                                                       int(train_loader.dataset.len)), batch_size=args.batch_size,
+                                                       len(train_loader.dataset.activeClasses)*train_loader.dataset.classSize), batch_size=args.batch_size,
                                                    **kwargs)
     for batch_idx, (data, target) in enumerate(train_loader):
         if args.cuda:
