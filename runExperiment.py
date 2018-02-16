@@ -2,25 +2,18 @@ from __future__ import print_function
 import argparse
 import torch.utils.data as td
 import torch
-import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
-from torch.autograd import Variable
-from torchnet.meter import confusionmeter
-
-import os
 import torchvision
-
 import dataHandler.incrementalLoaderCifar as dL
 import model.modelFactory as mF
 import copy
 import plotter.plotter as plt
 import trainer.classifierFactory as tF
-
 import trainer.trainer as t
 import utils.utils as ut
-# Training settings
-parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
+
+parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=100, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=100, metavar='N',
@@ -64,18 +57,6 @@ parser.add_argument('--classes', type=int, default=100, help='Total classes (aft
 parser.add_argument('--depth', type=int, default=32, help='depth of the model; only valid for resnet')
 
 
-def constructExperimentName(args):
-    name = [args.model_type, str(args.epochs_class), str(args.step_size)]
-    if not args.no_herding:
-        name.append("herding")
-    if not args.no_distill:
-        name.append("distillation")
-    if not os.path.exists("../"+args.name):
-        os.makedirs("../"+args.name)
-
-    return "../"+args.name+"/"+"_".join(name)
-
-
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -86,8 +67,7 @@ if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
 
-experimentName = constructExperimentName(args)
-
+experimentName = ut.constructExperimentName(args)
 
 # Mean and STD of Cifar-100 dataset.
 # To do : Remove the hard-coded mean and just compute it once using the data
@@ -129,18 +109,10 @@ if args.cuda:
 
 modelFixed = None
 
-y_onehot = torch.FloatTensor(args.batch_size, args.classes)
-if args.cuda:
-    y_onehot = y_onehot.cuda()
-
-
-
-
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                 weight_decay=args.decay, nesterov=True)
 currentLr = args.lr
 
-# for epoch in range(1, args.epochs + 1):
 allClasses = list(range(args.classes))
 allClasses.sort(reverse=True)
 
@@ -198,7 +170,6 @@ for classGroup in range(0, args.classes, stepSize):
         popVal = allClasses.pop()
         trainDatasetFull.addClasses(popVal)
         testDataset.addClasses(popVal)
-        # trainDatasetFull.limitClass(popVal,50)
         leftOver.append(popVal)
     epoch=0
     for epoch in range(0,epochsPerClass):
@@ -210,10 +181,10 @@ for classGroup in range(0, args.classes, stepSize):
                     param_group['lr'] = currentLr*gammas[temp]
                     print("Changing learning rate from", currentLr, "to", currentLr*gammas[temp])
                     currentLr*= gammas[temp]
-        t.train(int(classGroup/stepSize)*epochsPerClass + epoch,optimizer, train_loader_full,limitedset, model, modelFixed, args)
+        t.train(optimizer, train_loader_full,limitedset, model, modelFixed, args)
         if epoch%5==0:
-            print("Train Classifier", t.test(int(classGroup / stepSize) * epochsPerClass + epoch, train_loader_full, model, args))
-            print ("Test Classifier", t.test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, model, args))
+            print("Train Classifier", t.test(train_loader_full, model, args))
+            print ("Test Classifier", t.test(test_loader, model, args))
     nmc.updateMeans(model, train_loader_full, args.cuda, args.classes)
 
     tempTrain = nmc.classify(model,train_loader_full,args.cuda, True)
@@ -222,7 +193,7 @@ for classGroup in range(0, args.classes, stepSize):
     ut.saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,experimentName+"CONFUSION", model, args, test_loader)
     print ("Test NMC")
     y.append(nmc.classify(model,test_loader,args.cuda, True))
-    y1.append(t.test(int(classGroup / stepSize) * epochsPerClass + epoch, test_loader, model, args))
+    y1.append(t.test(test_loader, model, args))
     x.append(classGroup+stepSize)
 
     myPlotter = plt.plotter()

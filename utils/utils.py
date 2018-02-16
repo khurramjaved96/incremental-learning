@@ -40,3 +40,14 @@ def saveConfusionMatrix(epoch, path, model, args, test_loader):
     img = cMatrix.value() * 255
     cv2.imwrite(path + str(epoch) + ".jpg", img)
     return 100. * correct / len(test_loader.dataset)
+
+def constructExperimentName(args):
+    name = [args.model_type, str(args.epochs_class), str(args.step_size)]
+    if not args.no_herding:
+        name.append("herding")
+    if not args.no_distill:
+        name.append("distillation")
+    if not os.path.exists("../"+args.name):
+        os.makedirs("../"+args.name)
+
+    return "../"+args.name+"/"+"_".join(name)
