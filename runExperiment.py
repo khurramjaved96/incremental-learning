@@ -105,7 +105,7 @@ test_loader = torch.utils.data.DataLoader(
 
 # Selecting model
 myFactory = mF.modelFactory()
-model = myFactory.getModel(args.model_type,args.classes)
+model = myFactory.getModel(args.model_type,args.classes,1)
 if args.cuda:
     model.cuda()
 
