@@ -127,7 +127,7 @@ class trainer():
         test_loss = 0
         correct = 0
 
-        for data, target in enumerate(loader):
+        for data, target in loader:
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
