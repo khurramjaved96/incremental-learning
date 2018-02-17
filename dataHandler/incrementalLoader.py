@@ -185,7 +185,8 @@ class incrementalLoader(td.Dataset):
                 break
         base = self.indices[tempA][0]
         incre = index - oldLen
-
+        if tempA in self.limitedClasses:
+            incre = incre%self.limitedClasses[tempA]
         index = base + incre
         img = self.data[index]
         if "torch" in str(type(img)):
