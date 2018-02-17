@@ -75,6 +75,7 @@ class trainer():
             param.requires_grad = False
 
     def train(self):
+        self.model.train()
 
         for batch_idx, (data, target) in enumerate(self.trainDataIterator):
             if self.args.cuda:

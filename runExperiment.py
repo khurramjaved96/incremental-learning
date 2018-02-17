@@ -120,6 +120,7 @@ for classGroup in range(0, dataset.classes, args.step_size):
         if epoch % args.log_interval == 0:
             print("Train Classifier", myTrainer.evaluate(trainIterator))
             print("Test Classifier", myTrainer.evaluate(testIterator))
+
     nmc.updateMeans(model, trainIterator, args.cuda, dataset.classes)
 
     tempTrain = nmc.classify(model, trainIterator, args.cuda, True)
