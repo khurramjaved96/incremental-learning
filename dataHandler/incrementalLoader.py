@@ -67,10 +67,10 @@ class incrementalLoader(td.Dataset):
         #
         # self.len = lenVar
         # Computing len if oversampling is turned on.
-        if self.overSampling:
-            lenVar = 0
-            for a in self.activeClasses:
-                lenVar += self.indices[a][1] - self.indices[a][0]
+
+        lenVar = 0
+        for a in self.activeClasses:
+            lenVar += self.indices[a][1] - self.indices[a][0]
         self.len = lenVar
 
         return
