@@ -30,15 +30,12 @@ class modelFactory():
                 assert (False)
             return res.resnet44(100)
 
-        elif modelType == "resnet10":
-            if dataset == "MNIST":
-                return res.resnet10mnist(10)
-            print ("Resnet10 is not supported for CIFAR")
-            assert(False)
-
 
         elif modelType=="test":
             if dataset=="MNIST":
                 print ("MNIST dataset not supported in this model. Try resnet20 or 32")
                 assert(False)
             return tm.Net(100)
+        else:
+            print ("Unsupported model; either implement the model in model/modelFactory or choose a different model")
+            assert(False)

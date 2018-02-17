@@ -11,7 +11,7 @@ from torchvision import datasets, transforms
 import model.modelFactory as mF
 
 
-class incrementalLoaderCifar(td.Dataset):
+class incrementalLoader(td.Dataset):
     def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False, oversampling=True):
 
         self.len = classSize * len(activeClasses)
@@ -30,6 +30,16 @@ class incrementalLoaderCifar(td.Dataset):
         self.cuda = cuda
         self.weights = np.zeros(self.totalClasses * self.classSize)
         self.overSampling = oversampling
+        self.classIndices()
+
+
+    def classIndices(self):
+        self.indices={}
+        cur=  0
+        for temp in range(0, self.totalClasses):
+            curLen = len(np.nonzero(np.uint8(self.labels==temp))[0])
+            self.indices[temp] = (cur, cur+ curLen)
+            cur+= curLen
 
     def addClasses(self, n):
         if n in self.activeClasses:
@@ -45,22 +55,26 @@ class incrementalLoaderCifar(td.Dataset):
         '''
         # Computing len if no oversampling
         lenVar = 0
-        for a in self.activeClasses:
-            if a in self.limitedClasses:
-                self.weights[lenVar:lenVar + min(self.classSize, self.limitedClasses[a])] = 1.0 / float(
-                    self.limitedClasses[a])
-                if self.classSize > self.limitedClasses[a]:
-                    self.weights[lenVar + self.limitedClasses[a]:lenVar + self.classSize] = 0
-                lenVar += min(self.classSize, self.limitedClasses[a])
-
-            else:
-                self.weights[lenVar:lenVar + self.classSize] = 1.0 / float(self.classSize)
-                lenVar += self.classSize
-
-        self.len = lenVar
+        # for a in self.activeClasses:
+        #     if a in self.limitedClasses:
+        #         self.weights[lenVar:lenVar + min(self.classSize, self.limitedClasses[a])] = 1.0 / float(
+        #             self.limitedClasses[a])
+        #         if self.classSize > self.limitedClasses[a]:
+        #             self.weights[lenVar + self.limitedClasses[a]:lenVar + self.classSize] = 0
+        #         lenVar += min(self.classSize, self.limitedClasses[a])
+        #
+        #     else:
+        #         self.weights[lenVar:lenVar + self.classSize] = 1.0 / float(self.classSize)
+        #         lenVar += self.classSize
+        #
+        # self.len = lenVar
         # Computing len if oversampling is turned on.
         if self.overSampling:
-            self.len = len(self.activeClasses) * self.classSize
+            lenVar =0
+            for a in self.activeClasses:
+                lenVar += self.indices[a][1] - self.indices[a][0]
+        self.len = lenVar
+
         return
 
     def limitClass(self, n, k):
@@ -86,8 +100,8 @@ class incrementalLoaderCifar(td.Dataset):
         '''
 
         if self.limitClass(n, k):
-            start = self.getStartIndex(n)
-            end = start + self.classSize
+            start = self.indices[n][0]
+            end = self.indices[n][1]
             buff = np.zeros(self.data[start:end].shape)
             images = []
             # Get input features of all the images of the class
@@ -139,7 +153,6 @@ class incrementalLoaderCifar(td.Dataset):
     def removeClass(self, n):
         while n in self.activeClasses:
             self.activeClasses.remove(n)
-        self.len = self.classSize * len(self.activeClasses)
         self.updateLen()
 
     def __len__(self):
@@ -151,7 +164,7 @@ class incrementalLoaderCifar(td.Dataset):
         :param n: 
         :return: Returns starting index of classs n
         '''
-        return n * self.classSize
+        return self.indices[n][0]
 
     def __getitem__(self, index):
         '''
@@ -160,29 +173,18 @@ class incrementalLoaderCifar(td.Dataset):
         :return: 
         '''
         assert (index < self.classSize * self.totalClasses)
-        if not self.overSampling:
-            len = 0
-            tempA = 0
-            oldLen = 0
-            for a in self.activeClasses:
-                tempA = a
-                oldLen = len
-                if a in self.limitedClasses:
-                    len += min(self.classSize, self.limitedClasses[a])
-                else:
-                    len += self.classSize
-                if len > index:
-                    break
-            base = tempA * self.classSize
-            incre = index - oldLen
-        else:
-            assert (index < self.len)
-            classNo = int(index / self.classSize)
-            incre = index % self.classSize
-            if self.activeClasses[classNo] in self.limitedClasses:
-                incre = incre % self.limitedClasses[self.activeClasses[classNo]]
 
-            base = self.activeClasses[classNo] * self.classSize
+        len = 0
+        tempA = 0
+        oldLen = 0
+        for a in self.activeClasses:
+            tempA = a
+            oldLen = len
+            len += self.indices[a][1] - self.indices[a][0]
+            if len > index:
+                break
+        base = self.indices[tempA][0]
+        incre = index - oldLen
 
         index = base + incre
         img = self.data[index]
@@ -195,6 +197,8 @@ class incrementalLoaderCifar(td.Dataset):
         if not self.labels[index] in self.activeClasses:
             print("Active classes", self.activeClasses)
             print("Label ", self.labels[index])
+            assert(False)
+
         return img, self.labels[index]
 
     def sortByImportance(self, algorithm="Kennard-Stone"):
@@ -239,8 +243,8 @@ if __name__ == "__main__":
          transforms.Normalize(mean, std)])
 
     train_data = datasets.CIFAR100("data", train=True, transform=train_transform, download=True)
-    trainDatasetFull = incrementalLoaderCifar(train_data.train_data, train_data.train_labels, 500, 100, [],
-                                              transform=train_transform)
+    trainDatasetFull = incrementalLoader(train_data.train_data, train_data.train_labels, 500, 100, [],
+                                         transform=train_transform)
 
     train_loader_full = torch.utils.data.DataLoader(trainDatasetFull,
                                                     batch_size=10, shuffle=True)

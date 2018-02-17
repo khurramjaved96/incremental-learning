@@ -7,7 +7,7 @@ import torch.optim as optim
 import torch.utils.data as td
 
 import dataHandler.datasetFactory as dF
-import dataHandler.incrementalLoaderCifar as dL
+import dataHandler.incrementalLoader as dL
 import experiment.experiment as ex
 import model.modelFactory as mF
 import plotter.plotter as plt
@@ -66,16 +66,16 @@ if args.cuda:
 
 dataset = dF.datasetFactory.getDataset(args.dataset)
 
-trainDatasetLoader = dL.incrementalLoaderCifar(dataset.trainData.train_data, dataset.trainData.train_labels,
-                                               dataset.labelsPerClassTrain,
-                                               dataset.classes, [], transform=dataset.trainTransform,
-                                               cuda=args.cuda,
-                                               oversampling=args.oversampling)
+trainDatasetLoader = dL.incrementalLoader(dataset.trainData.train_data, dataset.trainData.train_labels,
+                                          dataset.labelsPerClassTrain,
+                                          dataset.classes, [], transform=dataset.trainTransform,
+                                          cuda=args.cuda,
+                                          oversampling=args.oversampling)
 
-testDatasetLoader = dL.incrementalLoaderCifar(dataset.testData.test_data, dataset.testData.test_labels,
-                                              dataset.labelsPerClassTest, dataset.classes,
-                                              [], transform=dataset.testTransform, cuda=args.cuda,
-                                              oversampling=args.oversampling)
+testDatasetLoader = dL.incrementalLoader(dataset.testData.test_data, dataset.testData.test_labels,
+                                         dataset.labelsPerClassTest, dataset.classes,
+                                         [], transform=dataset.testTransform, cuda=args.cuda,
+                                         oversampling=args.oversampling)
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
