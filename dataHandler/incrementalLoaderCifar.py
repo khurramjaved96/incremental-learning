@@ -139,6 +139,8 @@ class incrementalLoaderCifar(td.Dataset):
                     featuresTemp = features - mean
                 featuresNorm = torch.norm(featuresTemp.data, 2, dim=1)
                 # featuresNorm = featuresTemp.norm(dim=1)
+                if self.cuda:
+                    featuresNorm = featuresNorm.cpu()
                 argMin = np.argmin(featuresNorm.numpy())
                 if argMin in listOfSelected:
                     assert(False)
