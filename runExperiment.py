@@ -52,8 +52,8 @@ parser.add_argument('--step-size', type=int, default=10, help='How many classes 
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--classes', type=int, default=100, help='Total classes (after all the increments)')
-parser.add_argument('--depth', type=int, default=32, help='depth of the model; only valid for resnet')
 parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
+
 
 
 args = parser.parse_args()
@@ -65,6 +65,13 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
+if args.dataset=="MNIST":
+    args.classes=10
+elif args.dataset=="CIFAR100":
+    args.classes=100
+else:
+    print ("Unsupported dataset; move this code to a better place")
+    assert(False)
 
 
 train_data, trainDatasetFull = dF.datasetFactory.getDataset(args.dataset, args, True)
@@ -82,7 +89,7 @@ test_loader = torch.utils.data.DataLoader(
 
 # Selecting model
 myFactory = mF.modelFactory()
-model = myFactory.getModel(args.model_type,args.classes,args.dataset)
+model = myFactory.getModel(args.model_type, args.dataset)
 if args.cuda:
     model.cuda()
 

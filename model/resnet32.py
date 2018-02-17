@@ -121,6 +121,25 @@ def resnet20(num_classes=10):
     model = CifarResNet(ResNetBasicblock, 20, num_classes)
     return model
 
+
+def resnet10mnist(num_classes=10):
+    """Constructs a ResNet-20 model for CIFAR-10 (by default)
+    Args:
+      num_classes (uint): number of classes
+    """
+    model = CifarResNet(ResNetBasicblock, 10, num_classes, 1)
+    return model
+
+
+def resnet20mnist(num_classes=10):
+    """Constructs a ResNet-20 model for CIFAR-10 (by default)
+    Args:
+      num_classes (uint): number of classes
+    """
+    model = CifarResNet(ResNetBasicblock, 20, num_classes, 1)
+    return model
+
+
 def resnet32mnist(num_classes=10, channels=1):
     model = CifarResNet(ResNetBasicblock, 32, num_classes,channels)
     return model
