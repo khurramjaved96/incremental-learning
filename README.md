@@ -23,7 +23,6 @@ runExperiment.py [-h] [--batch-size N] [--test-batch-size N]
 2. Python 3.6 
 3. torchnet (https://github.com/pytorch/tnt) 
 
-<<<<<<< HEAD
 ## Ideas to implement and test
 1. Auto-encoder to preserve information of a class 
 2. Generative models for data seen in the past to remove dependency on examplers.
