@@ -60,26 +60,16 @@ class NearestMeanClassifier():
             if cuda:
                 data = data.cuda()
             features = model.forward(Variable(data), True)
-            #Convert result into a numpy array
+            #Convert result to a numpy array
             featuresNp = features.data.cpu().numpy()
             # Accumulate the results in the means array
-            # print ("Menas before adding", self.means)
-            # print ("Features", featuresNp)
             np.add.at(self.means,target, featuresNp)
-            # print ("Means after adding", self.means)
-            # 0/0
             # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
             np.add.at(self.totalFeatures, target, 1)
 
         # Divide the means array with total number of instaces to get the average
-        # print ("Total features = ", self.totalFeatures)
-        # 0/0
         self.means=self.means/self.totalFeatures
-        # Compute and divide by the L2 norm
-        # self.norms = np.linalg.norm(self.means, axis=1)
 
-        # Reshape for broadcasting, and convert into a pytorch tensor.
-        # self.means = self.means/self.norms.reshape((self.norms.size,1))
         self.means = torch.from_numpy(self.means).unsqueeze(0)
         print ("Mean vectors computed")
         # Return

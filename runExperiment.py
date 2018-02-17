@@ -80,7 +80,6 @@ test_loader = torch.utils.data.DataLoader(
     testDataset,
     batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
-
 # Selecting model
 myFactory = mF.modelFactory()
 model = myFactory.getModel(args.model_type,args.classes,"MNIST")
@@ -105,13 +104,9 @@ if not args.no_random:
     print ("Randomly shuffling classes")
     random.shuffle(allClasses)
 
-stepSize = args.step_size
 leftOver = []
 limitedset=[]
-totalExmp = args.memory_budget
-epochsPerClass=args.epochs_class
 distillLoss = False
-
 
 x = []
 y = []
@@ -127,7 +122,7 @@ if not args.sortby == "none":
 overallEpoch = 0
 
 
-for classGroup in range(0, args.classes, stepSize):
+for classGroup in range(0, args.classes, args.step_size):
     if classGroup ==0:
         distillLoss=False
     else:
@@ -141,22 +136,22 @@ for classGroup in range(0, args.classes, stepSize):
         param_group['lr'] = args.lr
         currentLr = args.lr 
     for val in leftOver:
-        #print ("Limiting class", val,"to",int(totalExmp/len(leftOver)))
+
         if args.no_herding:
-            trainDatasetFull.limitClass(val,int(totalExmp/len(leftOver)))
+            trainDatasetFull.limitClass(val,int(args.memory_budget/len(leftOver)))
         else:
             print ("Sorting by herding")
-            trainDatasetFull.limitClassAndSort(val,int(totalExmp/len(leftOver)),modelFixed)
+            trainDatasetFull.limitClassAndSort(val,int(args.memory_budget/len(leftOver)),modelFixed)
         limitedset.append(val)
 
-    for temp in range(classGroup, classGroup+stepSize):
+    for temp in range(classGroup, classGroup+args.step_size):
         popVal = allClasses.pop()
         trainDatasetFull.addClasses(popVal)
         testDataset.addClasses(popVal)
         print ("Train Classes", trainDatasetFull.activeClasses)
         leftOver.append(popVal)
     epoch=0
-    for epoch in range(0,epochsPerClass):
+    for epoch in range(0,args.epochs_class):
         overallEpoch+=1
         for temp in range(0, len(schedule)):
             if schedule[temp]==epoch:
@@ -174,11 +169,13 @@ for classGroup in range(0, args.classes, stepSize):
     tempTrain = nmc.classify(model,train_loader_full,args.cuda, True)
     trainY.append(tempTrain)
     print("Train NMC", tempTrain)
-    ut.saveConfusionMatrix(int(classGroup/stepSize)*epochsPerClass + epoch,myExperiment.path+"CONFUSION", model, args, test_loader)
-    print ("Test NMC")
-    y.append(nmc.classify(model,test_loader,args.cuda, True))
+    ut.saveConfusionMatrix(int(classGroup/args.step_size)*args.epochs_class + epoch,myExperiment.path+"CONFUSION", model, args, test_loader)
+    testY = nmc.classify(model, test_loader, args.cuda, True)
+    y.append(testY)
+    print ("Test NMC", testY)
+
     y1.append(t.test(test_loader, model, args))
-    x.append(classGroup+stepSize)
+    x.append(classGroup+args.step_size)
 
     myExperiment.results["NCM"] = [x,y]
     myExperiment.results["Trained Classifier"] = [x,y1]
