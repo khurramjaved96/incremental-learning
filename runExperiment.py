@@ -14,12 +14,12 @@ import experiment.experiment as ex
 import dataHandler.datasetFactory as dF
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
-parser.add_argument('--batch-size', type=int, default=100, metavar='N',
+parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=100, metavar='N',
-                    help='input batch size for testing (default: 1000)')
+parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
+                    help='input batch size for testing (default: 128)')
 parser.add_argument('--epochs', type=int, default=200, metavar='N',
-                    help='number of epochs to train (default: 10)')
+                    help='number of epochs to train (default: 200)')
 parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                     help='learning rate (default: 0.1)')
 parser.add_argument('--schedule', type=int, nargs='+', default=[20,30,40,50,57], help='Decrease learning rate at these epochs.')
@@ -30,32 +30,30 @@ parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--no-distill', action='store_true', default=False,
-                    help='argument to enable/disable distillation loss')
+                    help='disable distillation loss')
 parser.add_argument('--no-random', action='store_true', default=False,
-                    help='Do not shuffle the classes')
+                    help='Disable random shuffling of classes')
 parser.add_argument('--no-herding', action='store_true', default=False,
-                    help='To do herding or not to do herding')
-parser.add_argument('--no-upsampling', action='store_true', default=False,
-                    help='argument to enable/disable upsampling')
+                    help='Disable herding for NMC')
 parser.add_argument('--oversampling', action='store_true', default=False,
-                    help='Should we use oversampling')
+                    help='Do oversampling to train unbiased classifier')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--model-type',  default="resnet32",
-                    help='model type to be used')
+                    help='model type to be used. Example : resnet32, resnet20, densenet, test')
 parser.add_argument('--name',  default="noname",
                     help='Name of the experiment')
 parser.add_argument('--sortby',  default="none",
-                    help='Name of the experiment')
+                    help='Examplars sorting strategy')
 parser.add_argument('--decay', type=float, default=0.00001 , help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--classes', type=int, default=100, help='Total classes (after all the increments)')
 parser.add_argument('--depth', type=int, default=32, help='depth of the model; only valid for resnet')
-parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNISTT')
+parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
 
 
 args = parser.parse_args()

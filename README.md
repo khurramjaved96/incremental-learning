@@ -1,5 +1,20 @@
 # iCarl2.0
 This is an on-going pytorch implementation of iCarl[1].
+
+``` bash
+runExperiment.py [-h] [--batch-size N] [--test-batch-size N]
+                        [--epochs N] [--lr LR]
+                        [--schedule SCHEDULE [SCHEDULE ...]]
+                        [--gammas GAMMAS [GAMMAS ...]] [--momentum M]
+                        [--no-cuda] [--no-distill] [--no-random]
+                        [--no-herding] [--oversampling] [--seed S]
+                        [--log-interval N] [--model-type MODEL_TYPE]
+                        [--name NAME] [--sortby SORTBY] [--decay DECAY]
+                        [--step-size STEP_SIZE]
+                        [--memory-budget MEMORY_BUDGET]
+                        [--epochs-class EPOCHS_CLASS] [--classes CLASSES]
+                        [--depth DEPTH] [--dataset DATASET]
+```
 ## Implemented Modules
 1. Data pipeline
 2. Data loader with upsampling
