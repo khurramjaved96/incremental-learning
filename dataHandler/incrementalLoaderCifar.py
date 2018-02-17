@@ -139,7 +139,7 @@ class incrementalLoaderCifar(td.Dataset):
                     featuresTemp = features - mean
                 featuresNorm = torch.norm(featuresTemp.data, 2, dim=1)
                 # featuresNorm = featuresTemp.norm(dim=1)
-                argMin = np.argmin(featuresNorm.data)
+                argMin = np.argmin(featuresNorm.numpy())
                 if argMin in listOfSelected:
                     assert(False)
                 listOfSelected.append(argMin)
