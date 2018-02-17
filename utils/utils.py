@@ -18,7 +18,7 @@ def resizeImage(img,factor):
     return img2
 
 
-def saveConfusionMatrix(epoch, path, model, args, test_loader):
+def saveConfusionMatrix(epoch, path, model, args, dataset, test_loader):
     model.eval()
     test_loss = 0
     correct = 0

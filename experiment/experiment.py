@@ -2,12 +2,13 @@ class experiment:
     '''
     Class to store results of any experiment 
     '''
-    def __init__(self, params):
+    def __init__(self, args):
         self.name = None
-        self.params = params
+        self.params = vars(args)
+        self.args = args
         self.results= {}
-
-    def constructExperimentName(self, args):
+        self.constructExperimentName(args)
+    def constructExperimentName(self,args):
         import os
         name = [args.model_type, str(args.epochs_class), str(args.step_size)]
         if not args.no_herding:

@@ -93,19 +93,19 @@ model = myFactory.getModel(args.model_type, args.dataset)
 if args.cuda:
     model.cuda()
 
-myExperiment = ex.experiment(vars(args))
-myExperiment.constructExperimentName(args)
+myExperiment = ex.experiment(args)
 
 modelFixed = None
 
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                 weight_decay=args.decay, nesterov=True)
-currentLr = args.lr
 
+currentLr = args.lr
 allClasses = list(range(dataset.classes))
 allClasses.sort(reverse=True)
 
-# Will be important when computing confidence intervals.
+
+# Simplify the training code by moving it to appropriate files
 import random
 if not args.no_random:
     print ("Randomly shuffling classes")
@@ -176,7 +176,7 @@ for classGroup in range(0, dataset.classes, args.step_size):
     tempTrain = nmc.classify(model, trainIterator, args.cuda, True)
     trainY.append(tempTrain)
     print("Train NMC", tempTrain)
-    ut.saveConfusionMatrix(int(classGroup/args.step_size) * args.epochs_class + epoch, myExperiment.path +"CONFUSION", model, args, testIterator)
+    ut.saveConfusionMatrix(int(classGroup/args.step_size) * args.epochs_class + epoch, myExperiment.path +"CONFUSION", model, args, dataset, testIterator)
     testY = nmc.classify(model, testIterator, args.cuda, True)
     y.append(testY)
     print ("Test NMC", testY)
