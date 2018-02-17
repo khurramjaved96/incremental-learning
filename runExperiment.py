@@ -1,8 +1,6 @@
 from __future__ import print_function
 
 import argparse
-import copy
-import random
 
 import torch
 import torch.optim as optim
@@ -41,11 +39,11 @@ parser.add_argument('--no-random', action='store_true', default=False,
                     help='Disable random shuffling of classes')
 parser.add_argument('--no-herding', action='store_true', default=False,
                     help='Disable herding for NMC')
-parser.add_argument('--oversampling', action='store_true', default=False,
+parser.add_argument('--oversampling', action='store_true', default=True,
                     help='Do oversampling to train unbiased classifier')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+parser.add_argument('--log-interval', type=int, default=2, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--model-type', default="resnet32",
                     help='model type to be used. Example : resnet32, resnet20, densenet, test')
@@ -94,30 +92,16 @@ if args.cuda:
 
 myExperiment = ex.experiment(args)
 
-modelFixed = None
-
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                       weight_decay=args.decay, nesterov=True)
 
-currentLr = args.lr
-allClasses = list(range(dataset.classes))
-allClasses.sort(reverse=True)
-
-# Simplify the training code by moving it to appropriate files
-
-
-if not args.no_random:
-    print("Randomly shuffling classes")
-    random.shuffle(allClasses)
-
-leftOver = []
-limitedset = []
-distillLoss = False
+myTrainer = t.trainer(trainIterator, testIterator, dataset, model, args, optimizer)
 
 x = []
 y = []
 y1 = []
 trainY = []
+leftOver = []
 myTestFactory = tF.classifierFactory()
 nmc = myTestFactory.getTester("nmc", args.cuda)
 
@@ -125,62 +109,35 @@ if not args.sortby == "none":
     print("Sorting by", args.sortby)
     trainDatasetLoader.sortByImportance(args.sortby)
 
-overallEpoch = 0
-
 for classGroup in range(0, dataset.classes, args.step_size):
-    if classGroup == 0:
-        distillLoss = False
-    else:
-        distillLoss = True
-        modelFixed = copy.deepcopy(model)
-        for param in modelFixed.parameters():
-            param.requires_grad = False
-            # model.classifier = nn.Linear(64, 100).cuda()
-    for param_group in optimizer.param_groups:
-        print("Setting LR to", args.lr)
-        param_group['lr'] = args.lr
-        currentLr = args.lr
-    for val in leftOver:
 
-        if args.no_herding:
-            trainDatasetLoader.limitClass(val, int(args.memory_budget / len(leftOver)))
-        else:
-            print("Sorting by herding")
-            trainDatasetLoader.limitClassAndSort(val, int(args.memory_budget / len(leftOver)), modelFixed)
-        limitedset.append(val)
+    myTrainer.setupTraining()
 
-    for temp in range(classGroup, classGroup + args.step_size):
-        popVal = allClasses.pop()
-        trainDatasetLoader.addClasses(popVal)
-        testDatasetLoader.addClasses(popVal)
-        print("Train Classes", trainDatasetLoader.activeClasses)
-        leftOver.append(popVal)
+    myTrainer.incrementClasses(classGroup)
+
     epoch = 0
     for epoch in range(0, args.epochs_class):
-        overallEpoch += 1
-        for temp in range(0, len(args.schedule)):
-            if args.schedule[temp] == epoch:
-                for param_group in optimizer.param_groups:
-                    currentLr = param_group['lr']
-                    param_group['lr'] = currentLr * args.gammas[temp]
-                    print("Changing learning rate from", currentLr, "to", currentLr * args.gammas[temp])
-                    currentLr *= args.gammas[temp]
-        t.train(optimizer, trainIterator, limitedset, model, modelFixed, args, dataset)
-        if epoch % 5 == 0:
-            print("Train Classifier", t.test(trainIterator, model, args))
-            print("Test Classifier", t.test(testIterator, model, args))
+        myTrainer.updateLR(epoch)
+        myTrainer.train()
+        if epoch % args.log_interval == 0:
+            print("Train Classifier", myTrainer.evaluate(trainIterator))
+            print("Test Classifier", myTrainer.evaluate(testIterator))
     nmc.updateMeans(model, trainIterator, args.cuda, dataset.classes)
 
     tempTrain = nmc.classify(model, trainIterator, args.cuda, True)
     trainY.append(tempTrain)
-    print("Train NMC", tempTrain)
+
+    # Saving confusion matrix
     ut.saveConfusionMatrix(int(classGroup / args.step_size) * args.epochs_class + epoch,
                            myExperiment.path + "CONFUSION", model, args, dataset, testIterator)
+    # Computing test error for graphing
     testY = nmc.classify(model, testIterator, args.cuda, True)
     y.append(testY)
+
+    print("Train NMC", tempTrain)
     print("Test NMC", testY)
 
-    y1.append(t.test(testIterator, model, args))
+    y1.append(myTrainer.evaluate(testIterator))
     x.append(classGroup + args.step_size)
 
     myExperiment.results["NCM"] = [x, y]

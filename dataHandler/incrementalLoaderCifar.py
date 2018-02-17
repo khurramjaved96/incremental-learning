@@ -66,16 +66,12 @@ class incrementalLoaderCifar(td.Dataset):
     def limitClass(self, n, k):
         if k > self.classSize:
             k = self.classSize
-        # self.weights[n * self.classSize:(n + 1) * self.classSize] = 0
-        # self.weights[n * self.classSize:n*self.classSize+k] = max(1.0 / float(self.classSize), 1.0/float(k))
         if n in self.limitedClasses:
             self.limitedClasses[n] = k
-            # self.weights[n] = max(1,float(self.classSize)/k)
             self.updateLen()
             return False
         else:
             self.limitedClasses[n] = k
-            # self.weights[n] = max(1, float(self.classSize) / k)
             self.updateLen()
             return True
 
@@ -166,7 +162,6 @@ class incrementalLoaderCifar(td.Dataset):
         assert (index < self.classSize * self.totalClasses)
         if not self.overSampling:
             len = 0
-            old = 0
             tempA = 0
             oldLen = 0
             for a in self.activeClasses:

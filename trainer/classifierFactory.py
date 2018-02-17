@@ -40,11 +40,6 @@ class NearestMeanClassifier():
             cMatrix.add(pred, target.data.view_as(pred))
             # 0/0
         test_loss /= len(test_loader.dataset)
-        print("Correct pred", correct, "Total Pre", len(test_loader.dataset))
-        if verbose:
-            print('\nTNCM est set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-                test_loss, correct, len(test_loader.dataset),
-                100. * correct / len(test_loader.dataset)))
 
         return 100. * correct / len(test_loader.dataset)
 
