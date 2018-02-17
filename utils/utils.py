@@ -1,20 +1,21 @@
 import numpy as np
+import torch.nn.functional as F
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
-import torch.nn.functional as F
 
-def resizeImage(img,factor):
+
+def resizeImage(img, factor):
     '''
     
     :param img: 
     :param factor: 
     :return: 
     '''
-    img2 = np.zeros(np.array(img.shape)*factor)
+    img2 = np.zeros(np.array(img.shape) * factor)
 
-    for a in range(0,img.shape[0]):
-        for b in range(0,img.shape[1]):
-            img2[a*factor:(a+1)*factor, b*factor:(b+1)*factor] = img[a,b]
+    for a in range(0, img.shape[0]):
+        for b in range(0, img.shape[1]):
+            img2[a * factor:(a + 1) * factor, b * factor:(b + 1) * factor] = img[a, b]
     return img2
 
 
@@ -41,6 +42,7 @@ def saveConfusionMatrix(epoch, path, model, args, dataset, test_loader):
     cv2.imwrite(path + str(epoch) + ".jpg", img)
     return 100. * correct / len(test_loader.dataset)
 
+
 def constructExperimentName(args):
     import os
     name = [args.model_type, str(args.epochs_class), str(args.step_size)]
@@ -48,7 +50,7 @@ def constructExperimentName(args):
         name.append("herding")
     if not args.no_distill:
         name.append("distillation")
-    if not os.path.exists("../"+args.name):
-        os.makedirs("../"+args.name)
+    if not os.path.exists("../" + args.name):
+        os.makedirs("../" + args.name)
 
-    return "../"+args.name+"/"+"_".join(name)
+    return "../" + args.name + "/" + "_".join(name)

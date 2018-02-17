@@ -1,9 +1,11 @@
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import init
-from .res_utils import DownsampleA, DownsampleC, DownsampleD
-import math
+
+from .res_utils import DownsampleA
 
 
 class ResNetBasicblock(nn.Module):
@@ -110,8 +112,9 @@ class CifarResNet(nn.Module):
 
         return F.softmax(self.classifier(x))
 
-    def forwardFeature(self,x):
+    def forwardFeature(self, x):
         pass
+
 
 def resnet20(num_classes=10):
     """Constructs a ResNet-20 model for CIFAR-10 (by default)
@@ -141,8 +144,9 @@ def resnet20mnist(num_classes=10):
 
 
 def resnet32mnist(num_classes=10, channels=1):
-    model = CifarResNet(ResNetBasicblock, 32, num_classes,channels)
+    model = CifarResNet(ResNetBasicblock, 32, num_classes, channels)
     return model
+
 
 def resnet32(num_classes=10):
     """Constructs a ResNet-32 model for CIFAR-10 (by default)
