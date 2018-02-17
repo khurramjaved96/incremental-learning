@@ -30,7 +30,6 @@ runExperiment.py [-h] [--batch-size N] [--test-batch-size N]
 =======
 ## Results 
 ![alt text](http://khurramjaved96.github.io/random/result.jpg "Incremental Learning on MNIST")
->>>>>>> acd7acec3baefd5ec7bf83c61e705acf4387d7a1
 
 
 ## References
