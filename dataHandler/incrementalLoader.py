@@ -12,7 +12,7 @@ import model.modelFactory as mF
 
 
 class incrementalLoader(td.Dataset):
-    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False, oversampling=True):
+    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False):
 
         self.len = classSize * len(activeClasses)
         sortIndex = np.argsort(labels)

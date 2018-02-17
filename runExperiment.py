@@ -39,8 +39,6 @@ parser.add_argument('--no-random', action='store_true', default=False,
                     help='Disable random shuffling of classes')
 parser.add_argument('--no-herding', action='store_true', default=False,
                     help='Disable herding for NMC')
-parser.add_argument('--oversampling', action='store_true', default=True,
-                    help='Do oversampling to train unbiased classifier')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=2, metavar='N',
@@ -70,12 +68,12 @@ trainDatasetLoader = dL.incrementalLoader(dataset.trainData.train_data, dataset.
                                           dataset.labelsPerClassTrain,
                                           dataset.classes, [], transform=dataset.trainTransform,
                                           cuda=args.cuda,
-                                          oversampling=args.oversampling)
+                                          )
 
 testDatasetLoader = dL.incrementalLoader(dataset.testData.test_data, dataset.testData.test_labels,
                                          dataset.labelsPerClassTest, dataset.classes,
                                          [], transform=dataset.testTransform, cuda=args.cuda,
-                                         oversampling=args.oversampling)
+                                         )
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
