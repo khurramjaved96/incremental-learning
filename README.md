@@ -23,6 +23,9 @@ runExperiment.py [-h] [--batch-size N] [--test-batch-size N]
 2. Python 3.6 
 3. torchnet (https://github.com/pytorch/tnt) 
 
+## Results 
+![alt text](http://khurramjaved96.github.io/random/result.jpg "Incremental Learning on MNIST")
+
 
 ## References
 [1] https://arxiv.org/abs/1611.07725
