@@ -1,6 +1,8 @@
 import model.densenet as dn
 import model.resnet32 as res
 import model.testModel as tm
+import model.cDCGAN as gan
+
 class modelFactory():
     def __init__(self):
         pass
@@ -36,6 +38,17 @@ class modelFactory():
                 print ("MNIST dataset not supported in this model. Try resnet20 or 32")
                 assert(False)
             return tm.Net(100)
+
+        elif modelType=="cdcgan":
+            if dataset=="CIFAR100":
+                print("CIFAR100 not supported")
+                assert(False)
+            G = gan.Generator(128)
+            D = gan.Discriminator(128)
+            G.weight_init(mean=0.0, std=0.02)
+            D.weight_init(mean=0.0, std=0.02)
+            return G, D
+
         else:
             print ("Unsupported model; either implement the model in model/modelFactory or choose a different model")
             assert(False)
