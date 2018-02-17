@@ -29,17 +29,15 @@ class incrementalLoader(td.Dataset):
         self.means = {}
         self.cuda = cuda
         self.weights = np.zeros(self.totalClasses * self.classSize)
-        self.overSampling = oversampling
         self.classIndices()
 
-
     def classIndices(self):
-        self.indices={}
-        cur=  0
+        self.indices = {}
+        cur = 0
         for temp in range(0, self.totalClasses):
-            curLen = len(np.nonzero(np.uint8(self.labels==temp))[0])
-            self.indices[temp] = (cur, cur+ curLen)
-            cur+= curLen
+            curLen = len(np.nonzero(np.uint8(self.labels == temp))[0])
+            self.indices[temp] = (cur, cur + curLen)
+            cur += curLen
 
     def addClasses(self, n):
         if n in self.activeClasses:
@@ -70,7 +68,7 @@ class incrementalLoader(td.Dataset):
         # self.len = lenVar
         # Computing len if oversampling is turned on.
         if self.overSampling:
-            lenVar =0
+            lenVar = 0
             for a in self.activeClasses:
                 lenVar += self.indices[a][1] - self.indices[a][0]
         self.len = lenVar
@@ -186,7 +184,7 @@ class incrementalLoader(td.Dataset):
         base = self.indices[tempA][0]
         incre = index - oldLen
         if tempA in self.limitedClasses:
-            incre = incre%self.limitedClasses[tempA]
+            incre = incre % self.limitedClasses[tempA]
         index = base + incre
         img = self.data[index]
         if "torch" in str(type(img)):
@@ -198,7 +196,7 @@ class incrementalLoader(td.Dataset):
         if not self.labels[index] in self.activeClasses:
             print("Active classes", self.activeClasses)
             print("Label ", self.labels[index])
-            assert(False)
+            assert (False)
 
         return img, self.labels[index]
 
