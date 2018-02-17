@@ -23,14 +23,12 @@ runExperiment.py [-h] [--batch-size N] [--test-batch-size N]
 2. Python 3.6 
 3. torchnet (https://github.com/pytorch/tnt) 
 
-<<<<<<< HEAD
 ## Ideas to implement and test
 1. Auto-encoder to preserve information of a class 
 2. Generative models for data seen in the past to remove dependency on examplers.
 =======
 ## Results 
 ![alt text](http://khurramjaved96.github.io/random/result.jpg "Incremental Learning on MNIST")
->>>>>>> acd7acec3baefd5ec7bf83c61e705acf4387d7a1
 
 
 ## References
