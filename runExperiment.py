@@ -53,7 +53,7 @@ parser.add_argument('--memory-budget', type=int, default=2000, help='How many im
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--classes', type=int, default=100, help='Total classes (after all the increments)')
 parser.add_argument('--depth', type=int, default=32, help='depth of the model; only valid for resnet')
-parser.add_argument('--dataset', default="MNIST", help='dataset to be used; example CIFAR, MNIST')
+parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
 
 
 args = parser.parse_args()
