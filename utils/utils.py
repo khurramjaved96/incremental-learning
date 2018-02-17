@@ -22,7 +22,7 @@ def saveConfusionMatrix(epoch, path, model, args, test_loader):
     model.eval()
     test_loss = 0
     correct = 0
-    cMatrix = confusionmeter.ConfusionMeter(args.classes, True)
+    cMatrix = confusionmeter.ConfusionMeter(dataset.classes, True)
 
     for data, target in test_loader:
         if args.cuda:

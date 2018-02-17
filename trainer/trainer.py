@@ -6,7 +6,7 @@ from torch.autograd import Variable
 
 
 
-def train(optimizer, train_loader, leftover, model ,modelFixed, args, verbose=False):
+def train(optimizer, train_loader, leftover, model ,modelFixed, args, dataset, verbose=False):
 
     model.train()
 
@@ -38,7 +38,7 @@ def train(optimizer, train_loader, leftover, model ,modelFixed, args, verbose=Fa
             dataOldClasses, target = Variable(dataOldClasses), Variable(targetsOldClasses)
 
             output = model(dataOldClasses)
-            y_onehot = torch.FloatTensor(len(dataOldClasses), args.classes)
+            y_onehot = torch.FloatTensor(len(dataOldClasses), dataset.classes)
             if args.cuda:
                 y_onehot = y_onehot.cuda()
 
@@ -47,7 +47,7 @@ def train(optimizer, train_loader, leftover, model ,modelFixed, args, verbose=Fa
             y_onehot.scatter_(1, target2, 1)
 
         else:
-            y_onehot = torch.FloatTensor(len(data), args.classes)
+            y_onehot = torch.FloatTensor(len(data), dataset.classes)
             if args.cuda:
                 y_onehot = y_onehot.cuda()
 

@@ -11,6 +11,7 @@ import trainer.classifierFactory as tF
 import trainer.trainer as t
 import utils.utils as ut
 import experiment.experiment as ex
+import dataHandler.incrementalLoaderCifar as dL
 import dataHandler.datasetFactory as dF
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
@@ -51,7 +52,6 @@ parser.add_argument('--decay', type=float, default=0.00001 , help='Weight decay 
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
-parser.add_argument('--classes', type=int, default=100, help='Total classes (after all the increments)')
 parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
 
 
@@ -59,35 +59,35 @@ parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; e
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
-schedule = args.schedule
-gammas = args.gammas
+
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
-if args.dataset=="MNIST":
-    args.classes=10
-elif args.dataset=="CIFAR100":
-    args.classes=100
-else:
-    print ("Unsupported dataset; move this code to a better place")
-    assert(False)
+dataset = dF.datasetFactory.getDataset(args.dataset)
+
+trainDatasetLoader = dL.incrementalLoaderCifar(dataset.trainData.train_data, dataset.trainData.train_labels, dataset.labelsPerClassTrain,
+                                               dataset.classes, [], transform=dataset.trainTransform,
+                                               cuda=args.cuda,
+                                               oversampling=args.oversampling)
 
 
-train_data, trainDatasetFull = dF.datasetFactory.getDataset(args.dataset, args, True)
-test_data, testDataset = dF.datasetFactory.getDataset(args.dataset, args, False)
+testDatasetLoader = dL.incrementalLoaderCifar(dataset.testData.test_data, dataset.testData.test_labels, dataset.labelsPerClassTest, dataset.classes,
+                                              [], transform=dataset.testTransform, cuda=args.cuda,
+                                              oversampling=args.oversampling)
+
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-train_loader_full = torch.utils.data.DataLoader(trainDatasetFull,
-    batch_size=args.batch_size, shuffle=True, **kwargs)
+trainIterator = torch.utils.data.DataLoader(trainDatasetLoader,
+                                            batch_size=args.batch_size, shuffle=True, **kwargs)
 
 
-test_loader = torch.utils.data.DataLoader(
-    testDataset,
+testIterator = torch.utils.data.DataLoader(
+    testDatasetLoader,
     batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
-# Selecting model
+
 myFactory = mF.modelFactory()
 model = myFactory.getModel(args.model_type, args.dataset)
 if args.cuda:
@@ -102,7 +102,7 @@ optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                 weight_decay=args.decay, nesterov=True)
 currentLr = args.lr
 
-allClasses = list(range(args.classes))
+allClasses = list(range(dataset.classes))
 allClasses.sort(reverse=True)
 
 # Will be important when computing confidence intervals.
@@ -124,12 +124,12 @@ nmc = myTestFactory.getTester("nmc", args.cuda)
 
 if not args.sortby == "none":
     print ("Sorting by", args.sortby)
-    trainDatasetFull.sortByImportance(args.sortby)
+    trainDatasetLoader.sortByImportance(args.sortby)
 
 overallEpoch = 0
 
 
-for classGroup in range(0, args.classes, args.step_size):
+for classGroup in range(0, dataset.classes, args.step_size):
     if classGroup ==0:
         distillLoss=False
     else:
@@ -145,43 +145,43 @@ for classGroup in range(0, args.classes, args.step_size):
     for val in leftOver:
 
         if args.no_herding:
-            trainDatasetFull.limitClass(val,int(args.memory_budget/len(leftOver)))
+            trainDatasetLoader.limitClass(val, int(args.memory_budget / len(leftOver)))
         else:
             print ("Sorting by herding")
-            trainDatasetFull.limitClassAndSort(val,int(args.memory_budget/len(leftOver)),modelFixed)
+            trainDatasetLoader.limitClassAndSort(val, int(args.memory_budget / len(leftOver)), modelFixed)
         limitedset.append(val)
 
     for temp in range(classGroup, classGroup+args.step_size):
         popVal = allClasses.pop()
-        trainDatasetFull.addClasses(popVal)
-        testDataset.addClasses(popVal)
-        print ("Train Classes", trainDatasetFull.activeClasses)
+        trainDatasetLoader.addClasses(popVal)
+        testDatasetLoader.addClasses(popVal)
+        print ("Train Classes", trainDatasetLoader.activeClasses)
         leftOver.append(popVal)
     epoch=0
     for epoch in range(0,args.epochs_class):
         overallEpoch+=1
-        for temp in range(0, len(schedule)):
-            if schedule[temp]==epoch:
+        for temp in range(0, len(args.schedule)):
+            if args.schedule[temp]==epoch:
                 for param_group in optimizer.param_groups:
                     currentLr = param_group['lr']
-                    param_group['lr'] = currentLr*gammas[temp]
-                    print("Changing learning rate from", currentLr, "to", currentLr*gammas[temp])
-                    currentLr*= gammas[temp]
-        t.train(optimizer, train_loader_full,limitedset, model, modelFixed, args)
+                    param_group['lr'] = currentLr*args.gammas[temp]
+                    print("Changing learning rate from", currentLr, "to", currentLr*args.gammas[temp])
+                    currentLr*= args.gammas[temp]
+        t.train(optimizer, trainIterator, limitedset, model, modelFixed, args, dataset)
         if epoch%5==0:
-            print("Train Classifier", t.test(train_loader_full, model, args))
-            print ("Test Classifier", t.test(test_loader, model, args))
-    nmc.updateMeans(model, train_loader_full, args.cuda, args.classes)
+            print("Train Classifier", t.test(trainIterator, model, args))
+            print ("Test Classifier", t.test(testIterator, model, args))
+    nmc.updateMeans(model, trainIterator, args.cuda, dataset.classes)
 
-    tempTrain = nmc.classify(model,train_loader_full,args.cuda, True)
+    tempTrain = nmc.classify(model, trainIterator, args.cuda, True)
     trainY.append(tempTrain)
     print("Train NMC", tempTrain)
-    ut.saveConfusionMatrix(int(classGroup/args.step_size)*args.epochs_class + epoch,myExperiment.path+"CONFUSION", model, args, test_loader)
-    testY = nmc.classify(model, test_loader, args.cuda, True)
+    ut.saveConfusionMatrix(int(classGroup/args.step_size) * args.epochs_class + epoch, myExperiment.path +"CONFUSION", model, args, testIterator)
+    testY = nmc.classify(model, testIterator, args.cuda, True)
     y.append(testY)
     print ("Test NMC", testY)
 
-    y1.append(t.test(test_loader, model, args))
+    y1.append(t.test(testIterator, model, args))
     x.append(classGroup+args.step_size)
 
     myExperiment.results["NCM"] = [x,y]
@@ -195,5 +195,5 @@ for classGroup in range(0, args.classes, args.step_size):
     myPlotter.plot(x,y, title=args.name, legend="NCM")
     myPlotter.plot(x, y1, title=args.name, legend="Trained Classifier")
 
-    myPlotter.saveFig(myExperiment.path+"Overall"+".jpg", args.classes+1)
+    myPlotter.saveFig(myExperiment.path+"Overall"+".jpg", dataset.classes+1)
 
