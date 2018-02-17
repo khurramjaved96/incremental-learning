@@ -30,6 +30,12 @@ class modelFactory():
                 assert (False)
             return res.resnet44(100)
 
+        elif modelType == "resnet10":
+            if dataset == "MNIST":
+                return res.resnet10mnist(10)
+            print ("Resnet10 is not supported for CIFAR")
+            assert(False)
+
 
         elif modelType=="test":
             if dataset=="MNIST":
