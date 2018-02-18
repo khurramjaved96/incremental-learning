@@ -51,13 +51,17 @@ parser.add_argument('--sortby', default="none",
                     help='Examplars sorting strategy')
 parser.add_argument('--decay', type=float, default=0.00001, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
-parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
+parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max. 0 will result in fine-tuning')
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
+parser.add_argument('--lwf', action='store_true', default=False,
+                    help='Use learning without forgetting. Ignores memory-budget ("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
+if args.lwf:
+    args.memory_budget=0
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
