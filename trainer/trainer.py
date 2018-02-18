@@ -94,19 +94,22 @@ class trainer():
                 assert(len(oldClassesIndices)==0)
                 assert(self.args.memory_budget ==0)
                 output = self.model(Variable(data))
+                y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
+                y_onehot.zero_()
+                target.unsqueeze_(1)
+                y_onehot.scatter_(1, target, 1)
+
                 if len(self.olderClasses)>0:
                     print ("Using LWF to combine losess")
                     pred2 = self.modelFixed(Variable(data))
                     output = Variable(torch.cat((output.data, output.data), dim=0))
                     print (target.shape, pred2.data.shape)
-                    target = torch.cat((target, pred2.data), dim=0)
-                y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
+                    y_onehot = torch.cat((y_onehot, pred2.data), dim=0)
+
                 if self.args.cuda:
                     y_onehot = y_onehot.cuda()
 
-                y_onehot.zero_()
-                target.unsqueeze_(1)
-                y_onehot.scatter_(1, target, 1)
+
 
             elif len(oldClassesIndices) == 0:
                 dataOldClasses = data[newClassesIndices]
