@@ -31,7 +31,6 @@ class Generator(nn.Module):
             normal_init(self._modules[m], mean, std)
 
 class Discriminator(nn.Module):
-    # initializers
     def __init__(self, d=128):
         super(Discriminator, self).__init__()
         self.conv1_img = nn.Conv2d(1, d//2, 4, 2, 1)
