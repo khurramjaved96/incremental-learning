@@ -1,4 +1,6 @@
+import pickle
 import numpy as np
+import plotter.plotter as plt
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
@@ -54,3 +56,20 @@ def constructExperimentName(args):
         os.makedirs("../" + args.name)
 
     return "../" + args.name + "/" + "_".join(name)
+
+# y should be of type [("Value Name", y_values), ....]
+def plotAccuracy(experiment, x, y, num_classes)
+    myPlotter = plt.plotter()
+
+    if not isinstance(y, list):
+        print("y must be a list of tuples!")
+        assert(False)
+
+    for i in range(len(y)):
+        experiment.results[y[i][0]] = [x, y[i][1]]
+        myPlotter.plot(x, y[i][1], title=args.name, legend=y[i][0])
+
+    myPlotter.saveFig(experiment.path + "Overall" + ".jpg", num_classes)
+
+    with open(experiment.path + "result", "wb") as f:
+        pickle.dump(experiment, f)

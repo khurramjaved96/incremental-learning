@@ -54,6 +54,7 @@ parser.add_argument('--step-size', type=int, default=10, help='How many classes 
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
+parser.add_argument('--process', default="nmc", help='Process to be used to prevent forgetting; Example: nmc, gan')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -79,14 +80,21 @@ kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
 trainIterator = torch.utils.data.DataLoader(trainDatasetLoader,
                                             batch_size=args.batch_size, shuffle=True, **kwargs)
-testIterator = torch.utils.data.DataLoader(
-    testDatasetLoader,
-    batch_size=args.test_batch_size, shuffle=True, **kwargs)
+testIterator = torch.utils.data.DataLoader(testDatasetLoader,
+                                           batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
+G = D = None
 myFactory = mF.modelFactory()
 model = myFactory.getModel(args.model_type, args.dataset)
+
+if args.process == "gan":
+    G, D = myFactory.getModel("cdcgan", args.dataset)
+
 if args.cuda:
     model.cuda()
+    if args.process == "gan":
+        G.cuda()
+        D.cuda()
 
 myExperiment = ex.experiment(args)
 
@@ -138,6 +146,8 @@ for classGroup in range(0, dataset.classes, args.step_size):
 
     y1.append(myTrainer.evaluate(testIterator))
     x.append(classGroup + args.step_size)
+
+    ut.plotAccuracy(myExperiment, x, [("NMC", y), ("Trained Classifier",y1)], dataset.classes + 1)
 
     myExperiment.results["NCM"] = [x, y]
     myExperiment.results["Trained Classifier"] = [x, y1]
