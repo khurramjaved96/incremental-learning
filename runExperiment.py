@@ -12,7 +12,8 @@ import experiment.experiment as ex
 import model.modelFactory as mF
 import plotter.plotter as plt
 import trainer.classifierFactory as tF
-import trainer.trainer as t
+import trainer.classifierTrainer as t
+import trainer.nmcTrainer as nt
 import utils.utils as ut
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
@@ -101,52 +102,10 @@ myExperiment = ex.experiment(args)
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                       weight_decay=args.decay, nesterov=True)
 
-myTrainer = t.trainer(trainIterator, testIterator, dataset, model, args, optimizer)
+classifierTrainer = t.trainer(trainIterator, testIterator, dataset, model, args, optimizer)
 
-x = []
-y = []
-y1 = []
-trainY = []
-leftOver = []
-myTestFactory = tF.classifierFactory()
-nmc = myTestFactory.getTester("nmc", args.cuda)
+if args.process == "nmc":
+    trainer = nt.trainer()
+    trainer.train(args, dataset, classifierTrainer, model, trainIterator, testIterator, myExperiment)
 
-if not args.sortby == "none":
-    print("Sorting by", args.sortby)
-    trainDatasetLoader.sortByImportance(args.sortby)
 
-for classGroup in range(0, dataset.classes, args.step_size):
-
-    myTrainer.setupTraining()
-
-    myTrainer.incrementClasses(classGroup)
-
-    epoch = 0
-    for epoch in range(0, args.epochs_class):
-        myTrainer.updateLR(epoch)
-        myTrainer.train()
-        if epoch % args.log_interval == 0:
-            print("Train Classifier", myTrainer.evaluate(trainIterator))
-            print("Test Classifier", myTrainer.evaluate(testIterator))
-    myTrainer.updateFrozenModel()
-    nmc.updateMeans(model, trainIterator, args.cuda, dataset.classes)
-
-    tempTrain = nmc.classify(model, trainIterator, args.cuda, True)
-    trainY.append(tempTrain)
-
-    # Saving confusion matrix
-    ut.saveConfusionMatrix(int(classGroup / args.step_size) * args.epochs_class + epoch,
-                           myExperiment.path + "CONFUSION", model, args, dataset, testIterator)
-    # Computing test error for graphing
-    testY = nmc.classify(model, testIterator, args.cuda, True)
-    y.append(testY)
-
-    print("Train NMC", tempTrain)
-    print("Test NMC", testY)
-
-    y1.append(myTrainer.evaluate(testIterator))
-    x.append(classGroup + args.step_size)
-
-    ut.plotAccuracy(myExperiment, x,
-                    [("NMC", y), ("Trained Classifier",y1)],
-                    dataset.classes + 1, args.name)
