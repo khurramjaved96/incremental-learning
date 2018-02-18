@@ -45,8 +45,8 @@ class modelFactory():
                 assert(False)
             G = gan.Generator(128)
             D = gan.Discriminator(128)
-            G.weight_init(mean=0.0, std=0.02)
-            D.weight_init(mean=0.0, std=0.02)
+            G.init_weights(mean=0.0, std=0.02)
+            D.init_weights(mean=0.0, std=0.02)
             return G, D
 
         else:
