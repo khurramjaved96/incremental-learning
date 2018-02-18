@@ -95,6 +95,8 @@ class trainer():
                 assert(self.args.memory_budget ==0)
                 output = self.model(Variable(data))
                 y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
+                if self.args.cuda:
+                    y_onehot = y_onehot.cuda()
                 y_onehot.zero_()
                 target.unsqueeze_(1)
                 y_onehot.scatter_(1, target, 1)
@@ -106,8 +108,7 @@ class trainer():
                     print (target.shape, pred2.data.shape)
                     y_onehot = torch.cat((y_onehot, pred2.data), dim=0)
 
-                if self.args.cuda:
-                    y_onehot = y_onehot.cuda()
+
 
 
 
