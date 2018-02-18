@@ -58,7 +58,7 @@ def constructExperimentName(args):
     return "../" + args.name + "/" + "_".join(name)
 
 # y should be of type [("Value Name", y_values), ....]
-def plotAccuracy(experiment, x, y, num_classes)
+def plotAccuracy(experiment, x, y, num_classes, plot_name):
     myPlotter = plt.plotter()
 
     if not isinstance(y, list):
@@ -67,7 +67,7 @@ def plotAccuracy(experiment, x, y, num_classes)
 
     for i in range(len(y)):
         experiment.results[y[i][0]] = [x, y[i][1]]
-        myPlotter.plot(x, y[i][1], title=args.name, legend=y[i][0])
+        myPlotter.plot(x, y[i][1], title=plot_name, legend=y[i][0])
 
     myPlotter.saveFig(experiment.path + "Overall" + ".jpg", num_classes)
 

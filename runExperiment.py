@@ -147,18 +147,6 @@ for classGroup in range(0, dataset.classes, args.step_size):
     y1.append(myTrainer.evaluate(testIterator))
     x.append(classGroup + args.step_size)
 
-    ut.plotAccuracy(myExperiment, x, [("NMC", y), ("Trained Classifier",y1)], dataset.classes + 1)
-
-    myExperiment.results["NCM"] = [x, y]
-    myExperiment.results["Trained Classifier"] = [x, y1]
-
-    with open(myExperiment.path + "result", "wb") as f:
-        import pickle
-
-        pickle.dump(myExperiment, f)
-
-    myPlotter = plt.plotter()
-    myPlotter.plot(x, y, title=args.name, legend="NCM")
-    myPlotter.plot(x, y1, title=args.name, legend="Trained Classifier")
-
-    myPlotter.saveFig(myExperiment.path + "Overall" + ".jpg", dataset.classes + 1)
+    ut.plotAccuracy(myExperiment, x,
+                    [("NMC", y), ("Trained Classifier",y1)],
+                    dataset.classes + 1, args.name)
