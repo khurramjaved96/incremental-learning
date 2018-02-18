@@ -76,6 +76,11 @@ class incrementalLoader(td.Dataset):
         return
 
     def limitClass(self, n, k):
+        if k ==0:
+            self.removeClass(n)
+            print ("Removed class", n)
+            print ("Current classes", self.activeClasses)
+            return False
         if k > self.classSize:
             k = self.classSize
         if n in self.limitedClasses:

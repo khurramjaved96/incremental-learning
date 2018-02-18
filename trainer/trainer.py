@@ -70,6 +70,7 @@ class trainer():
 
 
     def updateFrozenModel(self):
+        self.model.eval()
         self.modelFixed = copy.deepcopy(self.model)
         for param in self.modelFixed.parameters():
             param.requires_grad = False
