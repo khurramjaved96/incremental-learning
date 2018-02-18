@@ -98,7 +98,7 @@ class trainer():
                     print ("Using LWF to combine losess")
                     pred2 = self.modelFixed(Variable(data))
                     output = Variable(torch.cat((output.data, output.data), dim=0))
-                    target = torch.cat((target, pred2), dim=0)
+                    target = torch.cat((target, pred2.data), dim=0)
                 y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
                 if self.args.cuda:
                     y_onehot = y_onehot.cuda()
