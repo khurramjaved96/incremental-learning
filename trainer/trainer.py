@@ -102,7 +102,6 @@ class trainer():
                 y_onehot.scatter_(1, target, 1)
 
                 if len(self.olderClasses)>0:
-                    print ("Using LWF to combine losess")
                     pred2 = self.modelFixed(Variable(data))
                     data = torch.cat((data,data),dim=0)
                     output = self.model(Variable(data))
