@@ -6,8 +6,8 @@ import utils.utils as ut
 import trainer.classifierFactory as tF
 
 class trainer():
-    def _init__(self, args, dataset, classifierTrainer, model, trainIterator,
-                testIterator, trainDatasetLoader, experiment):
+    def __init__(self, args, dataset, classifierTrainer, model, trainIterator,
+                 testIterator, trainDatasetLoader, experiment):
         self.args = args
         self.dataset = dataset
         self.classifierTrainer = classifierTrainer
@@ -71,5 +71,5 @@ class trainer():
             x.append(classGroup + self.args.step_size)
 
             ut.plotAccuracy(self.experiment, x,
-                            [("NMC", y), ("Trained Classifier",y1)],
+                            [("NMC", y), ("Trained Classifier", y1)],
                             self.dataset.classes + 1, self.args.name)

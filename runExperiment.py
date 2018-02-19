@@ -103,10 +103,13 @@ myExperiment = ex.experiment(args)
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                       weight_decay=args.decay, nesterov=True)
 
-classifierTrainer = t.trainer(trainIterator, testIterator, dataset, model, args, optimizer)
+classifierTrainer = t.trainer(trainIterator, testIterator, dataset, model,
+                              args, optimizer)
 
 if args.process == "nmc":
-    trainer = nt.trainer(args, dataset, classifierTrainer, model, trainIterator, testIterator, trainDatasetLoader,  myExperiment)
+    trainer = nt.trainer(args, dataset, classifierTrainer, model,
+                         trainIterator, testIterator, trainDatasetLoader,
+                         myExperiment)
     trainer.train()
 
 if args.process == "gan":

@@ -7,7 +7,7 @@ import trainer.classifierTrainer as t
 import trainer.classifierFactory as tF
 
 class trainer():
-    def _init__(self, args, dataset, classifierTrainer, model, G, D,
+    def __init__(self, args, dataset, classifierTrainer, model, G, D,
                 trainIterator, testIterator, trainDatasetLoader, experiment):
         self.args = args
         self.dataset = dataset
