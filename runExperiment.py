@@ -57,7 +57,7 @@ parser.add_argument('--memory-budget', type=int, default=2000, help='How many im
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
 parser.add_argument('--process', default="nmc", help='Process to be used to prevent forgetting; Example: nmc, gan')
-parser.add_argument('--gan-epochs', default="20", help='Epochs per increment for training the GANs')
+parser.add_argument('--gan-epochs', type=int, default="20", help='Epochs per increment for training the GANs')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
