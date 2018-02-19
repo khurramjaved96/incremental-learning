@@ -106,8 +106,8 @@ optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
 classifierTrainer = t.trainer(trainIterator, testIterator, dataset, model, args, optimizer)
 
 if args.process == "nmc":
-    trainer = nt.trainer()
-    trainer.train(args, dataset, classifierTrainer, model, trainIterator, testIterator, myExperiment)
+    trainer = nt.trainer(args, dataset, classifierTrainer, model, trainIterator, testIterator, trainDatasetLoader,  myExperiment)
+    trainer.train()
 
 if args.process == "gan":
     trainer = gt.trainer()

@@ -65,8 +65,9 @@ class trainer():
             param_group['lr'] = self.args.lr
             self.currentLr = self.args.lr
 
-        for val in self.leftOver:
-            self.limitClass(val, int(self.args.memory_budget / len(self.leftOver)), not self.args.no_herding)
+        if self.args.process == "nmc":
+            for val in self.leftOver:
+                self.limitClass(val, int(self.args.memory_budget / len(self.leftOver)), not self.args.no_herding)
 
 
     def updateFrozenModel(self):
