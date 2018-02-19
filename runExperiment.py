@@ -14,6 +14,7 @@ import plotter.plotter as plt
 import trainer.classifierFactory as tF
 import trainer.classifierTrainer as t
 import trainer.nmcTrainer as nt
+import trainer.ganTrainer as gt
 import utils.utils as ut
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
@@ -108,4 +109,5 @@ if args.process == "nmc":
     trainer = nt.trainer()
     trainer.train(args, dataset, classifierTrainer, model, trainIterator, testIterator, myExperiment)
 
-
+if args.process == "gan":
+    trainer = gt.trainer()
