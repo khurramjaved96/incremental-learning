@@ -88,7 +88,9 @@ class incrementalLoader(td.Dataset):
             self.limitedClasses[n] = k
             # Remove this line; this turns off oversampling
             if not self.overSampling:
+                print ("Previous indices", self.indices[n])
                 self.indices[n] = (self.indices[n][0],self.indices[n][0]+k)
+                print ("Current indices", self.indices[n])
             self.updateLen()
             return False
         else:

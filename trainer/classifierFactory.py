@@ -47,6 +47,7 @@ class NearestMeanClassifier():
         # Set the mean to zero
         self.means *= 0
         self.classes = classes
+        # Remove the magic number 64
         self.means = np.zeros((classes, 64))
         self.totalFeatures = np.zeros((classes, 1)) + 1
         print("Computing means")
