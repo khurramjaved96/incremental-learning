@@ -56,8 +56,16 @@ parser.add_argument('--step-size', type=int, default=10, help='How many classes 
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
+
 parser.add_argument('--process', default="nmc", help='Process to be used to prevent forgetting; Example: nmc, gan')
-parser.add_argument('--gan-epochs', type=int, default="20", help='Epochs per increment for training the GANs')
+
+parser.add_argument('--gan-epochs', type=int, default=15, help='Epochs per increment for training the GANs')
+parser.add_argument('--gan-lr', type=int, default=0.0002, help='Learning Rate for training the GANs')
+parser.add_argument('--gan-batch-size', type=int, default=128, help='Batch Size for training the GANs')
+parser.add_argument('--gan-schedule', type=int, nargs='+', default=[11, 16],
+                    help='Decrease GAN learning rate at these epochs.')
+parser.add_argument('--gan-gammas', type=float, nargs='+', default=[0.1, 0.1],
+                    help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -111,7 +119,10 @@ if args.process == "nmc":
     trainer = nt.trainer(args, dataset, classifierTrainer, model,
                          trainIterator, testIterator, trainDatasetLoader,
                          myExperiment)
-    trainer.train()
 
 if args.process == "gan":
-    trainer = gt.trainer()
+    trainer = gt.trainer(args, dataset, classifierTrainer, model,
+                         trainIterator, testIterator, myFactory,
+                         myExperiment)
+
+trainer.train()
