@@ -33,8 +33,7 @@ class modelFactory():
 
         elif modelType=="test":
             if dataset=="MNIST":
-                print ("MNIST dataset not supported in this model. Try resnet20 or 32")
-                assert(False)
+                return tm.testNetMNIST()
             return tm.Net(100)
         else:
             print ("Unsupported model; either implement the model in model/modelFactory or choose a different model")

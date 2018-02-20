@@ -49,6 +49,8 @@ parser.add_argument('--name', default="noname",
                     help='Name of the experiment')
 parser.add_argument('--sortby', default="none",
                     help='Examplars sorting strategy')
+parser.add_argument('--no-upsampling', action='store_true', default=False,
+                    help='Do not do upsampling.')
 parser.add_argument('--decay', type=float, default=0.00001, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max. 0 will result in fine-tuning')
@@ -71,7 +73,7 @@ dataset = dF.datasetFactory.getDataset(args.dataset)
 trainDatasetLoader = dL.incrementalLoader(dataset.trainData.train_data, dataset.trainData.train_labels,
                                           dataset.labelsPerClassTrain,
                                           dataset.classes, [], transform=dataset.trainTransform,
-                                          cuda=args.cuda,
+                                          cuda=args.cuda, oversampling = not args.no_upsampling,
                                           )
 
 testDatasetLoader = dL.incrementalLoader(dataset.testData.test_data, dataset.testData.test_labels,
@@ -124,7 +126,10 @@ for classGroup in range(0, dataset.classes, args.step_size):
         if epoch % args.log_interval == 0:
             print("Train Classifier", myTrainer.evaluate(trainIterator))
             print("Test Classifier", myTrainer.evaluate(testIterator))
-
+    print("Test Classifier", myTrainer.evaluate(testIterator))
+    if classGroup != 0:
+        myTrainer.averageWeights()
+    print("Test Classifier", myTrainer.evaluate(testIterator))
     nmc.updateMeans(model, trainIterator, args.cuda, dataset.classes)
 
     tempTrain = nmc.classify(model, trainIterator, args.cuda, True)

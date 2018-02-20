@@ -7,6 +7,58 @@ import torch.nn.functional as F
 import torch.utils.data as td
 from torch.autograd import Variable
 import random
+import progressbar
+
+
+import torch.nn as nn
+import torch.nn.functional as F
+import torch
+
+
+
+class genericTrainer():
+    def __init__(self):
+        pass
+
+class autoEncoderTrainer(genericTrainer):
+    def __init__(self, trainDataIterator, dataset, model, args, optimizer):
+        super().__init__()
+        self.trainDataIterator = trainDataIterator
+        self.model = model
+        self.args = args
+        self.dataset = dataset
+        self.olderClasses = []
+        self.optimizer = optimizer
+        self.modelFixed = copy.deepcopy(self.model)
+        self.activeClasses = []
+        for param in self.modelFixed.parameters():
+            param.requires_grad = False
+
+        self.allClasses = list(range(dataset.classes))
+        self.allClasses.sort(reverse=True)
+        self.leftOver = []
+        self.autoEncoders = {}
+        if not args.no_random:
+            print("Randomly shuffling classes")
+            random.shuffle(self.allClasses)
+    def autoEncoderModel(self, noOfFeatures):
+        class autoEncoderModelClass(nn.Module):
+            def __init__(self, noOfFeatures):
+                super(autoEncoderModelClass, self).__init__()
+                self.fc1 = nn.Linear(noOfFeatures, int(noOfFeatures/10))
+                self.fc2 = nn.Linear(int(noOfFeatures/10), noOfFeatures)
+
+            def forward(self, x, feature=False):
+                x = F.sigmoid(self.fc1(x))
+                x = F.fc2(x)
+                return x
+
+        myModel = autoEncoderModelClass(noOfFeatures)
+        return myModel
+
+    def optimize(self, x,y, optimizer):
+        pass
+
 
 class trainer():
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer):
@@ -75,10 +127,19 @@ class trainer():
         for param in self.modelFixed.parameters():
             param.requires_grad = False
 
+    def averageWeights(self):
+        print ("Averaging weights")
+        self.model.eval()
+        self.modelFixed.eval()
+
+        for a in self.model.state_dict():
+            self.model.state_dict()[a].copy_((self.model.state_dict()[a] + self.modelFixed.state_dict()[a])/2)
+
+
     def train(self):
         self.model.train()
-
-        for batch_idx, (data, target) in enumerate(self.trainDataIterator):
+        bar = progressbar.ProgressBar()
+        for batch_idx, (data, target) in bar(enumerate(self.trainDataIterator)):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
