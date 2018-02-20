@@ -120,10 +120,8 @@ class trainer():
                     D_labels = Variable(D_labels.cuda())
 
                 #Discriminator output for real image and labels
-                print(image.shape, D_labels.shape)
                 D_output = D(image, D_labels).squeeze()
                 #Maximize the probability of D_output to be all 1s
-                print(D_output.shape, D_like_real.shape)
                 D_real_loss = criterion(D_output, D_like_real)
 
                 #Train with fake image and labels
@@ -189,7 +187,24 @@ class trainer():
                 G_Loss.backward()
                 G_Opt.step()
                 
-                print(D_Loss, G_Loss)
+    
+    #Uses GAN to generate examples
+    def generateExamples(self, G, num_examples, active_classes):
+        examples = []
+        for cls in activeClasses:
+            for _ in num_examples//100:
+                noise = torch.randn(100,100,1,1)
+                labels = torch.zeros(100,10,1,1)
+                labels[:, cls] = 1
+                if self.args.cuda:
+                    noise  = Variable(noise.cuda(), volatile=True)
+                    labels = Variable(labels.cuda(), volatile=True)
+                G.eval()
+                images = G(noise, labels)
+                G.train()
+                #TODO Decide whether the labels need to be separated
+                examples.append(images)
+        return examples
 
     #TODO Merge this with updateLR function in classifierTrainer
     #TODO Add the new args to runExperiment
