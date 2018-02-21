@@ -56,11 +56,11 @@ class CIFAR100(dataset):
             transforms.Normalize(mean, std),
 ])
         #
-        # self.trainTransform = transforms.Compose(
-        #     [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.2, 0.2, 0.2, 0.2),
-        #      transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-10, 10)),
-        #      transforms.ToTensor(),
-        #      transforms.Normalize(mean, std)])
+        self.trainTransform = transforms.Compose(
+            [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.3, 0.3, 0.3, 0.3),
+             transforms.RandomCrop(32, padding=4), torchvision.transforms.RandomRotation((-10, 10)),
+             transforms.ToTensor(),
+             transforms.Normalize(mean, std)])
 
         self.testTransform = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize(mean, std)])
