@@ -46,14 +46,21 @@ class CIFAR100(dataset):
     def __init__(self):
         super().__init__(100, "CIFAR100", 500, 100)
 
-        mean = [x / 255 for x in [125.3, 123.0, 113.9]]
-        std = [x / 255 for x in [63.0, 62.1, 66.7]]
+        mean = [0.5071, 0.4867, 0.4408]
+        std = [0.2675, 0.2565, 0.2761]
 
-        self.trainTransform = transforms.Compose(
-            [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
-             transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-10, 10)),
-             transforms.ToTensor(),
-             transforms.Normalize(mean, std)])
+        self.trainTransform =transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(mean, std),
+])
+        #
+        # self.trainTransform = transforms.Compose(
+        #     [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.2, 0.2, 0.2, 0.2),
+        #      transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-10, 10)),
+        #      transforms.ToTensor(),
+        #      transforms.Normalize(mean, std)])
 
         self.testTransform = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize(mean, std)])

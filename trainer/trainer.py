@@ -2,13 +2,10 @@ from __future__ import print_function
 
 import copy
 
-import torch
-import torch.nn.functional as F
 import torch.utils.data as td
 from torch.autograd import Variable
 import random
 import progressbar
-
 
 import torch.nn as nn
 import torch.nn.functional as F
@@ -50,11 +47,12 @@ class autoEncoderTrainer(genericTrainer):
 
             def forward(self, x, feature=False):
                 x = F.sigmoid(self.fc1(x))
+                if feature:
+                    return x
                 x = F.fc2(x)
                 return x
+    def trainAutoEncoder(self, x, y, epcohs):
 
-        myModel = autoEncoderModelClass(noOfFeatures)
-        return myModel
 
     def optimize(self, x,y, optimizer):
         pass
