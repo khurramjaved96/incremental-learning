@@ -52,7 +52,7 @@ class autoEncoderTrainer(genericTrainer):
                 x = F.fc2(x)
                 return x
     def trainAutoEncoder(self, x, y, epcohs):
-
+        pass
 
     def optimize(self, x,y, optimizer):
         pass
