@@ -24,6 +24,7 @@ class ResNetBasicblock(nn.Module):
         self.bn_b = nn.BatchNorm2d(planes)
 
         self.downsample = downsample
+        self.featureSize = 64
 
     def forward(self, x):
         residual = x

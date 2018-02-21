@@ -16,11 +16,13 @@ class classifierFactory():
 class NearestMeanClassifier():
     def __init__(self, cuda):
         self.cuda = cuda
-        self.means = np.zeros((100, 64))
+        self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
     def classify(self, model, test_loader, cuda, verbose=False):
         model.eval()
+        if self.means is None:
+            self.means = np.zeros((100, model.featureSize))
         test_loss = 0
         correct = 0
         cMatrix = confusionmeter.ConfusionMeter(self.classes, True)

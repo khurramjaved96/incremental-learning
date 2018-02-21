@@ -16,7 +16,7 @@ class Net(nn.Module):
         self.conv2_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(224, 100)
         self.fc2 = nn.Linear(100, noClasses)
-
+        self.featureSize = 224
     def forward(self, x, feature=False):
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
         x = self.conv2_bn1(self.conv2(x))
@@ -24,6 +24,7 @@ class Net(nn.Module):
         x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2_bn3(self.conv4(x))), 2))
         # print ("X after conv", x.shape)
         x = x.view(-1, 224)
+
         if feature:
             # print ("Size = ",torch.norm(x, 2, 1).unsqueeze(1).shape)
             return x / torch.norm(x, 2, 1).unsqueeze(1)
