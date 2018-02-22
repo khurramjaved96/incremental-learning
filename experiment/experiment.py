@@ -22,7 +22,6 @@ class experiment:
 
     def storeJSON(self):
         with open(self.path +"JSONDump", 'w') as outfile:
-            print (json.dumps(self.__dict__))
             json.dump(json.dumps(self.__dict__), outfile)
 
 

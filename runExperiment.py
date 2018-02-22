@@ -127,25 +127,25 @@ for classGroup in range(0, dataset.classes, args.step_size):
         myTrainer.updateLR(epoch)
         myTrainer.train()
         if epoch % args.log_interval == 0:
-            print("Train Classifier", tClassifier.classify(model, trainIterator))
-            print("Test Classifier", tClassifier.classify(model, testIterator))
+            print("Train Classifier", tClassifier.evaluate(model, trainIterator))
+            print("Test Classifier", tClassifier.evaluate(model, testIterator))
 
     nmc.updateMeans(model, trainIterator, dataset.classes)
 
-    tempTrain = nmc.classify(model, trainIterator)
+    tempTrain = nmc.evaluate(model, trainIterator)
     trainY.append(tempTrain)
 
     # Saving confusion matrix
     ut.saveConfusionMatrix(int(classGroup / args.step_size) * args.epochs_class + epoch,
                            myExperiment.path + "CONFUSION", model, args, dataset, testIterator)
     # Computing test error for graphing
-    testY = nmc.classify(model, testIterator, args.cuda, True)
+    testY = nmc.evaluate(model, testIterator)
     y.append(testY)
 
     print("Train NMC", tempTrain)
     print("Test NMC", testY)
 
-    y1.append(myTrainer.evaluate(testIterator))
+    y1.append(tClassifier.evaluate(model, testIterator))
     x.append(classGroup + args.step_size)
 
     myExperiment.results["NCM"] = [x, y]

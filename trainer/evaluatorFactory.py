@@ -20,7 +20,7 @@ class NearestMeanEvaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def classify(self, model, loader):
+    def evaluate(self, model, loader):
         model.eval()
         if self.means is None:
             self.means = np.zeros((100, model.featureSize))
@@ -78,7 +78,7 @@ class SoftmaxEvaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def classify(self, model, loader):
+    def evaluate(self, model, loader):
         model.eval()
         correct = 0
 
