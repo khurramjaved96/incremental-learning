@@ -96,7 +96,7 @@ model = mF.modelFactory.getModel(args.model_type, args.dataset)
 if args.cuda:
     model.cuda()
 
-myExperiment = ex.experiment(args)
+myExperiment = ex.experiment(args.name, args)
 
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                       weight_decay=args.decay, nesterov=True)
