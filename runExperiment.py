@@ -130,7 +130,7 @@ for classGroup in range(0, dataset.classes, args.step_size):
             print("Train Classifier", tClassifier.classify(model, trainIterator))
             print("Test Classifier", tClassifier.classify(model, testIterator))
 
-    nmc.updateMeans(model, trainIterator, args.cuda, dataset.classes)
+    nmc.updateMeans(model, trainIterator, dataset.classes)
 
     tempTrain = nmc.classify(model, trainIterator)
     trainY.append(tempTrain)
