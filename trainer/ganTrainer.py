@@ -34,15 +34,15 @@ class trainer():
             self.classifierTrainer.incrementClasses(classGroup)
             dataIteratorForGan = copy.deepcopy(self.trainIterator)
 
-            #epoch = 0
-            #for epoch in range(0, self.args.epochs_class):
-            #    self.classifierTrainer.updateLR(epoch)
-            #    self.classifierTrainer.train()
-            #    if epoch % self.args.log_interval == 0:
-            #        print("Train Classifier",
-            #              self.classifierTrainer.evaluate(self.trainIterator))
-            #        print("Test Classifier",
-            #              self.classifierTrainer.evaluate(self.testIterator))
+            epoch = 0
+            for epoch in range(0, self.args.epochs_class):
+                self.classifierTrainer.updateLR(epoch)
+                self.classifierTrainer.train()
+                if epoch % self.args.log_interval == 0:
+                    print("[Classifier] Train:",
+                          self.classifierTrainer.evaluate(self.trainIterator),
+                          "Test:",
+                          self.classifierTrainer.evaluate(self.testIterator))
 
             #Get a new Generator and Discriminator
             #TODO What if we kept the Discriminator?
@@ -180,7 +180,6 @@ class trainer():
                 G_output = G(G_random_noise, G_random_labels)
                 D_output = D(G_output, D_random_labels).squeeze()
 
-                #We are maximizing the opposite of discriminator fake cost
                 G_Loss = criterion(D_output, D_like_real)
                 G_Loss.backward()
                 G_Losses.append(G_Loss)
