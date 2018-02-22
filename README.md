@@ -15,7 +15,7 @@ runExperiment.py [-h] [--batch-size N] [--test-batch-size N]
                         [--step-size STEP_SIZE]
                         [--memory-budget MEMORY_BUDGET]
                         [--epochs-class EPOCHS_CLASS] [--classes CLASSES]
-                        [--depth DEPTH] [--dataset DATASET]
+                        [--depth DEPTH] [--Dataset DATASET]
 ```
 ## Dependencies 
 

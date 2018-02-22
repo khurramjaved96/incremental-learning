@@ -44,7 +44,7 @@ class ResNetBasicblock(nn.Module):
 
 class CifarResNet(nn.Module):
     """
-    ResNet optimized for the Cifar dataset, as specified in
+    ResNet optimized for the Cifar Dataset, as specified in
     https://arxiv.org/abs/1512.03385.pdf
     """
 
@@ -58,7 +58,7 @@ class CifarResNet(nn.Module):
         super(CifarResNet, self).__init__()
 
         self.featureSize = 64
-        
+
         # Model type specifies number of layers for CIFAR-10 and CIFAR-100 model
         assert (depth - 2) % 6 == 0, 'depth should be one of 20, 32, 44, 56, 110'
         layer_blocks = (depth - 2) // 6

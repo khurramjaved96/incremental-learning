@@ -3,15 +3,15 @@ import torch
 from torch.autograd import Variable
 
 
-class evaluatorFactory():
+class EvaluatorFactory():
     def __init__(self):
         pass
     @staticmethod
-    def getEvaluator(testType="nmc", cuda=True):
+    def get_evaluator(testType="nmc", cuda=True):
         if testType == "nmc":
             return NearestMeanEvaluator(cuda)
         if testType == "trainedClassifier":
-            return SoftmaxEvaluator(cuda)
+            return softmax_evaluator(cuda)
 
 
 class NearestMeanEvaluator():
@@ -39,7 +39,7 @@ class NearestMeanEvaluator():
 
         return 100. * correct / len(loader.dataset)
 
-    def updateMeans(self, model, train_loader, classes=100):
+    def update_means(self, model, train_loader, classes=100):
         # Set the mean to zero
         if self.means is None:
             self.means = np.zeros((100, model.featureSize))
@@ -49,7 +49,7 @@ class NearestMeanEvaluator():
         self.means = np.zeros((classes, model.featureSize))
         self.totalFeatures = np.zeros((classes, 1)) + 1
         print("Computing means")
-        # Iterate over all train dataset
+        # Iterate over all train Dataset
         for batch_id, (data, target) in enumerate(train_loader):
             # Get features for a minibactch
             if self.cuda:
@@ -72,7 +72,7 @@ class NearestMeanEvaluator():
         return
 
 
-class SoftmaxEvaluator():
+class softmax_evaluator():
     def __init__(self, cuda):
         self.cuda = cuda
         self.means = None

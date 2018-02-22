@@ -1,16 +1,16 @@
 import dataHandler.dataset as data
 
 
-class datasetFactory():
+class DatasetFactory:
     def __init__(self):
         pass
 
     @staticmethod
-    def getDataset(name):
+    def get_dataset(name):
         if name == "MNIST":
             return data.MNIST()
         elif name == "CIFAR100":
             return data.CIFAR100()
         else:
-            print("Unsupported dataset")
-            assert (False)
+            print("Unsupported Dataset")
+            assert False

@@ -5,11 +5,11 @@ class experiment:
     '''
     Class to store results of any experiment 
     '''
-    def __init__(self, name, args, outputDir="../"):
+    def __init__(self, name, args, output_dir="../"):
         self.name = name
         self.params = vars(args)
         self.results = {}
-        self.dir = outputDir
+        self.dir = output_dir
 
         ver = 0
         while os.path.exists("../" + self.name + "_" + str(ver)):
@@ -20,7 +20,7 @@ class experiment:
 
         self.results["Temp Results"]= [[1,2,3,4], [5,6,2,6]]
 
-    def storeJSON(self):
+    def store_json(self):
         with open(self.path +"JSONDump", 'w') as outfile:
             json.dump(json.dumps(self.__dict__), outfile)
 
@@ -30,5 +30,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='iCarl2.0')
     args = parser.parse_args()
     e = experiment("TestExperiment", args)
-    e.storeJSON()
+    e.store_json()
 

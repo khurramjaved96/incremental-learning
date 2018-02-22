@@ -5,7 +5,7 @@ from torchnet.meter import confusionmeter
 import torchvision
 import torch
 
-def resizeImage(img, factor):
+def resize_image(img, factor):
     '''
     
     :param img: 
@@ -20,7 +20,7 @@ def resizeImage(img, factor):
     return img2
 
 
-def saveConfusionMatrix(epoch, path, model, args, dataset, test_loader):
+def save_confusion_matrix(epoch, path, model, args, dataset, test_loader):
     model.eval()
     test_loss = 0
     correct = 0
@@ -39,7 +39,7 @@ def saveConfusionMatrix(epoch, path, model, args, dataset, test_loader):
 
     test_loss /= len(test_loader.dataset)
     img = cMatrix.value() * 255
-    torchvision.utils.save_image(torch.from_numpy(img),path + str(epoch) + ".jpg",normalize=True)
+    torchvision.utils.save_image(torch.from_numpy(img),path + str(epoch) + ".jpg")
     return 100. * correct / len(test_loader.dataset)
 
 
