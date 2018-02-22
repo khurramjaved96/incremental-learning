@@ -27,15 +27,15 @@ class MNIST(dataset):
     def __init__(self):
         super().__init__(10, "MNIST", 6000, 1000)
 
-        self.trainTransform = transforms.Compose(
-            [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
-             transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-10, 10)),
-             transforms.ToTensor(),
-             transforms.Normalize((0.1307,), (0.3081,))])
+        self.trainTransform = transforms.Compose([
+        transforms.Scale(32),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+        ])
 
         self.testTransform = transforms.Compose(
             [transforms.RandomCrop(32, padding=6), transforms.ToTensor(),
-             transforms.Normalize((0.1307,), (0.3081,))])
+             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
 
         self.trainData = datasets.MNIST("data", train=True, transform=self.trainTransform, download=True)
 
