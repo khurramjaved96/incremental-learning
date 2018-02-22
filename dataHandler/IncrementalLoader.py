@@ -8,8 +8,6 @@ from PIL import Image
 from torch.autograd import Variable
 from torchvision import datasets, transforms
 
-import model.ModelFactory as mF
-
 
 class IncrementalLoader(td.Dataset):
     def __init__(self, data, labels, class_size, classes, active_classes, transform=None, cuda=False,
@@ -38,9 +36,9 @@ class IncrementalLoader(td.Dataset):
     def __class_indices(self):
         cur = 0
         for temp in range(0, self.total_classes):
-            curLen = len(np.nonzero(np.uint8(self.labels == temp))[0])
-            self.indices[temp] = (cur, cur + curLen)
-            cur += curLen
+            cur_len = len(np.nonzero(np.uint8(self.labels == temp))[0])
+            self.indices[temp] = (cur, cur + cur_len)
+            cur += cur_len
 
     def add_class(self, n):
         if n in self.active_classes:
@@ -171,14 +169,14 @@ class IncrementalLoader(td.Dataset):
         '''
         assert (index < self.class_size * self.total_classes)
 
-        len = 0
+        length = 0
         temp_a = 0
         old_len = 0
         for a in self.active_classes:
             temp_a = a
-            old_len = len
-            len += self.indices[a][1] - self.indices[a][0]
-            if len > index:
+            old_len = length
+            length += self.indices[a][1] - self.indices[a][0]
+            if length > index:
                 break
         base = self.indices[temp_a][0]
         incre = index - old_len
@@ -204,6 +202,9 @@ class IncrementalLoader(td.Dataset):
             dataFile = "dataHandler/selectedCIFARIndicesForTrainingDataK1.txt"
         elif algorithm == "Kennard-Stone":
             dataFile = "dataHandler/selectedCIFARIndicesForTrainingDataKenStone.txt"
+        else:
+            print ("Unsupported sorting algorithm chosen")
+            assert False
 
         # load sorted (training) data indices
         lines = [line.rstrip('\n') for line in open(dataFile)]
@@ -230,6 +231,7 @@ class IncrementalLoader(td.Dataset):
 
 if __name__ == "__main__":
     # To do : Remove the hard-coded mean and just compute it once using the data
+    import model
     mean = [x / 255 for x in [125.3, 123.0, 113.9]]
     std = [x / 255 for x in [63.0, 62.1, 66.7]]
 
@@ -244,7 +246,7 @@ if __name__ == "__main__":
 
     train_loader_full = torch.utils.data.DataLoader(train_dataset_full,
                                                     batch_size=10, shuffle=True)
-    my_factory = mF.ModelFactory()
+    my_factory = model.ModelFactory()
     model = my_factory.get_model("test", 100)
 
     train_dataset_full.add_class(2)

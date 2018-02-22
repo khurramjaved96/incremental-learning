@@ -11,31 +11,32 @@ from torch.autograd import Variable
 
 
 class GenericTrainer:
-    def __init__(self):
-        pass
-
-
-class AutoEncoderTrainer(GenericTrainer):
-    def __init__(self, trainDataIterator, dataset, model, args, optimizer):
-        super().__init__()
-        self.trainDataIterator = trainDataIterator
+    def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer):
+        self.train_data_iterator = trainDataIterator
+        self.test_data_iterator = testDataIterator
         self.model = model
         self.args = args
         self.dataset = dataset
-        self.olderClasses = []
+        self.train_loader = self.train_data_iterator.dataset
+        self.older_classes = []
         self.optimizer = optimizer
-        self.modelFixed = copy.deepcopy(self.model)
-        self.activeClasses = []
-        for param in self.modelFixed.parameters():
+        self.model_fixed = copy.deepcopy(self.model)
+        self.active_classes = []
+        for param in self.model_fixed.parameters():
             param.requires_grad = False
 
-        self.allClasses = list(range(dataset.classes))
-        self.allClasses.sort(reverse=True)
-        self.leftOver = []
-        self.autoEncoders = {}
-        if not args.no_random:
-            print("Randomly shuffling classes")
-            random.shuffle(self.allClasses)
+        self.current_lr = args.lr
+        self.all_classes = list(range(dataset.classes))
+        self.all_classes.sort(reverse=True)
+        self.left_over = []
+
+        random.seed(args.seed)
+        random.shuffle(self.all_classes)
+
+
+class AutoEncoderTrainer(GenericTrainer):
+    def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer):
+        super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer)
 
     def auto_encoder_model(self, noOfFeatures):
         '''
@@ -65,35 +66,17 @@ class AutoEncoderTrainer(GenericTrainer):
     def train_auto_encoder(self, xIterator, epochs):
         bar = progressbar.ProgressBar()
         for epoch in range(epochs):
-            for batch_idx, (data, target) in bar(enumerate(self.trainDataIterator)):
+            for batch_idx, (data, target) in bar(enumerate(self.train_data_iterator)):
                 pass
 
     def optimize(self, x, y, optimizer):
         pass
 
 
-class Trainer():
+class Trainer(GenericTrainer):
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer):
-        self.train_data_iterator = trainDataIterator
-        self.test_data_iterator = testDataIterator
-        self.model = model
-        self.args = args
-        self.dataset = dataset
-        self.train_loader = self.train_data_iterator.dataset
-        self.older_classes = []
-        self.optimizer = optimizer
-        self.model_fixed = copy.deepcopy(self.model)
-        self.active_classes = []
-        for param in self.model_fixed.parameters():
-            param.requires_grad = False
+        super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer)
 
-        self.current_lr = args.lr
-        self.all_classes = list(range(dataset.classes))
-        self.all_classes.sort(reverse=True)
-        self.left_over = []
-        if not args.no_random:
-            print("Randomly shuffling classes")
-            random.shuffle(self.all_classes)
 
     def update_lr(self, epoch):
         for temp in range(0, len(self.args.schedule)):

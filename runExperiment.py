@@ -6,11 +6,11 @@ import torch
 import torch.optim as optim
 import torch.utils.data as td
 
-import dataHandler as dF
+import dataHandler
 import experiment as ex
-import model as mF
+import model
 import plotter as plt
-import trainer as tF
+import trainer
 import utils.utils as ut
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
@@ -71,18 +71,18 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
-dataset = dF.DatasetFactory.get_dataset(args.dataset)
+dataset = dataHandler.DatasetFactory.get_dataset(args.dataset)
 
-train_dataset_loader = dF.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
-                                            dataset.labels_per_class_train,
-                                            dataset.classes, [], transform=dataset.train_transform,
-                                            cuda=args.cuda, oversampling=not args.no_upsampling,
-                                            )
+train_dataset_loader = dataHandler.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
+                                                     dataset.labels_per_class_train,
+                                                     dataset.classes, [], transform=dataset.train_transform,
+                                                     cuda=args.cuda, oversampling=not args.no_upsampling,
+                                                     )
 
-test_dataset_loader = dF.IncrementalLoader(dataset.test_data.test_data, dataset.test_data.test_labels,
-                                           dataset.labels_per_class_test, dataset.classes,
-                                           [], transform=dataset.test_transform, cuda=args.cuda,
-                                           )
+test_dataset_loader = dataHandler.IncrementalLoader(dataset.test_data.test_data, dataset.test_data.test_labels,
+                                                    dataset.labels_per_class_test, dataset.classes,
+                                                    [], transform=dataset.test_transform, cuda=args.cuda,
+                                                    )
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
@@ -92,7 +92,7 @@ test_iterator = torch.utils.data.DataLoader(
     test_dataset_loader,
     batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
-model = mF.ModelFactory.get_model(args.model_type, args.dataset)
+model = model.ModelFactory.get_model(args.model_type, args.dataset)
 if args.cuda:
     model.cuda()
 
@@ -101,15 +101,15 @@ my_experiment = ex.experiment(args.name, args)
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                       weight_decay=args.decay, nesterov=True)
 
-my_trainer = tF.Trainer(train_iterator, test_iterator, dataset, model, args, optimizer)
+my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, model, args, optimizer)
 
 x = []
 y = []
 y1 = []
 train_y = []
 
-nmc = tF.EvaluatorFactory.get_evaluator("nmc", args.cuda)
-t_classifier = tF.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
+nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
+t_classifier = trainer.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
 
 if not args.sortby == "none":
     print("Sorting by", args.sortby)
