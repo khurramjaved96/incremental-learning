@@ -75,11 +75,6 @@ class trainer():
         for param in self.modelFixed.parameters():
             param.requires_grad = False
 
-    #Used to Iterate over the same examples as iterated by trainer
-    def getTrainedDataIterator(self):
-        iteratorFixed = copy.deepcopy(self.trainDataIterator)
-        return iteratorFixed
-
     def train(self):
         self.model.train()
 
