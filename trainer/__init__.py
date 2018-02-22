@@ -1,1 +1,2 @@
-from trainer.EvaluatorFactory import *
+from trainer.evaluator import *
+from trainer.trainer import *

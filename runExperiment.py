@@ -6,13 +6,11 @@ import torch
 import torch.optim as optim
 import torch.utils.data as td
 
-import dataHandler.DatasetFactory as dF
-import dataHandler.IncrementalLoader as dL
-import experiment.experiment as ex
-import model.ModelFactory as mF
-import plotter.plotter as plt
+import dataHandler as dF
+import experiment as ex
+import model as mF
+import plotter as plt
 import trainer as tF
-import trainer.trainer as t
 import utils.utils as ut
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
@@ -75,13 +73,13 @@ if args.cuda:
 
 dataset = dF.DatasetFactory.get_dataset(args.dataset)
 
-train_dataset_loader = dL.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
+train_dataset_loader = dF.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
                                             dataset.labels_per_class_train,
                                             dataset.classes, [], transform=dataset.train_transform,
                                             cuda=args.cuda, oversampling=not args.no_upsampling,
                                             )
 
-test_dataset_loader = dL.IncrementalLoader(dataset.test_data.test_data, dataset.test_data.test_labels,
+test_dataset_loader = dF.IncrementalLoader(dataset.test_data.test_data, dataset.test_data.test_labels,
                                            dataset.labels_per_class_test, dataset.classes,
                                            [], transform=dataset.test_transform, cuda=args.cuda,
                                            )
@@ -103,7 +101,7 @@ my_experiment = ex.experiment(args.name, args)
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                       weight_decay=args.decay, nesterov=True)
 
-my_trainer = t.Trainer(train_iterator, test_iterator, dataset, model, args, optimizer)
+my_trainer = tF.Trainer(train_iterator, test_iterator, dataset, model, args, optimizer)
 
 x = []
 y = []
