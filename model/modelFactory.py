@@ -5,7 +5,7 @@ class modelFactory():
     def __init__(self):
         pass
     @staticmethod
-    def getModel(self, modelType, dataset="CIFAR100"):
+    def getModel(modelType, dataset="CIFAR100"):
         if modelType=="densenet":
             if dataset=="MNIST":
                 print ("MNIST dataset not supported in this model. Try resnet20 or 32")
