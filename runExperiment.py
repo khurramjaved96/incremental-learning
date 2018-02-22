@@ -107,10 +107,10 @@ x = []
 y = []
 y1 = []
 trainY = []
-leftOver = []
-myTestFactory = tF.evaluatorFactory()
-nmc = myTestFactory.getEvaluator("nmc", args.cuda)
-tClassifier = myTestFactory.getEvaluator("trainedClassifier", args.cuda)
+
+
+nmc = tF.evaluatorFactory.getEvaluator("nmc", args.cuda)
+tClassifier = tF.evaluatorFactory.getEvaluator("trainedClassifier", args.cuda)
 
 if not args.sortby == "none":
     print("Sorting by", args.sortby)
@@ -147,9 +147,10 @@ for classGroup in range(0, dataset.classes, args.step_size):
 
     y1.append(tClassifier.evaluate(model, testIterator))
     x.append(classGroup + args.step_size)
-
+g
     myExperiment.results["NCM"] = [x, y]
     myExperiment.results["Trained Classifier"] = [x, y1]
+    myExperiment.results["Train Error Classifier"] = [x, trainY]
     myExperiment.storeJSON()
 
 

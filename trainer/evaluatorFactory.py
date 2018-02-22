@@ -6,8 +6,8 @@ from torch.autograd import Variable
 class evaluatorFactory():
     def __init__(self):
         pass
-
-    def getEvaluator(self, testType="nmc", cuda=True):
+    @staticmethod
+    def getEvaluator(testType="nmc", cuda=True):
         if testType == "nmc":
             return NearestMeanEvaluator(cuda)
         if testType == "trainedClassifier":
