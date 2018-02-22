@@ -52,22 +52,6 @@ class incrementalLoader(td.Dataset):
         Function to compute length of the active elements of the data. 
         :return: 
         '''
-        # Computing len if no oversampling
-        lenVar = 0
-        # for a in self.activeClasses:
-        #     if a in self.limitedClasses:
-        #         self.weights[lenVar:lenVar + min(self.classSize, self.limitedClasses[a])] = 1.0 / float(
-        #             self.limitedClasses[a])
-        #         if self.classSize > self.limitedClasses[a]:
-        #             self.weights[lenVar + self.limitedClasses[a]:lenVar + self.classSize] = 0
-        #         lenVar += min(self.classSize, self.limitedClasses[a])
-        #
-        #     else:
-        #         self.weights[lenVar:lenVar + self.classSize] = 1.0 / float(self.classSize)
-        #         lenVar += self.classSize
-        #
-        # self.len = lenVar
-        # Computing len if oversampling is turned on.
 
         lenVar = 0
         for a in self.activeClasses:

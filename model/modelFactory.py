@@ -4,6 +4,7 @@ import model.testModel as tm
 class modelFactory():
     def __init__(self):
         pass
+    @staticmethod
     def getModel(self, modelType, dataset="CIFAR100"):
         if modelType=="densenet":
             if dataset=="MNIST":

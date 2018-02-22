@@ -11,7 +11,7 @@ import dataHandler.incrementalLoader as dL
 import experiment.experiment as ex
 import model.modelFactory as mF
 import plotter.plotter as plt
-import trainer.classifierFactory as tF
+import trainer.evaluatorFactory as tF
 import trainer.trainer as t
 import utils.utils as ut
 
@@ -49,6 +49,8 @@ parser.add_argument('--name', default="noname",
                     help='Name of the experiment')
 parser.add_argument('--sortby', default="none",
                     help='Examplars sorting strategy')
+parser.add_argument('--outputDir', default="../",
+                    help='Directory to store the results; the new folder will be created in the specified directory to save the results.')
 parser.add_argument('--no-upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
 parser.add_argument('--decay', type=float, default=0.00001, help='Weight decay (L2 penalty).')
@@ -89,8 +91,8 @@ testIterator = torch.utils.data.DataLoader(
     testDatasetLoader,
     batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
-myFactory = mF.modelFactory()
-model = myFactory.getModel(args.model_type, args.dataset)
+
+model = mF.modelFactory.getModel(args.model_type, args.dataset)
 if args.cuda:
     model.cuda()
 
@@ -106,8 +108,9 @@ y = []
 y1 = []
 trainY = []
 leftOver = []
-myTestFactory = tF.classifierFactory()
-nmc = myTestFactory.getTester("nmc", args.cuda)
+myTestFactory = tF.evaluatorFactory()
+nmc = myTestFactory.getEvaluator("nmc", args.cuda)
+tClassifier = myTestFactory.getEvaluator("trainedClassifier", args.cuda)
 
 if not args.sortby == "none":
     print("Sorting by", args.sortby)
@@ -124,14 +127,12 @@ for classGroup in range(0, dataset.classes, args.step_size):
         myTrainer.updateLR(epoch)
         myTrainer.train()
         if epoch % args.log_interval == 0:
-            print("Train Classifier", myTrainer.evaluate(trainIterator))
-            print("Test Classifier", myTrainer.evaluate(testIterator))
-    print("Test Classifier", myTrainer.evaluate(testIterator))
+            print("Train Classifier", tClassifier.classify(model, trainIterator))
+            print("Test Classifier", tClassifier.classify(model, testIterator))
 
-    print("Test Classifier", myTrainer.evaluate(testIterator))
     nmc.updateMeans(model, trainIterator, args.cuda, dataset.classes)
 
-    tempTrain = nmc.classify(model, trainIterator, args.cuda, True)
+    tempTrain = nmc.classify(model, trainIterator)
     trainY.append(tempTrain)
 
     # Saving confusion matrix
@@ -149,11 +150,8 @@ for classGroup in range(0, dataset.classes, args.step_size):
 
     myExperiment.results["NCM"] = [x, y]
     myExperiment.results["Trained Classifier"] = [x, y1]
+    myExperiment.storeJSON()
 
-    with open(myExperiment.path + "result", "wb") as f:
-        import pickle
-
-        pickle.dump(myExperiment, f)
 
     myPlotter = plt.plotter()
     myPlotter.plot(x, y, title=args.name, legend="NCM")

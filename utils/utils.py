@@ -2,7 +2,8 @@ import numpy as np
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
-
+import torchvision
+import torch
 
 def resizeImage(img, factor):
     '''
@@ -37,20 +38,9 @@ def saveConfusionMatrix(epoch, path, model, args, dataset, test_loader):
             cMatrix.add(pred, target.data.view_as(pred))
 
     test_loss /= len(test_loader.dataset)
-    import cv2
     img = cMatrix.value() * 255
-    cv2.imwrite(path + str(epoch) + ".jpg", img)
+    torchvision.utils.save_image(torch.from_numpy(img),path + str(epoch) + ".jpg",normalize=True)
     return 100. * correct / len(test_loader.dataset)
 
 
-def constructExperimentName(args):
-    import os
-    name = [args.model_type, str(args.epochs_class), str(args.step_size)]
-    if not args.no_herding:
-        name.append("herding")
-    if not args.no_distill:
-        name.append("distillation")
-    if not os.path.exists("../" + args.name):
-        os.makedirs("../" + args.name)
 
-    return "../" + args.name + "/" + "_".join(name)
