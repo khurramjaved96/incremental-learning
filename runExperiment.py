@@ -147,7 +147,7 @@ for classGroup in range(0, dataset.classes, args.step_size):
 
     y1.append(tClassifier.evaluate(model, testIterator))
     x.append(classGroup + args.step_size)
-g
+
     myExperiment.results["NCM"] = [x, y]
     myExperiment.results["Trained Classifier"] = [x, y1]
     myExperiment.results["Train Error Classifier"] = [x, trainY]
