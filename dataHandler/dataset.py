@@ -28,13 +28,13 @@ class MNIST(Dataset):
         super().__init__(10, "MNIST", 6000, 1000)
 
         self.train_transform = transforms.Compose(
-            [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
-             transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-10, 10)),
+            [torchvision.transforms.ColorJitter(0.1, 0.1, 0.1, 0.1),
+             transforms.RandomCrop(32, padding=4),
              transforms.ToTensor(),
              transforms.Normalize((0.1307,), (0.3081,))])
 
         self.test_transform = transforms.Compose(
-            [transforms.RandomCrop(32, padding=6), transforms.ToTensor(),
+            [transforms.RandomCrop(32, padding=4), transforms.ToTensor(),
              transforms.Normalize((0.1307,), (0.3081,))])
 
         self.train_data = datasets.MNIST("data", train=True, transform=self.train_transform, download=True)
