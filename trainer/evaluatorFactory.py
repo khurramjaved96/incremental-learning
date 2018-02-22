@@ -79,7 +79,7 @@ class SoftmaxEvaluator():
         self.totalFeatures = np.zeros((100, 1))
 
     def classify(self, model, loader):
-        self.model.eval()
+        model.eval()
         correct = 0
 
         for data, target in loader:
