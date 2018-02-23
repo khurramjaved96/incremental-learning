@@ -79,6 +79,10 @@ class Trainer(GenericTrainer):
 
 
     def update_lr(self, epoch):
+        if epoch == 10 :
+            print ("Shifting from Adam to SGD")
+            self.optimizer = torch.optim.SGD(self.model.parameters(), self.args.lr, momentum=self.args.momentum,
+                      weight_decay=self.args.decay, nesterov=True)
         for temp in range(0, len(self.args.schedule)):
             if self.args.schedule[temp] == epoch:
                 for param_group in self.optimizer.param_groups:
@@ -107,6 +111,8 @@ class Trainer(GenericTrainer):
         self.older_classes.append(n)
 
     def setup_training(self):
+        print ("Shifting to Adam")
+        self.optimizer = torch.optim.Adam(self.model.parameters)
         for param_group in self.optimizer.param_groups:
             print("Setting LR to", self.args.lr)
             param_group['lr'] = self.args.lr

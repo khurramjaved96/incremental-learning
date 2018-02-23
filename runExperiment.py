@@ -98,8 +98,7 @@ if args.cuda:
 
 my_experiment = ex.experiment(args.name, args)
 
-optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
-                      weight_decay=args.decay, nesterov=True)
+optimizer = optim.Adam(model.parameters)
 
 my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, model, args, optimizer)
 
