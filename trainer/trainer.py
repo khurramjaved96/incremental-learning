@@ -112,12 +112,12 @@ class Trainer(GenericTrainer):
 
     def setup_training(self):
         print ("Shifting to Adam")
-        self.optimizer = torch.optim.Adam(self.model.parameters())
+
         for param_group in self.optimizer.param_groups:
             print("Setting LR to", self.args.lr)
             param_group['lr'] = self.args.lr
             self.current_lr = self.args.lr
-
+        self.optimizer = torch.optim.Adam(self.model.parameters())
         for val in self.left_over:
             self.limit_class(val, int(self.args.memory_budget / len(self.left_over)), not self.args.no_herding)
 
