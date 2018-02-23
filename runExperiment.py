@@ -98,7 +98,7 @@ if args.cuda:
 
 my_experiment = ex.experiment(args.name, args)
 
-optimizer = optim.Adam(model.parameters)
+optimizer = optim.Adam(model.parameters())
 
 my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, model, args, optimizer)
 

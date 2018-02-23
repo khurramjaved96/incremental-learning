@@ -112,7 +112,7 @@ class Trainer(GenericTrainer):
 
     def setup_training(self):
         print ("Shifting to Adam")
-        self.optimizer = torch.optim.Adam(self.model.parameters)
+        self.optimizer = torch.optim.Adam(self.model.parameters())
         for param_group in self.optimizer.param_groups:
             print("Setting LR to", self.args.lr)
             param_group['lr'] = self.args.lr
