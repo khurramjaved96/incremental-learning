@@ -98,7 +98,8 @@ if args.cuda:
 
 my_experiment = ex.experiment(args.name, args)
 
-optimizer = optim.Adam(model.parameters())
+optimizer = torch.optim.SGD(model.parameters(), self.args.lr, momentum=args.momentum,
+                      weight_decay=args.decay, nesterov=True)
 
 my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, model, args, optimizer)
 
