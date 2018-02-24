@@ -39,7 +39,8 @@ def save_confusion_matrix(epoch, path, model, args, dataset, test_loader):
 
     test_loss /= len(test_loader.dataset)
     img = cMatrix.value() * 255
-    torchvision.utils.save_image(torch.from_numpy(img),path + str(epoch) + ".jpg")
+    import cv2
+    cv2.imwrite(path + str(epoch) + ".jpg", img)
     return 100. * correct / len(test_loader.dataset)
 
 
