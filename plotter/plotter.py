@@ -25,7 +25,7 @@ class Plotter():
         plt.xlabel(self.x_label)
         plt.yticks(list(range(0,105,10)))
         plt.xticks(list(range(0, xticks, int(xticks/10))))
-        plt.savefig(path,format='eps', dpi=1200)
+        plt.savefig(path+"_globalPlot_.eps",format='eps', dpi=1200)
 
 if __name__=="__main__":
     pl = Plotter()

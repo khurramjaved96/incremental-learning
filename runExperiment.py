@@ -173,4 +173,4 @@ for seed in args.seeds:
         my_plotter.plot(x, y, title=args.name, legend="NCM")
         my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
 
-        my_plotter.save_fig(my_experiment.path + "Overall" + ".jpg", dataset.classes + 1)
+        my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
