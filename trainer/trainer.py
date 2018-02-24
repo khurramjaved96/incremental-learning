@@ -92,7 +92,7 @@ class Trainer(GenericTrainer):
             pop_val = self.all_classes.pop()
             self.train_data_iterator.dataset.add_class(pop_val)
             self.test_data_iterator.dataset.add_class(pop_val)
-            print("Train Classes", self.train_data_iterator.dataset.active_classes)
+            # print("Train Classes", self.train_data_iterator.dataset.active_classes)
             self.left_over.append(pop_val)
 
     def update_leftover(self, k):
@@ -102,7 +102,7 @@ class Trainer(GenericTrainer):
         if not herding:
             self.train_loader.limit_class(n, k)
         else:
-            print("Sorting by herding")
+            # print("Sorting by herding")
             self.train_loader.limit_class_and_sort(n, k, self.model_fixed)
         self.older_classes.append(n)
 
@@ -122,9 +122,10 @@ class Trainer(GenericTrainer):
 
 
     def train(self, epoch):
+        print ("Current Epoch : ", epoch)
         self.model.train()
         bar = progressbar.ProgressBar(redirect_stdout=True)
-        for batch_idx, (data, target) in bar(enumerate(self.train_data_iterator)):
+        for batch_idx, (data, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
