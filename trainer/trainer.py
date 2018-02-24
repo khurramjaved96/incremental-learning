@@ -128,6 +128,7 @@ class Trainer(GenericTrainer):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
+
             weight_vector = (target * 0).int()
             for elem in self.older_classes:
                 weight_vector = weight_vector + (target == elem).int()
@@ -137,11 +138,12 @@ class Trainer(GenericTrainer):
             self.optimizer.zero_grad()
 
             if self.args.lwf:
+
                 assert (len(old_classes_indices) == 0)
                 assert (self.args.memory_budget == 0)
 
                 rightIndices = list(range(int(len(data)/2),len(data)))
-                rightHalf = data[list(range(int(len(data)/2),len(data)))]
+                rightHalf = data[rightIndices]
 
                 y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
                 if self.args.cuda:
@@ -151,6 +153,18 @@ class Trainer(GenericTrainer):
                 y_onehot.scatter_(1, target, 1)
 
                 if len(self.older_classes) > 0:
+                    if batch_idx == 0:
+                        print("Warm up step for 2 epochs")
+                        for param in self.model.named_parameters():
+                            if "fc" in param[0]:
+                                pass
+                            else:
+                                param[1].requires_grad = False
+                    if batch_idx == 2:
+                        print("Shifting to all weight training from warm up training")
+                        for param in self.model.named_parameters():
+                            param[1].requires_grad = True
+                            
                     pred2 = self.model_fixed(Variable(rightHalf))
                     # data = torch.cat((data, data), dim=0)
                     output = self.model(Variable(data))
