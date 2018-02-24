@@ -3,7 +3,6 @@ from __future__ import print_function
 import argparse
 
 import torch
-import torch.optim as optim
 import torch.utils.data as td
 
 import dataHandler
@@ -107,16 +106,16 @@ for seed in args.seeds:
         test_dataset_loader,
         batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
-    model = model.ModelFactory.get_model(args.model_type, args.dataset)
+    myModel = model.ModelFactory.get_model(args.model_type, args.dataset)
     if args.cuda:
-        model.cuda()
+        myModel.cuda()
 
     my_experiment = ex.experiment(args.name, args)
 
-    optimizer = torch.optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
-                          weight_decay=args.decay, nesterov=True)
+    optimizer = torch.optim.SGD(myModel.parameters(), args.lr, momentum=args.momentum,
+                                weight_decay=args.decay, nesterov=True)
 
-    my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, model, args, optimizer)
+    my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, myModel, args, optimizer)
 
     x = []
     y = []
@@ -143,26 +142,26 @@ for seed in args.seeds:
             my_trainer.update_lr(epoch)
             my_trainer.train(epoch)
             if epoch % args.log_interval == 0:
-                print("Train Classifier", t_classifier.evaluate(model, train_iterator))
-                print("Test Classifier", t_classifier.evaluate(model, test_iterator))
+                print("Train Classifier", t_classifier.evaluate(myModel, train_iterator))
+                print("Test Classifier", t_classifier.evaluate(myModel, test_iterator))
             bar.update(int(float(epoch)/float(args.epochs_class))*100)
 
-        nmc.update_means(model, train_iterator, dataset.classes)
+        nmc.update_means(myModel, train_iterator, dataset.classes)
 
-        tempTrain = nmc.evaluate(model, train_iterator)
+        tempTrain = nmc.evaluate(myModel, train_iterator)
         train_y.append(tempTrain)
 
         # Saving confusion matrix
         ut.save_confusion_matrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-                                 my_experiment.path + "CONFUSION", model, args, dataset, test_iterator)
+                                 my_experiment.path + "CONFUSION", myModel, args, dataset, test_iterator)
         # Computing test error for graphing
-        testY = nmc.evaluate(model, test_iterator)
+        testY = nmc.evaluate(myModel, test_iterator)
         y.append(testY)
 
         print("Train NMC", tempTrain)
         print("Test NMC", testY)
 
-        y1.append(t_classifier.evaluate(model, test_iterator))
+        y1.append(t_classifier.evaluate(myModel, test_iterator))
         x.append(class_group + args.step_size)
 
         my_experiment.results["NCM"] = [x, y]
