@@ -137,7 +137,7 @@ for class_group in range(0, dataset.classes, args.step_size):
     bar = progressbar.ProgressBar(redirect_stdout=True)
     for epoch in bar(range(0, args.epochs_class)):
         my_trainer.update_lr(epoch)
-        my_trainer.train()
+        my_trainer.train(epoch)
         if epoch % args.log_interval == 0:
             print("Train Classifier", t_classifier.evaluate(model, train_iterator))
             print("Test Classifier", t_classifier.evaluate(model, test_iterator))

@@ -121,7 +121,7 @@ class Trainer(GenericTrainer):
             param.requires_grad = False
 
 
-    def train(self):
+    def train(self, epoch):
         self.model.train()
         bar = progressbar.ProgressBar(redirect_stdout=True)
         for batch_idx, (data, target) in bar(enumerate(self.train_data_iterator)):
@@ -153,8 +153,7 @@ class Trainer(GenericTrainer):
                 y_onehot.scatter_(1, target, 1)
 
                 if len(self.older_classes) > 0:
-                    print ("Batch idx", batch_idx)
-                    if batch_idx == 0:
+                    if epoch == 0:
                         print("Warm up step for 2 epochs")
                         for param in self.model.named_parameters():
                             if "fc" in param[0]:
@@ -162,7 +161,7 @@ class Trainer(GenericTrainer):
                                 param[1].requies_grad = True
                             else:
                                 param[1].requires_grad = False
-                    if batch_idx == 2:
+                    if epoch == 2:
                         print("Shifting to all weight training from warm up training")
                         for param in self.model.named_parameters():
                             param[1].requires_grad = True
