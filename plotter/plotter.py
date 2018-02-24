@@ -1,5 +1,15 @@
 import matplotlib.pyplot as plt
+import matplotlib
+
 plt.switch_backend('agg')
+
+
+font = {'family' : 'sans-serif',
+        'size'   : 18}
+
+matplotlib.rc('font', **font)
+from matplotlib import rcParams
+rcParams.update({'figure.autolayout': True})
 
 class Plotter():
     def  __init__(self):
@@ -9,7 +19,7 @@ class Plotter():
     def plot(self,x,y, xLabel="Number of Classes",yLabel = "Accuracy", legend="none",title="none"):
         self.x = x
         self.y = y
-        plt.grid(color='b', linestyle='--', linewidth=0.2)
+        plt.grid(color='b', linestyle='--', linewidth=0.3)
         l, = plt.plot(x,y,linestyle='-', marker=next(self.marker), label=legend)
 
         self.handles.append(l)
@@ -25,7 +35,7 @@ class Plotter():
         plt.xlabel(self.x_label)
         plt.yticks(list(range(0,105,10)))
         plt.xticks(list(range(0, xticks, int(xticks/10))))
-        plt.savefig(path+"_globalPlot_.eps",format='eps', dpi=1200)
+        plt.savefig(path+"globalPlot_.eps",format='eps', dpi=1200)
 
 if __name__=="__main__":
     pl = Plotter()
