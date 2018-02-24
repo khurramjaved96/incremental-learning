@@ -70,9 +70,7 @@ args.cuda = not args.no_cuda and torch.cuda.is_available()
 
 if args.lwf:
     args.memory_budget = 0
-torch.manual_seed(args.seed)
-if args.cuda:
-    torch.cuda.manual_seed(args.seed)
+
 
 dataset = dataHandler.DatasetFactory.get_dataset(args.dataset)
 
@@ -85,6 +83,11 @@ if args.step_size<2:
 
 for seed in args.seeds:
 
+    torch.manual_seed(seed)
+    if args.cuda:
+        torch.cuda.manual_seed(seed)
+
+        
     train_dataset_loader = dataHandler.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
                                                          dataset.labels_per_class_train,
                                                          dataset.classes, [], transform=dataset.train_transform,
