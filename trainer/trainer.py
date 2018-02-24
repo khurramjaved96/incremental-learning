@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+import numpy as np
 
 class GenericTrainer:
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer):
@@ -140,6 +140,9 @@ class Trainer(GenericTrainer):
                 assert (len(old_classes_indices) == 0)
                 assert (self.args.memory_budget == 0)
 
+                rightIndices = list(range(int(len(data)/2),len(data)))
+                rightHalf = data[list(range(int(len(data)/2),len(data)))]
+
                 y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
                 if self.args.cuda:
                     y_onehot = y_onehot.cuda()
@@ -148,10 +151,10 @@ class Trainer(GenericTrainer):
                 y_onehot.scatter_(1, target, 1)
 
                 if len(self.older_classes) > 0:
-                    pred2 = self.model_fixed(Variable(data))
-                    data = torch.cat((data, data), dim=0)
+                    pred2 = self.model_fixed(Variable(rightHalf))
+                    # data = torch.cat((data, data), dim=0)
                     output = self.model(Variable(data))
-                    y_onehot = torch.cat((y_onehot, pred2.data), dim=0)
+                    y_onehot[rightIndices] = pred2.data
 
                 else:
                     output = self.model(Variable(data))
