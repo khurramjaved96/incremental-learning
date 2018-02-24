@@ -153,6 +153,7 @@ class Trainer(GenericTrainer):
                 y_onehot.scatter_(1, target, 1)
 
                 if len(self.older_classes) > 0:
+                    print ("Batch idx", batch_idx)
                     if batch_idx == 0:
                         print("Warm up step for 2 epochs")
                         for param in self.model.named_parameters():
