@@ -73,6 +73,7 @@ class trainer():
 
 
     def updateFrozenModel(self):
+        self.model.eval()
         self.modelFixed = copy.deepcopy(self.model)
         for param in self.modelFixed.parameters():
             param.requires_grad = False
@@ -91,8 +92,18 @@ class trainer():
             oldClassesIndices = torch.squeeze(torch.nonzero((weightVector > 0)).long())
             newClassesIndices = torch.squeeze(torch.nonzero((weightVector == 0)).long())
             self.optimizer.zero_grad()
-
-            if len(oldClassesIndices) == 0:
+            
+            if self.args.process == "gan":
+                 assert (len(oldClassesIndices) == 0)
+                 y_onehot = torch.FloatTensor(len(data), self.dataset.classes)
+                 if self.args.cuda:
+                     y_onehot = y_onehot.cuda()
+                 y_onehot.zero_()
+                 target.unsqueeze_(1)
+                 y_onehot.scatter_(1, target, 1)
+                 output = self.model(Variable(data))      
+ 
+            elif len(oldClassesIndices) == 0:
                 dataOldClasses = data[newClassesIndices]
                 targetsOldClasses = target[newClassesIndices]
                 target2 = targetsOldClasses
@@ -131,6 +142,7 @@ class trainer():
         test_loss = 0
         correct = 0
 
+        #print("ASASAS")
         for data, target in loader:
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
@@ -139,7 +151,11 @@ class trainer():
             test_loss += F.nll_loss(output, target, size_average=False).data[0]  # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+            #print("TARGET:", target)
+            #print("OUT:", pred)
 
+        #print(correct)
+        #print(len(loader.dataset))
         test_loss /= len(loader.dataset)
         return 100. * correct / len(loader.dataset)
 
