@@ -66,7 +66,6 @@ class trainer():
 
             #Get a new Generator and Discriminator
             #TODO What if we kept the Discriminator?
-            print("SDDSDSD",self.old_classes)
             G, D = self.modelFactory.getModel("cdcgan", self.args.dataset)
             if self.args.cuda:
                 G.cuda()
@@ -207,7 +206,7 @@ class trainer():
             print("[GAN] Epoch:", epoch,
                   "G_Loss:", (sum(G_Losses)/len(G_Losses)).cpu().data.numpy()[0],
                   "D_Loss:", (sum(D_Losses)/len(D_Losses)).cpu().data.numpy()[0])
-            self.generateExamples(G, 100, activeClasses, epoch, save=True)
+            #self.generateExamples(G, 100, activeClasses, 15, save=True)
 
     #Uses GAN to generate examples
     def generateExamples(self, G, num_examples, active_classes, epoch=0, save=False):
