@@ -31,6 +31,10 @@ class trainer():
             print("Randomly shuffling classes")
             random.shuffle(self.allClasses)
 
+    def updateIterator(self, trainIterator):
+        self.trainDataIterator = trainIterator
+        self.trainLoader = trainIterator.dataset
+
     def updateLR(self, epoch):
         for temp in range(0, len(self.args.schedule)):
             if self.args.schedule[temp] == epoch:
@@ -82,6 +86,7 @@ class trainer():
         self.model.train()
 
         for batch_idx, (data, target) in enumerate(self.trainDataIterator):
+            print(data.shape)
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 

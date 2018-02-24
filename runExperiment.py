@@ -123,7 +123,7 @@ if args.process == "nmc":
 
 if args.process == "gan":
     trainer = gt.trainer(args, dataset, classifierTrainer, model,
-                         trainIterator, testIterator, myFactory,
-                         myExperiment)
+                         trainIterator, testIterator, trainDatasetLoader,
+                         myFactory, myExperiment)
 
 trainer.train()

@@ -1,10 +1,18 @@
 import pickle
 import numpy as np
 import plotter.plotter as plt
+import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
 
+
+def get_new_iterator(cuda, train_loader, new_batch_size):
+    kwargs = {'num_workers': 1, 'pin_memory': True} if cuda else {}
+    train_iterator = torch.utils.data.DataLoader(train_loader,
+                                                batch_size=new_batch_size,
+                                                shuffle=True, **kwargs)
+    return train_iterator
 
 def resizeImage(img, factor):
     '''
