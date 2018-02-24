@@ -82,12 +82,12 @@ if args.step_size<2:
     assert False
 
 for seed in args.seeds:
-
+    args.seed = seed
     torch.manual_seed(seed)
     if args.cuda:
         torch.cuda.manual_seed(seed)
 
-        
+
     train_dataset_loader = dataHandler.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
                                                          dataset.labels_per_class_train,
                                                          dataset.classes, [], transform=dataset.train_transform,
