@@ -6,6 +6,11 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
 
+#TODO CONFIGURE FOR CIFAR
+def normalize_images(images, mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5]):
+    images.sub_(mean[0]).div_(std[0])
+    #No need to return but the var is needed
+    return images
 
 def get_new_iterator(cuda, train_loader, new_batch_size):
     kwargs = {'num_workers': 1, 'pin_memory': True} if cuda else {}

@@ -61,7 +61,8 @@ class trainer():
         else:
             print("Sorting by herding")
             self.trainLoader.limitClassAndSort(n, k, self.modelFixed)
-        self.olderClasses.append(n)
+        if n not in self.olderClasses:
+            self.olderClasses.append(n)
 
     def setupTraining(self):
         for param_group in self.optimizer.param_groups:
@@ -82,11 +83,31 @@ class trainer():
         for param in self.modelFixed.parameters():
             param.requires_grad = False
 
-    def train(self):
+    def insert_generated_images(self, data, target, gan_images, gan_labels, batch_size):
+        '''
+        data: Images from data iterator
+        target: Labels from data iterator
+        gan_images: Generated images by GAN
+        gan_labels: Python list containing unique classes of generated
+                    images
+        batch_size: Current batch_size of training iterator
+        '''
+        if self.args.process == 'gan':
+            if not gan_images == {}:
+                per_k_batch = (self.args.batch_size - batch_size) // len(gan_labels)
+                for k in gan_labels:
+                    random_indices = torch.randperm(gan_images[k].shape[0])[0:per_k_batch]
+                    new_targets = (torch.ones(per_k_batch) * k).long()
+                    data = torch.cat((data, gan_images[k][random_indices]), dim=0)
+                    target = torch.cat((target, new_targets), dim=0)
+        return data, target
+
+    def train(self, gan_images=None, gan_labels=None, batch_size=None):
         self.model.train()
 
         for batch_idx, (data, target) in enumerate(self.trainDataIterator):
-            print(data.shape)
+            data, target = self.insert_generated_images(data, target, gan_images,
+                                                        gan_labels, batch_size)
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
@@ -97,17 +118,16 @@ class trainer():
             oldClassesIndices = torch.squeeze(torch.nonzero((weightVector > 0)).long())
             newClassesIndices = torch.squeeze(torch.nonzero((weightVector == 0)).long())
             self.optimizer.zero_grad()
-            
+
             if self.args.process == "gan":
-                 assert (len(oldClassesIndices) == 0)
                  y_onehot = torch.FloatTensor(len(data), self.dataset.classes)
                  if self.args.cuda:
                      y_onehot = y_onehot.cuda()
                  y_onehot.zero_()
                  target.unsqueeze_(1)
                  y_onehot.scatter_(1, target, 1)
-                 output = self.model(Variable(data))      
- 
+                 output = self.model(Variable(data))
+
             elif len(oldClassesIndices) == 0:
                 dataOldClasses = data[newClassesIndices]
                 targetsOldClasses = target[newClassesIndices]
@@ -142,12 +162,12 @@ class trainer():
             loss.backward()
             self.optimizer.step()
 
+    #TODO Add generated images here
     def evaluate(self, loader):
         self.model.eval()
         test_loss = 0
         correct = 0
 
-        #print("ASASAS")
         for data, target in loader:
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
@@ -156,11 +176,6 @@ class trainer():
             test_loss += F.nll_loss(output, target, size_average=False).data[0]  # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-            #print("TARGET:", target)
-            #print("OUT:", pred)
-
-        #print(correct)
-        #print(len(loader.dataset))
         test_loss /= len(loader.dataset)
         return 100. * correct / len(loader.dataset)
 
