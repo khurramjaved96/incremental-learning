@@ -12,6 +12,7 @@ import model
 import plotter as plt
 import trainer
 import utils.utils as ut
+import logging
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
@@ -62,6 +63,8 @@ parser.add_argument('--lwf', action='store_true', default=False,
                     help='Use learning without forgetting. Ignores memory-budget '
                          '("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')
 
+
+
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -72,6 +75,14 @@ if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
 dataset = dataHandler.DatasetFactory.get_dataset(args.dataset)
+
+
+
+# Checks to make sure parameters are sane
+if args.step_size<2:
+    logging.warning("Step size of 1 will result in no learning;")
+    assert False
+
 
 train_dataset_loader = dataHandler.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
                                                      dataset.labels_per_class_train,
@@ -122,12 +133,15 @@ for class_group in range(0, dataset.classes, args.step_size):
     my_trainer.increment_classes(class_group)
     my_trainer.update_frozen_model()
     epoch = 0
-    for epoch in range(0, args.epochs_class):
+    import progressbar
+    bar = progressbar.ProgressBar(redirect_stdout=True)
+    for epoch in bar(range(0, args.epochs_class)):
         my_trainer.update_lr(epoch)
         my_trainer.train()
         if epoch % args.log_interval == 0:
             print("Train Classifier", t_classifier.evaluate(model, train_iterator))
             print("Test Classifier", t_classifier.evaluate(model, test_iterator))
+        bar.update(int(float(epoch)/float(args.epochs_class))*100)
 
     nmc.update_means(model, train_iterator, dataset.classes)
 

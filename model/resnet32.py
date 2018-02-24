@@ -74,7 +74,7 @@ class CifarResNet(nn.Module):
         self.stage_2 = self._make_layer(block, 32, layer_blocks, 2)
         self.stage_3 = self._make_layer(block, 64, layer_blocks, 2)
         self.avgpool = nn.AvgPool2d(8)
-        self.classifier = nn.Linear(64 * block.expansion, num_classes)
+        self.fc = nn.Linear(64 * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -113,7 +113,7 @@ class CifarResNet(nn.Module):
         if feature:
             return x / torch.norm(x, 2, 1).unsqueeze(1)
 
-        return F.softmax(self.classifier(x))
+        return F.softmax(self.fc(x))
 
     def forwardFeature(self, x):
         pass

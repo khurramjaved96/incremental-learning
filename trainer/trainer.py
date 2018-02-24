@@ -123,7 +123,7 @@ class Trainer(GenericTrainer):
 
     def train(self):
         self.model.train()
-        bar = progressbar.ProgressBar()
+        bar = progressbar.ProgressBar(redirect_stdout=True)
         for batch_idx, (data, target) in bar(enumerate(self.train_data_iterator)):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
@@ -157,14 +157,15 @@ class Trainer(GenericTrainer):
                         print("Warm up step for 2 epochs")
                         for param in self.model.named_parameters():
                             if "fc" in param[0]:
-                                pass
+                                print ("Setting gradient of FC layers to be True")
+                                param[1].requies_grad = True
                             else:
                                 param[1].requires_grad = False
                     if batch_idx == 2:
                         print("Shifting to all weight training from warm up training")
                         for param in self.model.named_parameters():
                             param[1].requires_grad = True
-                            
+
                     pred2 = self.model_fixed(Variable(rightHalf))
                     # data = torch.cat((data, data), dim=0)
                     output = self.model(Variable(data))
@@ -208,3 +209,4 @@ class Trainer(GenericTrainer):
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
             self.optimizer.step()
+            bar.update(int(float(batch_idx+1)/float(len(self.train_data_iterator))*100))
