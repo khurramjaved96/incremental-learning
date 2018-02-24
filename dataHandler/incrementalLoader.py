@@ -76,6 +76,11 @@ class incrementalLoader(td.Dataset):
         return
 
     def limitClass(self, n, k):
+        if k == 0:
+            self.remove_class(n)
+            print("Removed class", n)
+            print("Current classes", self.activeClasses)
+            return False
         if k > self.classSize:
             k = self.classSize
         if n in self.limitedClasses:
@@ -86,6 +91,12 @@ class incrementalLoader(td.Dataset):
             self.limitedClasses[n] = k
             self.updateLen()
             return True
+
+    def remove_class(self, n):
+        while n in self.activeClasses:
+            self.activeClasses.remove(n)
+        self.updateLen()
+
 
     def limitClassAndSort(self, n, k, model):
         ''' This function should only be called the first time a class is limited. To change the limitation, 

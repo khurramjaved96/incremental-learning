@@ -223,8 +223,6 @@ class trainer():
 
         plt.savefig("results/" + str(epoch) + "_" + str(klass) + ".png")
 
-    #TODO Merge this with updateLR function in classifierTrainer
-    #TODO Add the new args to runExperiment
     def updateLR(self, epoch, G_Opt, D_Opt):
         for temp in range(0, len(self.args.gan_schedule)):
             if self.args.gan_schedule[temp] == epoch:
