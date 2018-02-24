@@ -24,7 +24,11 @@ class trainer():
         self.testIterator = testIterator
         self.modelFactory = modelFactory
         self.experiment = experiment
-
+        self.old_classes = None
+        self.G = None
+        self.examples = {}
+        self.labels = {}
+        
     def train(self):
         x = []
         y = []
@@ -33,6 +37,13 @@ class trainer():
             self.classifierTrainer.setupTraining()
             self.classifierTrainer.incrementClasses(classGroup)
             dataIteratorForGan = copy.deepcopy(self.trainIterator)
+            if self.old_classes != None:
+                self.examples, self.labels = self.generateExamples(self.G,
+                                                                   self.args.gan_num_examples,
+                                                                   self.old_classes)
+                print(self.examples)
+                print(self.labels)
+            self.old_classes = self.trainIterator.dataset.activeClasses
 
             epoch = 0
             for epoch in range(0, self.args.epochs_class):
@@ -51,6 +62,7 @@ class trainer():
                 G.cuda()
                 D.cuda()
             self.trainGan(G, D, dataIteratorForGan)
+            self.updateFrozenGenerator(G)
 
             # Saving confusion matrix
             ut.saveConfusionMatrix(int(classGroup / self.args.step_size) *
@@ -188,26 +200,38 @@ class trainer():
             print("[GAN] Epoch:", epoch,
                   "G_Loss:", (sum(G_Losses)/len(G_Losses)).cpu().data.numpy()[0],
                   "D_Loss:", (sum(D_Losses)/len(D_Losses)).cpu().data.numpy()[0])
-            self.generateExamples( G, 100, epoch, activeClasses)
+            self.generateExamples(G, 100, activeClasses, epoch, save=True)
 
     #Uses GAN to generate examples
-    def generateExamples(self, G, num_examples, epoch, active_classes):
-            examples = []
+    def generateExamples(self, G, num_examples, active_classes, epoch=0, save=False):
+            examples = {}
+            labels = {}
             for klass in active_classes:
                 for _ in range(num_examples//100):
                     noise = torch.randn(100,100,1,1)
-                    labels = torch.zeros(100,10,1,1)
-                    labels[:, klass] = 1
+                    targets = torch.zeros(100,10,1,1)
+                    targets[:, klass] = 1
                     if self.args.cuda:
                         noise  = Variable(noise.cuda(), volatile=True)
-                        labels = Variable(labels.cuda(), volatile=True)
+                        targets = Variable(targets.cuda(), volatile=True)
                     G.eval()
-                    images = G(noise, labels)
+                    images = G(noise, targets)
                     G.train()
-                    #TODO Decide whether the labels need to be separated
-                    examples.append(images)
-                    self.saveResults(images, epoch, klass)
-            return examples
+                    if not klass in examples.keys():
+                        labels[klass] = targets
+                        examples[klass] = images
+                    else:
+                        labels[klass] = torch.cat((labels[klass], targets), dim=0)
+                        examples[klass] = torch.cat((examples[klass],images), dim=0)
+                    if save:
+                        self.saveResults(images, epoch, klass)
+            return examples, labels
+        
+    def updateFrozenGenerator(self, G):
+        G.eval()
+        self.G = copy.deepcopy(G)
+        for param in self.G.parameters():
+            param.requires_grad = False
 
     def saveResults(self, images, epoch, klass):
         _, sub = plt.subplots(10, 10, figsize=(5, 5))
