@@ -65,7 +65,7 @@ class Plotter():
     def plotMatrix(self, epoch, path, img):
         import matplotlib.pyplot as plt
 
-        plt.imshow(img, cmap='plasma', interpolation='nearest')
+        plt.imshow(img, cmap='viridis', interpolation='nearest')
         plt.colorbar()
         plt.savefig(path + str(epoch) + ".jpg")
         plt.gcf().clear()
