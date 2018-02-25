@@ -57,10 +57,10 @@ parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; e
 parser.add_argument('--process', default="nmc", help='Process to be used to prevent forgetting; Example: nmc, gan')
 
 parser.add_argument('--gan-epochs', type=int, nargs='+', default=[50, 30, 20, 20, 20], help='Epochs for each increment for training the GANs')
-parser.add_argument('--gan-lr', type=int, default=0.0002, help='Learning Rate for training the GANs')
+parser.add_argument('--gan-lr', type=float, default=0.0002, help='Learning Rate for training the GANs')
 parser.add_argument('--gan-batch-size', type=int, default=128, help='Batch Size for training the GANs')
 parser.add_argument('--gan-num-examples', type=int, default=1000, help='Number examples GAN will generate for each class')
-parser.add_argument('--gan-schedule', type=int, nargs='+', default=[13, 17],
+parser.add_argument('--gan-schedule', type=int, nargs='+', default=[11, 16],
                     help='Decrease GAN learning rate at these epochs.')
 parser.add_argument('--gan-gammas', type=float, nargs='+', default=[0.1, 0.1],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
