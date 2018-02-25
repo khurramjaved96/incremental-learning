@@ -240,15 +240,15 @@ class trainer():
         for param in self.G.parameters():
             param.requires_grad = False
 
-    def saveResults(self, images, epoch, klass, is_tensor=False):
+    def saveResults(self, images, epoch, klass, is_tensor=False, axis_size=10):
         _, sub = plt.subplots(10, 10, figsize=(5, 5))
         for i, j in itertools.product(range(10), range(10)):
             sub[i, j].get_xaxis().set_visible(False)
             sub[i, j].get_yaxis().set_visible(False)
 
-        for k in range(100):
-            i = k // 10
-            j = k % 10
+        for k in range(axis_size * axis_size):
+            i = k // axis_size
+            j = k % axis_size
             sub[i, j].cla()
             if is_tensor:
                 sub[i, j].imshow(images[k, 0].cpu().numpy(), cmap='gray')

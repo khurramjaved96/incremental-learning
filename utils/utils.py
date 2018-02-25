@@ -8,7 +8,7 @@ from torchnet.meter import confusionmeter
 
 #TODO CONFIGURE FOR CIFAR
 def normalize_images(images, mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5]):
-    images.sub_(mean[0]).div_(std[0])
+    #images.sub_(mean[0]).div_(std[0])
     #No need to return but the var is needed
     return images
 
