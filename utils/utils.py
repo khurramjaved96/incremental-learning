@@ -88,5 +88,5 @@ def plotAccuracy(experiment, x, y, num_classes, plot_name):
         myPlotter.plot(x, y[i][1], title=plot_name, legend=y[i][0])
 
     myPlotter.saveFig(experiment.path + "Overall" + ".jpg", num_classes)
-
+    plt.gcf().clear()
     experiment.store_json()
