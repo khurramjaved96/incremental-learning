@@ -124,7 +124,7 @@ class Trainer(GenericTrainer):
     def train(self, epoch):
 
         self.model.train()
-        length_epoch = self.dataset.labels_per_class_train*len(self.train_data_iterator.dataset.active_classes)
+        length_epoch = self.dataset.labels_per_class_train*(len(self.train_data_iterator.dataset.active_classes)-len(self.train_data_iterator.dataset.self.limited_classes))
         length_epoch += self.args.memory_budget
         print("Current Epoch : ", epoch, "size : ", length_epoch)
         length_epoch/= int(self.args.batch_size)
