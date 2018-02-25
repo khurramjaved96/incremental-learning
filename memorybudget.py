@@ -3,7 +3,7 @@ import plotter
 import json
 import numpy as np
 import os
-folders = ['plots/memorybudget/us/']
+folders = ['plots/memorybudget/us/', 'plots/memorybudget/os/']
 experimentCon = []
 for folder in folders:
     files = os.listdir(folder)
@@ -24,7 +24,7 @@ for folder in folders:
 
 counter=0
 myPlotter = plotter.Plotter()
-legend = ["Uniform sampling"]
+legend = ["Uniform sampling", "Oversampling"]
 for e in experimentCon:
     ncm = []
     tc = []

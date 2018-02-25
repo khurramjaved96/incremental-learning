@@ -151,7 +151,7 @@ for seed in args.seeds:
                     tError = t_classifier.evaluate(myModel, train_iterator)
                     print("Train Classifier", tError)
                     print("Test Classifier", t_classifier.evaluate(myModel, test_iterator))
-                    if tError>99 and class_group > 0:
+                    if tError>99.5 and class_group > 0:
                         print ("Ending training early")
                         break
                 bar.update(int(float(epoch)/float(args.epochs_class))*100)
