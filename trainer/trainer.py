@@ -134,9 +134,7 @@ class Trainer(GenericTrainer):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
-            if counter >= length_epoch:
-                print ("Stopping epsoch at", batch_idx)
-                # break
+
             counter+=1
 
             weight_vector = (target * 0).int()
