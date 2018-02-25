@@ -51,6 +51,7 @@ class trainer():
                                                                    self.old_classes)
                 for k in self.examples:
                     self.examples[k] = ut.normalize_images(self.examples[k]).data.cpu()
+                    self.saveResults(self.examples[k], 22, k, True)
 
             epoch = 0
             for epoch in range(0, self.args.epochs_class):
@@ -206,7 +207,10 @@ class trainer():
             print("[GAN] Epoch:", epoch,
                   "G_Loss:", (sum(G_Losses)/len(G_Losses)).cpu().data.numpy()[0],
                   "D_Loss:", (sum(D_Losses)/len(D_Losses)).cpu().data.numpy()[0])
-            #self.generateExamples(G, 100, activeClasses, 15, save=True)
+            self.generateExamples(G, 100, activeClasses, epoch, save=True)
+            if self.old_classes != None:
+                self.generateExamples(G, 100, activeClasses, epoch + 100, save=True)
+
 
     #Uses GAN to generate examples
     def generateExamples(self, G, num_examples, active_classes, epoch=0, save=False):
@@ -239,7 +243,7 @@ class trainer():
         for param in self.G.parameters():
             param.requires_grad = False
 
-    def saveResults(self, images, epoch, klass):
+    def saveResults(self, images, epoch, klass, is_tensor=False):
         _, sub = plt.subplots(10, 10, figsize=(5, 5))
         for i, j in itertools.product(range(10), range(10)):
             sub[i, j].get_xaxis().set_visible(False)
@@ -249,7 +253,10 @@ class trainer():
             i = k // 10
             j = k % 10
             sub[i, j].cla()
-            sub[i, j].imshow(images[k, 0].cpu().data.numpy(), cmap='gray')
+            if is_tensor:
+                sub[i, j].imshow(images[k, 0].cpu().numpy(), cmap='gray')
+            else:
+                sub[i, j].imshow(images[k, 0].cpu().data.numpy(), cmap='gray')
 
         plt.savefig("results/" + str(epoch) + "_" + str(klass) + ".png")
 
