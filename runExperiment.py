@@ -10,12 +10,9 @@ import dataHandler.datasetFactory as dF
 import dataHandler.incrementalLoader as dL
 import experiment.experiment as ex
 import model.modelFactory as mF
-import plotter.plotter as plt
-import trainer.classifierFactory as tF
 import trainer.classifierTrainer as t
 import trainer.nmcTrainer as nt
 import trainer.ganTrainer as gt
-import utils.utils as ut
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',

@@ -1,6 +1,6 @@
 import pickle
 import numpy as np
-import plotter.plotter as plt
+import plotter.plotter as pl
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -77,7 +77,7 @@ def constructExperimentName(args):
 
 # y should be of type [("Value Name", y_values), ....]
 def plotAccuracy(experiment, x, y, num_classes, plot_name):
-    myPlotter = plt.plotter()
+    myPlotter = pl.plotter()
 
     if not isinstance(y, list):
         print("y must be a list of tuples!")
@@ -88,5 +88,4 @@ def plotAccuracy(experiment, x, y, num_classes, plot_name):
         myPlotter.plot(x, y[i][1], title=plot_name, legend=y[i][0])
 
     myPlotter.saveFig(experiment.path + "Overall" + ".jpg", num_classes)
-    plt.gcf().clear()
     experiment.store_json()

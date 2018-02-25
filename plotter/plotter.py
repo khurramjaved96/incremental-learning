@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import matplotlib
+
 plt.switch_backend('agg')
 
 class plotter():
@@ -27,6 +29,7 @@ class plotter():
         plt.xticks(list(range(0, xticks, int(xticks/10))))
         plt.savefig(path)
         plt.gcf().clear()
+
 
 if __name__=="__main__":
     pl = plotter()
