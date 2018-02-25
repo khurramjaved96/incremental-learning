@@ -62,6 +62,14 @@ class Plotter():
         plt.savefig(path+".eps",format='eps', dpi=1200)
         plt.gcf().clear()
 
+    def plotMatrix(self, epoch, path, img):
+        import matplotlib.pyplot as plt
+
+        plt.imshow(img, cmap='plasma', interpolation='nearest')
+        plt.colorbar()
+        plt.savefig(path + str(epoch) + ".jpg")
+        plt.gcf().clear()
+
 if __name__=="__main__":
     pl = Plotter()
     pl.plot([1,2,3,4], [2,3,6,2])

@@ -1,7 +1,8 @@
 import numpy as np
 import torch
 from torch.autograd import Variable
-
+from torchnet.meter import confusionmeter
+import torch.nn.functional as F
 
 class EvaluatorFactory():
     def __init__(self):
@@ -38,6 +39,29 @@ class NearestMeanEvaluator():
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
         return 100. * correct / len(loader.dataset)
+
+    def getConfusionMatrix(self, model, loader, size):
+        model.eval()
+        test_loss = 0
+        correct = 0
+        cMatrix = confusionmeter.ConfusionMeter(size, True)
+
+        for data, target in loader:
+            if self.cuda:
+                data, target = data.cuda(), target.cuda()
+                self.means = self.means.cuda()
+            data, target = Variable(data, volatile=True), Variable(target)
+            output = model(data, True).unsqueeze(1)
+            result = (output.data - self.means.float())
+            result = torch.norm(result, 2, 2)
+            _, pred = torch.min(result, 1)
+            correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+            cMatrix.add(pred, target.data.view_as(pred))
+
+        test_loss /= len(loader.dataset)
+        img = cMatrix.value()
+        return img
+
 
     def update_means(self, model, train_loader, classes=100):
         # Set the mean to zero
@@ -91,3 +115,23 @@ class softmax_evaluator():
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
         return 100. * correct / len(loader.dataset)
+
+    def getConfusionMatrix(self, model, loader, size):
+        model.eval()
+        test_loss = 0
+        correct = 0
+        cMatrix = confusionmeter.ConfusionMeter(size, True)
+
+        for data, target in loader:
+            if self.cuda:
+                data, target = data.cuda(), target.cuda()
+            data, target = Variable(data, volatile=True), Variable(target)
+            output = model(data)
+            test_loss += F.nll_loss(output, target, size_average=False).data[0]  # sum up batch loss
+            pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
+            correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+            cMatrix.add(pred, target.data.view_as(pred))
+
+        test_loss /= len(loader.dataset)
+        img = cMatrix.value()
+        return img

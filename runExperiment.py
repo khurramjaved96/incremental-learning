@@ -54,7 +54,7 @@ parser.add_argument('--no-upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
 parser.add_argument('--decay', type=float, default=0.00001, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
-parser.add_argument('--memory-budgets', type=int,  nargs='+', default=2000,
+parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[2000],
                     help='How many images can we store at max. 0 will result in fine-tuning')
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; example CIFAR, MNIST')
@@ -159,11 +159,17 @@ for seed in args.seeds:
             train_y.append(tempTrain)
 
             # Saving confusion matrix
-            ut.save_confusion_matrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-                                     my_experiment.path + "CONFUSION", myModel, args, dataset, test_iterator)
+
+
+
+            # ut.save_confusion_matrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+            #                          my_experiment.path + "CONFUSION", myModel, args, dataset, test_iterator)
             # Computing test error for graphing
             testY = nmc.evaluate(myModel, test_iterator)
             y.append(testY)
+
+            tcMatrix = t_classifier.getConfusionMatrix(myModel, test_iterator, dataset.classes)
+            nmcMatrix = nmc.getConfusionMatrix(myModel, test_iterator, dataset.classes)
 
             print("Train NMC", tempTrain)
             print("Test NMC", testY)
@@ -176,7 +182,12 @@ for seed in args.seeds:
             my_experiment.results["Train Error Classifier"] = [x, train_y]
             my_experiment.store_json()
 
+
             my_plotter = plt.Plotter()
+
+            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
+            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
+                                  nmcMatrix)
             my_plotter.plot(x, y, title=args.name, legend="NCM")
             my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
 
