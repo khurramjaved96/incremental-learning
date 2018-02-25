@@ -59,16 +59,21 @@ parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; e
 
 parser.add_argument('--process', default="nmc", help='Process to be used to prevent forgetting; Example: nmc, gan')
 
-parser.add_argument('--gan-epochs', type=int, nargs='+', default=[60, 40, 20, 20, 20], help='Epochs for each increment for training the GANs')
+parser.add_argument('--gan-epochs', type=int, nargs='+', default=[50, 30, 20, 20, 20], help='Epochs for each increment for training the GANs')
 parser.add_argument('--gan-lr', type=int, default=0.0002, help='Learning Rate for training the GANs')
 parser.add_argument('--gan-batch-size', type=int, default=128, help='Batch Size for training the GANs')
 parser.add_argument('--gan-num-examples', type=int, default=1000, help='Number examples GAN will generate for each class')
-parser.add_argument('--gan-schedule', type=int, nargs='+', default=[11, 16],
+parser.add_argument('--gan-schedule', type=int, nargs='+', default=[13, 17],
                     help='Decrease GAN learning rate at these epochs.')
 parser.add_argument('--gan-gammas', type=float, nargs='+', default=[0.1, 0.1],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 
 args = parser.parse_args()
+
+if args.process == "gan" and args.dataset == "MNIST" and len(args.gan_epochs) < 10//args.step_size:
+    print("ERROR: Number of values in gan-epochs must be greater than number of increments")
+    assert False
+
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
 torch.manual_seed(args.seed)
