@@ -48,7 +48,18 @@ class Plotter():
         plt.xlabel(self.x_label)
         plt.yticks(list(range(0,105,10)))
         plt.xticks(list(range(0, xticks+1, int(xticks/10))))
-        plt.savefig(path+"globalPlot_.eps",format='eps', dpi=1200)
+        plt.savefig(path+".eps",format='eps', dpi=1200)
+        plt.gcf().clear()
+
+    def save_fig2(self, path, xticks=105):
+        plt.legend(handles=self.handles)
+        # plt.ylim( (0, 100) )
+        # plt.xlim((0,xticks+.2))
+        plt.ylabel(self.y_label)
+        plt.xlabel(self.x_label)
+        # plt.yticks(list(range(0,105,10)))
+        # plt.xticks(list(range(0, xticks+1, int(xticks/10))))
+        plt.savefig(path+".eps",format='eps', dpi=1200)
         plt.gcf().clear()
 
 if __name__=="__main__":

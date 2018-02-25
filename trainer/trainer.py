@@ -126,16 +126,18 @@ class Trainer(GenericTrainer):
         self.model.train()
         length_epoch = self.dataset.labels_per_class_train*(len(self.train_data_iterator.dataset.active_classes)-len(self.train_data_iterator.dataset.limited_classes))
         length_epoch += self.args.memory_budget
-        print("Current Epoch : ", epoch, "size : ", length_epoch)
         length_epoch/= int(self.args.batch_size)
+        print("Current Epoch : ", epoch, "size : ", length_epoch)
         bar = progressbar.ProgressBar(redirect_stdout=True)
+        counter=0
         for batch_idx, (data, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
-            if batch_idx == length_epoch:
+            if counter >= length_epoch:
                 print ("Stopping epsoch at", batch_idx)
                 break
+            counter+=1
 
             weight_vector = (target * 0).int()
             for elem in self.older_classes:
