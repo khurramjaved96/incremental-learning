@@ -7,6 +7,7 @@ folders = ['plots/memorybudget/us/', 'plots/memorybudget/os/']
 experimentCon = []
 for folder in folders:
     files = os.listdir(folder)
+    files = [f for f in files if not '.DS' in f]
     files = np.sort([int(i) for i in files])
     files = [str(f) for f in files]
     experiments= []

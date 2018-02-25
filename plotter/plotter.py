@@ -4,18 +4,19 @@ import matplotlib
 plt.switch_backend('agg')
 
 
-MEDIUM_SIZE = 14
+MEDIUM_SIZE = 16
 
-font = {'family' : 'sans-serif'}
+font = {'family' : 'sans-serif',
+        'weight':'bold'}
 
-matplotlib.rc('xtick', labelsize=14)
-matplotlib.rc('ytick', labelsize=14)
+matplotlib.rc('xtick', labelsize=MEDIUM_SIZE)
+matplotlib.rc('ytick', labelsize=MEDIUM_SIZE)
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 
 # matplotlib.rc('font', **font)
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
-# plt.style.use('ggplot')
+# plt.style.use('default')
 print(plt.style.available)
 
 class Plotter():
@@ -25,10 +26,10 @@ class Plotter():
         self.marker = itertools.cycle(('o', '+', "v", "^", "8",'.', '*'))
         self.handles=[]
         self.lines = itertools.cycle(('--', '-.', '-', ':'))
-    def plot(self,x,y, xLabel="Number of Classes",yLabel = "Accuracy", legend="none",title=None, error=None):
+    def plot(self,x,y, xLabel="Number of Classes",yLabel = "Accuracy %", legend="none",title=None, error=None):
         self.x = x
         self.y = y
-        plt.grid(color='0.86', linestyle='--', linewidth=0.5)
+        plt.grid(color='0.89', linestyle='--', linewidth=1.0)
         if error is None:
             l, = plt.plot(x,y,linestyle=next(self.lines), marker=next(self.marker), label=legend, linewidth=2.0)
         else:
@@ -42,11 +43,11 @@ class Plotter():
 
     def save_fig(self, path, xticks=105):
         plt.legend(handles=self.handles)
-        plt.ylim( (0, 100) )
+        plt.ylim( (0, 100+1.2) )
         plt.xlim((0,xticks+.2))
         plt.ylabel(self.y_label)
         plt.xlabel(self.x_label)
-        plt.yticks(list(range(0,105,10)))
+        plt.yticks(list(range(10,105,10)))
         plt.xticks(list(range(0, xticks+1, int(xticks/10))))
         plt.savefig(path+".eps",format='eps', dpi=1200)
         plt.gcf().clear()
@@ -56,7 +57,7 @@ class Plotter():
         # plt.ylim( (0, 100) )
         # plt.xlim((0,xticks+.2))
         plt.xlabel("Memory Budget")
-        plt.ylabel("Avg. Incremental Accuracy")
+        plt.ylabel("Average Incremental Accuracy")
         # plt.yticks(list(range(0,105,10)))
         # plt.xticks(list(range(0, xticks+1, int(xticks/10))))
         plt.savefig(path+".eps",format='eps', dpi=1200)
