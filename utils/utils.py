@@ -50,7 +50,7 @@ def saveConfusionMatrix(epoch, path, model, args, dataset, test_loader):
         pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
         if epoch > 0:
-            cMatrix.add(pred, target.data.view_as(pred))
+            cMatrix.add(pred.squeeze(), target.data.view_as(pred).squeeze())
 
     test_loss /= len(test_loader.dataset)
     img = cMatrix.value()

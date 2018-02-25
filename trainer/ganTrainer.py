@@ -52,7 +52,7 @@ class trainer():
                                                                    self.old_classes)
                 for k in self.examples:
                     self.examples[k] = ut.normalize_images(self.examples[k]).data.cpu()
-                    self.saveResults(self.examples[k], "Final", k, True)
+                    self.saveResults(self.examples[k], str(self.increment) + "_Final", k, True)
 
             epoch = 0
             for epoch in range(0, self.args.epochs_class):
@@ -232,7 +232,7 @@ class trainer():
                         labels[klass] = torch.cat((labels[klass], targets), dim=0)
                         examples[klass] = torch.cat((examples[klass],images), dim=0)
                     if save:
-                        self.saveResults(images, epoch, klass)
+                        self.saveResults(images, str(self.increment) + '_' + str(epoch), klass)
             return examples, labels
 
     def updateFrozenGenerator(self, G):
