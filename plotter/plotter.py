@@ -26,6 +26,7 @@ class plotter():
         plt.yticks(list(range(0,105,10)))
         plt.xticks(list(range(0, xticks, int(xticks/10))))
         plt.savefig(path)
+        plt.gcf().clear()
 
 if __name__=="__main__":
     pl = plotter()

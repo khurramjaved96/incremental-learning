@@ -34,6 +34,7 @@ def resizeImage(img, factor):
     return img2
 
 
+
 def saveConfusionMatrix(epoch, path, model, args, dataset, test_loader):
     model.eval()
     test_loss = 0
@@ -49,12 +50,16 @@ def saveConfusionMatrix(epoch, path, model, args, dataset, test_loader):
         pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
         if epoch > 0:
-            cMatrix.add(pred.squeeze(), target.data.view_as(pred).squeeze())
+            cMatrix.add(pred, target.data.view_as(pred))
 
     test_loss /= len(test_loader.dataset)
-    import cv2
-    img = cMatrix.value() * 255
-    cv2.imwrite(path + str(epoch) + ".jpg", img)
+    img = cMatrix.value()
+    import matplotlib.pyplot as plt
+
+    plt.imshow(img, cmap='plasma', interpolation='nearest')
+    plt.colorbar()
+    plt.savefig(path + str(epoch) + ".jpg")
+    plt.gcf().clear()
     return 100. * correct / len(test_loader.dataset)
 
 
@@ -83,6 +88,5 @@ def plotAccuracy(experiment, x, y, num_classes, plot_name):
         myPlotter.plot(x, y[i][1], title=plot_name, legend=y[i][0])
 
     myPlotter.saveFig(experiment.path + "Overall" + ".jpg", num_classes)
-
-    with open(experiment.path + "result", "wb") as f:
-        pickle.dump(experiment, f)
+    plt.gcf().clear()
+    experiment.store_json()

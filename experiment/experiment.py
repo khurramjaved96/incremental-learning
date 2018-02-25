@@ -1,27 +1,35 @@
+import json
+import os
+
 class experiment:
     '''
     Class to store results of any experiment 
     '''
-    def __init__(self, args):
-        self.name = None
-        self.params = vars(args)
-        self.args = args
-        self.results= {}
-        self.constructExperimentName(args)
-    def constructExperimentName(self,args):
-        import os
-        name = [args.model_type, str(args.epochs_class), str(args.step_size)]
-        if not args.no_herding:
-            name.append("herding")
-        if not args.no_distill:
-            name.append("distillation")
-        ver = 0
-        while os.path.exists("../" + args.name+"_"+str(ver)):
-            ver+=1
+    def __init__(self, name, args, output_dir="../"):
+        if not args is None:
+            self.name = name
+            self.params = vars(args)
+            self.results = {}
+            self.dir = output_dir
 
-        os.makedirs("../" + args.name+"_"+str(ver))
+            ver = 0
 
-        self.name = "_".join(name) +"_"+str(ver)
-        self.path = "../" + args.name +"_"+str(ver)+ "/" + "_".join(name)
+            while os.path.exists("../" + self.name + "_" + str(ver)):
+                ver += 1
 
-        return "../" + args.name +"_"+str(ver)+ "/" + "_".join(name)
+            os.makedirs("../" + self.name + "_" + str(ver))
+            self.path = "../" + self.name + "_" + str(ver) + "/" + name
+
+            self.results["Temp Results"]= [[1,2,3,4], [5,6,2,6]]
+
+    def store_json(self):
+        with open(self.path +"JSONDump", 'w') as outfile:
+            json.dump(json.dumps(self.__dict__), outfile)
+
+
+import argparse
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='iCarl2.0')
+    args = parser.parse_args()
+    e = experiment("TestExperiment", args)
+    e.store_json()

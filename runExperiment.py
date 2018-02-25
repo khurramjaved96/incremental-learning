@@ -108,7 +108,7 @@ if args.cuda:
         G.cuda()
         D.cuda()
 
-myExperiment = ex.experiment(args)
+myExperiment = ex.experiment(args.name, args)
 
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                       weight_decay=args.decay, nesterov=True)
