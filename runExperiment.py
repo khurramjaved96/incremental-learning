@@ -54,7 +54,7 @@ parser.add_argument('--no-upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
 parser.add_argument('--decay', type=float, default=0.00001, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
-parser.add_argument('--memory-budget', type=int, default=2000,
+parser.add_argument('--memory-budgets', type=int,  nargs='+', default=2000,
                     help='How many images can we store at max. 0 will result in fine-tuning')
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; example CIFAR, MNIST')
@@ -67,8 +67,7 @@ parser.add_argument('--lwf', action='store_true', default=False,
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
-if args.lwf:
-    args.memory_budget = 0
+
 
 
 dataset = dataHandler.DatasetFactory.get_dataset(args.dataset)
@@ -81,96 +80,103 @@ if args.step_size<2:
     assert False
 
 for seed in args.seeds:
-    args.seed = seed
-    torch.manual_seed(seed)
-    if args.cuda:
-        torch.cuda.manual_seed(seed)
+    for m in args.memory_budgets:
+        args.memory_budget = m
+
+        if args.lwf:
+            args.memory_budget = 0
 
 
-    train_dataset_loader = dataHandler.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
-                                                         dataset.labels_per_class_train,
-                                                         dataset.classes, [], transform=dataset.train_transform,
-                                                         cuda=args.cuda, oversampling=not args.no_upsampling,
-                                                         )
+        args.seed = seed
+        torch.manual_seed(seed)
+        if args.cuda:
+            torch.cuda.manual_seed(seed)
 
-    test_dataset_loader = dataHandler.IncrementalLoader(dataset.test_data.test_data, dataset.test_data.test_labels,
-                                                        dataset.labels_per_class_test, dataset.classes,
-                                                        [], transform=dataset.test_transform, cuda=args.cuda,
-                                                        )
 
-    kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
+        train_dataset_loader = dataHandler.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
+                                                             dataset.labels_per_class_train,
+                                                             dataset.classes, [], transform=dataset.train_transform,
+                                                             cuda=args.cuda, oversampling=not args.no_upsampling,
+                                                             )
 
-    train_iterator = torch.utils.data.DataLoader(train_dataset_loader,
-                                                 batch_size=args.batch_size, shuffle=True, **kwargs)
-    test_iterator = torch.utils.data.DataLoader(
-        test_dataset_loader,
-        batch_size=args.test_batch_size, shuffle=True, **kwargs)
+        test_dataset_loader = dataHandler.IncrementalLoader(dataset.test_data.test_data, dataset.test_data.test_labels,
+                                                            dataset.labels_per_class_test, dataset.classes,
+                                                            [], transform=dataset.test_transform, cuda=args.cuda,
+                                                            )
 
-    myModel = model.ModelFactory.get_model(args.model_type, args.dataset)
-    if args.cuda:
-        myModel.cuda()
+        kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-    my_experiment = ex.experiment(args.name, args)
+        train_iterator = torch.utils.data.DataLoader(train_dataset_loader,
+                                                     batch_size=args.batch_size, shuffle=True, **kwargs)
+        test_iterator = torch.utils.data.DataLoader(
+            test_dataset_loader,
+            batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
-    optimizer = torch.optim.SGD(myModel.parameters(), args.lr, momentum=args.momentum,
-                                weight_decay=args.decay, nesterov=True)
+        myModel = model.ModelFactory.get_model(args.model_type, args.dataset)
+        if args.cuda:
+            myModel.cuda()
 
-    my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, myModel, args, optimizer)
+        my_experiment = ex.experiment(args.name, args)
 
-    x = []
-    y = []
-    y1 = []
-    train_y = []
+        optimizer = torch.optim.SGD(myModel.parameters(), args.lr, momentum=args.momentum,
+                                    weight_decay=args.decay, nesterov=True)
 
-    nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
-    t_classifier = trainer.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
+        my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, myModel, args, optimizer)
 
-    if not args.sortby == "none":
-        print("Sorting by", args.sortby)
-        train_dataset_loader.sort_by_importance(args.sortby)
+        x = []
+        y = []
+        y1 = []
+        train_y = []
 
-    for class_group in range(0, dataset.classes, args.step_size):
+        nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
+        t_classifier = trainer.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
 
-        my_trainer.setup_training()
+        if not args.sortby == "none":
+            print("Sorting by", args.sortby)
+            train_dataset_loader.sort_by_importance(args.sortby)
 
-        my_trainer.increment_classes(class_group)
-        my_trainer.update_frozen_model()
-        epoch = 0
-        import progressbar
-        bar = progressbar.ProgressBar(redirect_stdout=True)
-        for epoch in bar(range(0, args.epochs_class)):
-            my_trainer.update_lr(epoch)
-            my_trainer.train(epoch)
-            if epoch % args.log_interval == 0:
-                print("Train Classifier", t_classifier.evaluate(myModel, train_iterator))
-                print("Test Classifier", t_classifier.evaluate(myModel, test_iterator))
-            bar.update(int(float(epoch)/float(args.epochs_class))*100)
+        for class_group in range(0, dataset.classes, args.step_size):
 
-        nmc.update_means(myModel, train_iterator, dataset.classes)
+            my_trainer.setup_training()
 
-        tempTrain = nmc.evaluate(myModel, train_iterator)
-        train_y.append(tempTrain)
+            my_trainer.increment_classes(class_group)
+            my_trainer.update_frozen_model()
+            epoch = 0
+            import progressbar
+            bar = progressbar.ProgressBar(redirect_stdout=True)
+            for epoch in bar(range(0, args.epochs_class)):
+                my_trainer.update_lr(epoch)
+                my_trainer.train(epoch)
+                if epoch % args.log_interval == 0:
+                    print("Train Classifier", t_classifier.evaluate(myModel, train_iterator))
+                    print("Test Classifier", t_classifier.evaluate(myModel, test_iterator))
+                bar.update(int(float(epoch)/float(args.epochs_class))*100)
 
-        # Saving confusion matrix
-        ut.save_confusion_matrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-                                 my_experiment.path + "CONFUSION", myModel, args, dataset, test_iterator)
-        # Computing test error for graphing
-        testY = nmc.evaluate(myModel, test_iterator)
-        y.append(testY)
+            nmc.update_means(myModel, train_iterator, dataset.classes)
 
-        print("Train NMC", tempTrain)
-        print("Test NMC", testY)
+            tempTrain = nmc.evaluate(myModel, train_iterator)
+            train_y.append(tempTrain)
 
-        y1.append(t_classifier.evaluate(myModel, test_iterator))
-        x.append(class_group + args.step_size)
+            # Saving confusion matrix
+            ut.save_confusion_matrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+                                     my_experiment.path + "CONFUSION", myModel, args, dataset, test_iterator)
+            # Computing test error for graphing
+            testY = nmc.evaluate(myModel, test_iterator)
+            y.append(testY)
 
-        my_experiment.results["NCM"] = [x, y]
-        my_experiment.results["Trained Classifier"] = [x, y1]
-        my_experiment.results["Train Error Classifier"] = [x, train_y]
-        my_experiment.store_json()
+            print("Train NMC", tempTrain)
+            print("Test NMC", testY)
 
-        my_plotter = plt.Plotter()
-        my_plotter.plot(x, y, title=args.name, legend="NCM")
-        my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
+            y1.append(t_classifier.evaluate(myModel, test_iterator))
+            x.append(class_group + args.step_size)
 
-        my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
+            my_experiment.results["NCM"] = [x, y]
+            my_experiment.results["Trained Classifier"] = [x, y1]
+            my_experiment.results["Train Error Classifier"] = [x, train_y]
+            my_experiment.store_json()
+
+            my_plotter = plt.Plotter()
+            my_plotter.plot(x, y, title=args.name, legend="NCM")
+            my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
+
+            my_plotter.save_fig(my_experiment.path, dataset.classes + 1)

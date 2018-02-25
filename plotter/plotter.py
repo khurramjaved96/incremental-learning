@@ -12,7 +12,7 @@ matplotlib.rc('xtick', labelsize=14)
 matplotlib.rc('ytick', labelsize=14)
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 
-matplotlib.rc('font', **font)
+# matplotlib.rc('font', **font)
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
 # plt.style.use('ggplot')
