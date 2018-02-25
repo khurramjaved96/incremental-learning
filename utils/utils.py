@@ -38,9 +38,11 @@ def save_confusion_matrix(epoch, path, model, args, dataset, test_loader):
             cMatrix.add(pred, target.data.view_as(pred))
 
     test_loss /= len(test_loader.dataset)
-    img = cMatrix.value() * 255
-    import cv2
-    cv2.imwrite(path + str(epoch) + ".jpg", img)
+    img = cMatrix.value()
+    import matplotlib.pyplot as plt
+
+    plt.imshow(img, cmap='hot', interpolation='nearest')
+    plt.savefig(path + str(epoch) + ".jpg")
     return 100. * correct / len(test_loader.dataset)
 
 

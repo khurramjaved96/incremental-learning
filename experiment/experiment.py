@@ -6,19 +6,21 @@ class experiment:
     Class to store results of any experiment 
     '''
     def __init__(self, name, args, output_dir="../"):
-        self.name = name
-        self.params = vars(args)
-        self.results = {}
-        self.dir = output_dir
+        if not args is None:
+            self.name = name
+            self.params = vars(args)
+            self.results = {}
+            self.dir = output_dir
 
-        ver = 0
-        while os.path.exists("../" + self.name + "_" + str(ver)):
-            ver += 1
+            ver = 0
 
-        os.makedirs("../" + self.name + "_" + str(ver))
-        self.path = "../" + self.name + "_" + str(ver) + "/" + name
+            while os.path.exists("../" + self.name + "_" + str(ver)):
+                ver += 1
 
-        self.results["Temp Results"]= [[1,2,3,4], [5,6,2,6]]
+            os.makedirs("../" + self.name + "_" + str(ver))
+            self.path = "../" + self.name + "_" + str(ver) + "/" + name
+
+            self.results["Temp Results"]= [[1,2,3,4], [5,6,2,6]]
 
     def store_json(self):
         with open(self.path +"JSONDump", 'w') as outfile:
