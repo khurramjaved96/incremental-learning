@@ -89,5 +89,4 @@ def plotAccuracy(experiment, x, y, num_classes, plot_name):
 
     myPlotter.saveFig(experiment.path + "Overall" + ".jpg", num_classes)
 
-    with open(experiment.path + "result", "wb") as f:
-        pickle.dump(experiment, f)
+    experiment.store_json()
