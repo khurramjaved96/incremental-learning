@@ -51,7 +51,7 @@ class trainer():
                                                                    self.old_classes)
                 for k in self.examples:
                     self.examples[k] = ut.normalize_images(self.examples[k]).data.cpu()
-                    self.saveResults(self.examples[k], 22, k, True)
+                    self.saveResults(self.examples[k], 2222, k, True)
 
             epoch = 0
             for epoch in range(0, self.args.epochs_class):
@@ -208,9 +208,6 @@ class trainer():
                   "G_Loss:", (sum(G_Losses)/len(G_Losses)).cpu().data.numpy()[0],
                   "D_Loss:", (sum(D_Losses)/len(D_Losses)).cpu().data.numpy()[0])
             self.generateExamples(G, 100, activeClasses, epoch, save=True)
-            if self.old_classes != None:
-                self.generateExamples(G, 100, activeClasses, epoch + 100, save=True)
-
 
     #Uses GAN to generate examples
     def generateExamples(self, G, num_examples, active_classes, epoch=0, save=False):
