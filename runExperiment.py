@@ -52,14 +52,14 @@ parser.add_argument('--name', default="noname",
 parser.add_argument('--sortby', default="none",
                     help='Examplars sorting strategy')
 parser.add_argument('--decay', type=float, default=0.00001, help='Weight decay (L2 penalty).')
-parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
+parser.add_argument('--step-size', type=int, default=2, help='How many classes to add in each increment')
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
 
 parser.add_argument('--process', default="nmc", help='Process to be used to prevent forgetting; Example: nmc, gan')
 
-parser.add_argument('--gan-epochs', type=int, default=15, help='Epochs per increment for training the GANs')
+parser.add_argument('--gan-epochs', type=int, nargs='+', default=[60, 40, 20, 20, 20], help='Epochs for each increment for training the GANs')
 parser.add_argument('--gan-lr', type=int, default=0.0002, help='Learning Rate for training the GANs')
 parser.add_argument('--gan-batch-size', type=int, default=128, help='Batch Size for training the GANs')
 parser.add_argument('--gan-num-examples', type=int, default=1000, help='Number examples GAN will generate for each class')

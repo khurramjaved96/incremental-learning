@@ -30,6 +30,7 @@ class trainer():
         self.G = None
         self.examples = {}
         self.labels = {}
+        self.increment = 0
 
     def train(self):
         x = []
@@ -40,6 +41,7 @@ class trainer():
             self.classifierTrainer.incrementClasses(classGroup)
             #Get new iterator with reduced batch_size
             if classGroup > 0:
+                self.increment = self.increment + 1
                 self.batch_size = self.batch_size // 2
                 self.old_classes = self.classifierTrainer.olderClasses
                 self.trainIterator = ut.get_new_iterator(self.args.cuda,
@@ -51,7 +53,7 @@ class trainer():
                                                                    self.old_classes)
                 for k in self.examples:
                     self.examples[k] = ut.normalize_images(self.examples[k]).data.cpu()
-                    self.saveResults(self.examples[k], 2222, k, True)
+                    self.saveResults(self.examples[k], "Final", k, True)
 
             epoch = 0
             for epoch in range(0, self.args.epochs_class):
@@ -112,7 +114,7 @@ class trainer():
             DVec[i, i, :, :] = 1
 
         print("Starting GAN Training")
-        for epoch in range(int(self.args.gan_epochs)):
+        for epoch in range(int(self.args.gan_epochs[self.increment])):
             D_Losses = []
             G_Losses = []
             self.updateLR(epoch, G_Opt, D_Opt)
@@ -256,6 +258,7 @@ class trainer():
                 sub[i, j].imshow(images[k, 0].cpu().data.numpy(), cmap='gray')
 
         plt.savefig("results/" + str(epoch) + "_" + str(klass) + ".png")
+        plt.clf()
 
     def updateLR(self, epoch, G_Opt, D_Opt):
         for temp in range(0, len(self.args.gan_schedule)):
