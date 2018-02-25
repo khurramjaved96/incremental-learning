@@ -32,7 +32,7 @@ class Plotter():
         if error is None:
             l, = plt.plot(x,y,linestyle=next(self.lines), marker=next(self.marker), label=legend, linewidth=2.0)
         else:
-            l = plt.errorbar(x, y, yerr=error, linestyle=next(self.lines), marker=next(self.marker), label=legend, linewidth=2.5)
+            l = plt.errorbar(x, y, yerr=error, capsize=4.0, capthick=2.0, linestyle=next(self.lines), marker=next(self.marker), label=legend, linewidth=2.0)
 
         self.handles.append(l)
         self.x_label = xLabel
