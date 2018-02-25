@@ -49,6 +49,7 @@ class Plotter():
         plt.yticks(list(range(0,105,10)))
         plt.xticks(list(range(0, xticks+1, int(xticks/10))))
         plt.savefig(path+"globalPlot_.eps",format='eps', dpi=1200)
+        plt.gcf().clear()
 
 if __name__=="__main__":
     pl = Plotter()

@@ -43,6 +43,7 @@ def save_confusion_matrix(epoch, path, model, args, dataset, test_loader):
 
     plt.imshow(img, cmap='hot', interpolation='nearest')
     plt.savefig(path + str(epoch) + ".jpg")
+    plt.gcf().clear()
     return 100. * correct / len(test_loader.dataset)
 
 
