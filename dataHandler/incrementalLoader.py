@@ -46,6 +46,13 @@ class incrementalLoader(td.Dataset):
         self.len = self.classSize * len(self.activeClasses)
         self.updateLen()
 
+    def replaceData(self, data, labels, k):
+        #     Code to replace images with GAN generated images
+        print (labels)
+        print (data.shape)
+        for a in list(set(labels)):
+            print (a)
+        0/0
     def updateLen(self):
         '''
         Function to compute length of the active elements of the data. 

@@ -43,13 +43,15 @@ class trainer():
                 self.increment = self.increment + 1
                 self.batch_size = self.batch_size // 2
                 self.old_classes = self.classifierTrainer.olderClasses
-                self.trainIterator = ut.get_new_iterator(self.args.cuda,
-                                                         self.trainLoader,
-                                                         self.batch_size)
+                # self.trainIterator = ut.get_new_iterator(self.args.cuda,
+                #                                          self.trainLoader,
+                #                                          self.batch_size)
                 #Generate examples
                 self.examples, self.labels = self.generateExamples(self.G,
                                                                    self.args.gan_num_examples,
                                                                    self.old_classes)
+
+                self.trainIterator.replaceData(self.examples, self.labels, 1000)
                 print ("Generated examples shapes", self.examples.shape, self.labels.shape)
                 for k in self.examples:
                     # self.examples[k] = ut.normalize_images(self.examples[k]).data.cpu()
