@@ -110,7 +110,8 @@ class CifarResNet(nn.Module):
         if feature:
             return x / torch.norm(x, 2, 1).unsqueeze(1)
 
-        return F.softmax(self.classifier(x))
+        return F.sigmoid(self.classifier(x))
+        # return F.softmax(self.classifier(x))
 
     def forwardFeature(self, x):
         pass
