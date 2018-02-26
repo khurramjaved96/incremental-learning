@@ -54,7 +54,7 @@ parser.add_argument('--memory-budget', type=int, default=2000, help='How many im
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
 
-parser.add_argument('--process', default="nmc", help='Process to be used to prevent forgetting; Example: nmc, gan')
+parser.add_argument('--process', default="nmc", help='Process to be used to prevent forgetting; Example: nmc, cgan, gan')
 
 parser.add_argument('--gan-epochs', type=int, nargs='+', default=[50, 30, 20, 20, 20], help='Epochs for each increment for training the GANs')
 parser.add_argument('--gan-lr', type=float, default=0.0002, help='Learning Rate for training the GANs')
@@ -123,7 +123,7 @@ if args.process == "nmc":
                          trainIterator, testIterator, trainDatasetLoader,
                          myExperiment)
 
-if args.process == "gan":
+if args.process == "gan" or args.process == "cgan":
     trainer = gt.trainer(args, dataset, classifierTrainer, model,
                          trainIterator, testIterator, trainDatasetLoader,
                          myFactory, myExperiment)

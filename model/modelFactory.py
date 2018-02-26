@@ -1,7 +1,8 @@
 import model.densenet as dn
 import model.resnet32 as res
 import model.testModel as tm
-import model.cDCGAN as gan
+import model.cDCGAN as cdcgan
+import model.DCGAN as dcgan
 
 class modelFactory():
     def __init__(self):
@@ -43,8 +44,18 @@ class modelFactory():
             if dataset=="CIFAR100":
                 print("CIFAR100 not supported")
                 assert(False)
-            G = gan.Generator(128)
-            D = gan.Discriminator(128)
+            G = cdcgan.Generator(128)
+            D = cdcgan.Discriminator(128)
+            G.init_weights(mean=0.0, std=0.02)
+            D.init_weights(mean=0.0, std=0.02)
+            return G, D
+
+        elif modelType=="dcgan":
+            if dataset=="CIFAR100":
+                print("CIFAR100 not supported")
+                assert(False)
+            G = dcgan.Generator(128)
+            D = dcgan.Discriminator(128)
             G.init_weights(mean=0.0, std=0.02)
             D.init_weights(mean=0.0, std=0.02)
             return G, D

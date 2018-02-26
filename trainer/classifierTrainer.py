@@ -83,8 +83,9 @@ class trainer():
         for param in self.modelFixed.parameters():
             param.requires_grad = False
 
-    def insert_generated_images(self, data, target, gan_images, gan_labels, batch_size):
+    def insert_generated_images(self, data, target, gan_images, gan_labels, batch_size, is_C=False):
         '''
+        NOT READY FOR CLASSIFIER ON STANDARD GAN
         data: Images from data iterator
         target: Labels from data iterator
         gan_images: Generated images by GAN
@@ -93,13 +94,20 @@ class trainer():
         batch_size: Current batch_size of training iterator
         '''
         if self.args.process == 'gan':
-            if not gan_images == {}:
-                per_k_batch = (self.args.batch_size - batch_size) // len(gan_labels)
-                for k in gan_labels:
-                    random_indices = torch.randperm(gan_images[k].shape[0])[0:per_k_batch]
-                    new_targets = (torch.ones(per_k_batch) * k).long()
-                    data = torch.cat((data, gan_images[k][random_indices]), dim=0)
-                    target = torch.cat((target, new_targets), dim=0)
+            if not len(gan_images) == 0:
+                if is_C:
+                    per_k_batch = (self.args.batch_size - batch_size) // len(gan_labels)
+                    for k in gan_labels:
+                        random_indices = torch.randperm(gan_images[k].shape[0])[0:per_k_batch]
+                        new_targets = (torch.ones(per_k_batch) * k).long()
+                        data = torch.cat((data, gan_images[k][random_indices]), dim=0)
+                        target = torch.cat((target, new_targets), dim=0)
+                else:
+                    batch = self.args.batch_size - batch_size
+                    gan_images = gan_images.cpu()
+                    random_indices = torch.randperm(gan_images.shape[0])[0:batch]
+                    data = torch.cat((data, gan_images[random_indices].data), dim=0)
+                    target = None
         return data, target
 
     def train(self, gan_images=None, gan_labels=None, batch_size=None):
