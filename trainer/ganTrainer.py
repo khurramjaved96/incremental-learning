@@ -261,6 +261,7 @@ class trainer():
                 sub[i, j].imshow(images[k, 0].cpu().data.numpy(), cmap='gray')
 
         plt.savefig("results/" + str(epoch) + "_" + str(klass) + ".png")
+        plt.gcf().clear()
         plt.clf()
 
     def updateLR(self, epoch, G_Opt, D_Opt):
