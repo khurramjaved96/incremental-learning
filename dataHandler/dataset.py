@@ -58,7 +58,9 @@ class CIFAR100(Dataset):
         #
         self.train_transform = transforms.Compose(
             [transforms.RandomHorizontalFlip(),
-             transforms.RandomCrop(32, padding=4),
+             transforms.RandomGrayscale(), transforms.RandomVerticalFlip(), transforms.RandomRotation(-10,10),
+             torchvision.transforms.ColorJitter(0.5,0.5,0.5,0.5),
+             transforms.RandomCrop(32, padding=6),
              transforms.ToTensor(),
              transforms.Normalize(mean, std)])
 
