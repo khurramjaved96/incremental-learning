@@ -51,7 +51,7 @@ class trainer():
                                                                    self.args.gan_num_examples,
                                                                    self.old_classes)
 
-                self.trainIterator.replaceData(self.examples, 1000)
+                self.trainIterator.dataset.replaceData(self.examples, 1000)
 
                 for k in self.examples:
                     # self.examples[k] = ut.normalize_images(self.examples[k]).data.cpu()
