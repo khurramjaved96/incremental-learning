@@ -30,4 +30,5 @@ class Net(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)
-        return F.softmax(x)
+        return F.sigmoid(x)
+        # return F.softmax(x)
