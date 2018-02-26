@@ -29,16 +29,11 @@ class MNIST(dataset):
 
         self.trainTransform = transforms.Compose([
         transforms.RandomCrop(32, padding=6),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
-        ])
+        transforms.ToTensor()])
 
-        self.testTransform = transforms.Compose(
-            [transforms.Scale(32), transforms.ToTensor(),
-             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+        self.testTransform = transforms.Compose([transforms.Scale(32), transforms.ToTensor()])
 
         self.trainData = datasets.MNIST("data", train=True, transform=self.trainTransform, download=True)
-
         self.testData = datasets.MNIST("data", train=False, transform=self.testTransform, download=True)
 
 

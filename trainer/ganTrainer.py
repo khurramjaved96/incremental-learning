@@ -50,8 +50,9 @@ class trainer():
                 self.examples, self.labels = self.generateExamples(self.G,
                                                                    self.args.gan_num_examples,
                                                                    self.old_classes)
+                print ("Generated examples shapes", self.examples.shape, self.labels.shape)
                 for k in self.examples:
-                    self.examples[k] = ut.normalize_images(self.examples[k]).data.cpu()
+                    # self.examples[k] = ut.normalize_images(self.examples[k]).data.cpu()
                     self.saveResults(self.examples[k], str(self.increment) + "_Final", k, True)
 
             epoch = 0
