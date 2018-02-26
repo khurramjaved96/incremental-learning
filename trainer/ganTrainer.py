@@ -55,9 +55,13 @@ class trainer():
                     self.saveResults(self.examples[k], str(self.increment) + "_Final", k, True)
 
             epoch = 0
+            is_iter_replaced = False
             for epoch in range(0, self.args.epochs_class):
                 self.classifierTrainer.updateLR(epoch)
-                self.classifierTrainer.updateIterator(self.trainIterator)
+                if classGroup > 0 and not is_iter_replaced:
+                    is_iter_replaced = True
+                    self.classifierTrainer.updateIterator(self.trainIterator)
+
                 self.classifierTrainer.train(self.examples, self.old_classes,
                                              self.batch_size)
                 if epoch % self.args.log_interval == 0:
