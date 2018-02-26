@@ -214,7 +214,8 @@ class Trainer(GenericTrainer):
                     outpu2 = self.model_fixed(dataDis)
                     y_onehot[old_classes_indices] = outpu2.data
 
-            loss = F.binary_cross_entropy(output, Variable(y_onehot))
+            # loss = F.binary_cross_entropy(output, Variable(y_onehot))
+            loss = F.multilabel_margin_loss(output, Variable(y_onehot))
             loss.backward()
             self.optimizer.step()
             bar.update(int(float(batch_idx+1)/float(len(self.train_data_iterator))*100))
