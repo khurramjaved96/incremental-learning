@@ -51,7 +51,7 @@ class incrementalLoader(td.Dataset):
         print ("replacing data")
         for a in data:
             print (data[a].shape)
-            nump = data[a].cpu().numpy()
+            nump = data[a].cpu().data.numpy()
             print (nump.shape,self.data[self.indices[a][0]:self.indices[a][0]+1000].shape)
             self.data[self.indices[a][0]:self.indices[a][0]+1000] = nump
             self.limitClass(a,1000)
