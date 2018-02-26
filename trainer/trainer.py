@@ -171,8 +171,8 @@ class Trainer(GenericTrainer):
                                 param[1].requires_grad = False
                     if epoch == 2 and batch_idx == 0:
                         print("Shifting to all weight training from warm up training")
-                        for param in self.model.named_parameters():
-                            param[1].requires_grad = True
+                        for param in self.model.parameters():
+                            param.requires_grad = True
 
                     pred2 = self.model_fixed(Variable(rightHalf))
                     # data = torch.cat((data, data), dim=0)
