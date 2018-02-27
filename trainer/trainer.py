@@ -148,7 +148,7 @@ class Trainer(GenericTrainer):
             # Compute weight for each instance; weight is proportional to no of samples of the class in the training set.
 
             weight = torch.ones(self.args.batch_size).long()
-            if self.cuda:
+            if self.args.cuda:
                 weight.cuda()
             OrigSize = self.dataset.labels_per_class_train
             ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
