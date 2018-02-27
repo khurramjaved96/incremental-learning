@@ -147,21 +147,21 @@ class Trainer(GenericTrainer):
 
             # Compute weight for each instance; weight is proportional to no of samples of the class in the training set.
 
-            weight = torch.ones(self.args.batch_size).long()
+            daTemp = np.ones((self.args.batch_size))
+            weight = torch.FloatTensor(daTemp)
             if self.args.cuda:
                 weight.cuda()
             # print ("Weight", weight)
+
             OrigSize = self.dataset.labels_per_class_train
             if len(self.older_classes)>0:
                 ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
-                weight[old_classes_indices.cpu().numpy()] = 1 / ChangedSize
-            # print ("Indices",new_classes_indices, )
-            weight[new_classes_indices,] = 1 / OrigSize
+                weight[old_classes_indices] = 1.0 / float(ChangedSize)
 
+            weight[new_classes_indices] = 1.0/float(OrigSize)
 
-
-            if epoch==0:
-                print (weight)
+            if epoch==0 and batch_idx==0:
+                print (weight.cpu().numpy())
 
             self.optimizer.zero_grad()
 
@@ -173,7 +173,7 @@ class Trainer(GenericTrainer):
             target.unsqueeze_(1)
             y_onehot.scatter_(1, target, 1)
 
-            output = self.model(data)
+            output = self.model(Variable(data))
             if len(self.older_classes) > 0:
                 pred2 = self.model_fixed(Variable(data))
                 y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
@@ -206,10 +206,12 @@ class Trainer(GenericTrainer):
             #
             #
             # else:
+            # print (data.shape)
+            # print (y_onehot.shape)
             if self.args.no_upsampling:
-                loss = F.binary_cross_entropy(output, Variable(y_onehot),weight)
+                loss = F.binary_cross_entropy(output, Variable(y_onehot))
             else:
-                loss = F.binary_cross_entropy(output, Variable(y_onehot), weight)
+                loss = F.binary_cross_entropy(output, Variable(y_onehot), weight.unsqueeze(1))
             loss.backward()
             self.optimizer.step()
             bar.update(int(float(batch_idx+1)/float(len(self.train_data_iterator))*100))
