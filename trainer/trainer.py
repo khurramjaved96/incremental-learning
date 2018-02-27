@@ -148,16 +148,16 @@ class Trainer(GenericTrainer):
             # Compute weight for each instance; weight is proportional to no of samples of the class in the training set.
 
             daTemp = np.ones((self.args.batch_size))
-            weight = torch.FloatTensor(daTemp).cpu()
+            weight = torch.FloatTensor(daTemp)
 
             # print ("Weight", weight)
 
             OrigSize = self.dataset.labels_per_class_train
             if len(self.older_classes)>0:
                 ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
-                weight[old_classes_indices] = 1.0 / float(ChangedSize)
+                weight[old_classes_indices.cpu()] = 1.0 / float(ChangedSize)
 
-            weight[new_classes_indices] = 1.0/float(OrigSize)
+            weight[new_classes_indices.cpu()] = 1.0/float(OrigSize)
 
             if epoch==0 and batch_idx==0:
                 print (weight.cpu().numpy())
