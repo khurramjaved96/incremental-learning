@@ -148,7 +148,7 @@ class Trainer(GenericTrainer):
             # Compute weight for each instance; weight is proportional to no of samples of the class in the training set.
 
             daTemp = np.ones((self.args.batch_size))
-            weight = torch.FloatTensor(daTemp)
+            weight = torch.FloatTensor(daTemp).cpu()
 
             # print ("Weight", weight)
 
@@ -210,7 +210,7 @@ class Trainer(GenericTrainer):
 
             if self.args.cuda:
                 weight.cuda()
-                
+
             if self.args.no_upsampling:
                 loss = F.binary_cross_entropy(output, Variable(y_onehot),weight.unsqueeze(1))
             else:
