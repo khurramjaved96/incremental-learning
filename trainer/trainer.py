@@ -151,10 +151,12 @@ class Trainer(GenericTrainer):
             if self.args.cuda:
                 weight.cuda()
             OrigSize = self.dataset.labels_per_class_train
-            ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
+            if len(self.older_classes)>0:
+                ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
+                weight[new_classes_indices] = 1 / OrigSize
 
             weight[old_classes_indices] = 1/ChangedSize
-            weight[new_classes_indices] = 1/OrigSize
+
             if epoch==0:
                 print (weight)
 
