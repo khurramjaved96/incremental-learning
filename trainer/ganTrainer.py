@@ -54,6 +54,9 @@ class trainer():
                                                                    self.old_classes,
                                                                    "Final-Inc"+str(self.increment),
                                                                    True)
+                #if self.is_C:
+                #    for k in self.examples:
+                #        self.examples[k] = self.examples[k].data.cpu()
             epoch = 0
             is_iter_replaced = False
             for epoch in range(0, self.args.epochs_class):
@@ -217,8 +220,8 @@ class trainer():
             print("[GAN] Epoch:", epoch,
                   "G_Loss:", (sum(G_Losses)/len(G_Losses)).cpu().data.numpy()[0],
                   "D_Loss:", (sum(D_Losses)/len(D_Losses)).cpu().data.numpy()[0])
-            #self.generateExamples(G, 100, activeClasses,
-            #                      "Inc"+str(self.increment) + "_E" + str(epoch)), True)
+            self.generateExamples(G, 100, activeClasses,
+                                  "Inc"+str(self.increment) + "_E" + str(epoch), True)
 
     #Uses GAN to generate examples
     def generateExamples(self, G, num_examples, active_classes, name="", save=False):
