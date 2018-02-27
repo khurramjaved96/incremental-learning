@@ -147,7 +147,7 @@ class Trainer(GenericTrainer):
 
             # Compute weight for each instance; weight is proportional to no of samples of the class in the training set.
 
-            daTemp = np.ones((self.args.batch_size))
+            daTemp = np.ones((len(data)))
             weight = torch.FloatTensor(daTemp)
 
             # print ("Weight", weight)
