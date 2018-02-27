@@ -174,7 +174,7 @@ class Trainer(GenericTrainer):
                         for param in self.model.parameters():
                             param.requires_grad = True
 
-                    pred2 = self.model_fixed(Variable(rightHalf))
+                    pred2 = self.model_fixed(Variable(data))
                     # data = torch.cat((data, data), dim=0)
                     output = self.model(Variable(data))
                     print (self.older_classes)
