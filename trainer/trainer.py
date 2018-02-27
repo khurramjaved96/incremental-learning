@@ -175,12 +175,8 @@ class Trainer(GenericTrainer):
                             param.requires_grad = True
 
                     pred2 = self.model_fixed(Variable(data))
-                    # data = torch.cat((data, data), dim=0)
                     output = self.model(Variable(data))
-                    # print (self.older_classes)
-                    # print (y_onehot[:, self.older_classes].shape)
                     y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
-                    # y_onehot[rightIndices] = pred2.data
 
                 else:
                     output = self.model(Variable(data))
@@ -213,9 +209,11 @@ class Trainer(GenericTrainer):
 
                 output = self.model(Variable(data))
                 if not self.args.no_distill:
-                    dataDis = Variable(data[old_classes_indices])
-                    outpu2 = self.model_fixed(dataDis)
-                    y_onehot[old_classes_indices] = outpu2.data
+                    # dataDis = Variable(data[old_classes_indices])
+                    # outpu2 = self.model_fixed(dataDis)
+                    # y_onehot[old_classes_indices] = outpu2.data
+                    pred2 = self.model_fixed(Variable(data))
+                    y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
 
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
             # loss = F.multilabel_margin_loss(output, Variable(y_onehot.long()))
