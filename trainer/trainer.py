@@ -155,7 +155,8 @@ class Trainer(GenericTrainer):
             OrigSize = self.dataset.labels_per_class_train
             if len(self.older_classes)>0:
                 ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
-                weight[old_classes_indices.cpu()] = max(1, float(OrigSize) / float(ChangedSize))
+                if (len(old_classes_indices.cpu())>0):
+                    weight[old_classes_indices.cpu()] = max(1, float(OrigSize) / float(ChangedSize))
 
             # weight[new_classes_indices.cpu()] = 1.0/float(OrigSize)
 
