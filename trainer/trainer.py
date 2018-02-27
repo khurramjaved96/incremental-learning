@@ -177,8 +177,8 @@ class Trainer(GenericTrainer):
                     pred2 = self.model_fixed(Variable(data))
                     # data = torch.cat((data, data), dim=0)
                     output = self.model(Variable(data))
-                    print (self.older_classes)
-                    print (y_onehot[:, self.older_classes].shape)
+                    # print (self.older_classes)
+                    # print (y_onehot[:, self.older_classes].shape)
                     y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
                     # y_onehot[rightIndices] = pred2.data
 
