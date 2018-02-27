@@ -209,7 +209,7 @@ class Trainer(GenericTrainer):
             # print (data.shape)
             # print (y_onehot.shape)
             if self.args.no_upsampling:
-                loss = F.binary_cross_entropy(output, Variable(y_onehot))
+                loss = F.binary_cross_entropy(output, Variable(y_onehot),weight.unsqueeze(1))
             else:
                 loss = F.binary_cross_entropy(output, Variable(y_onehot), weight.unsqueeze(1))
             loss.backward()
