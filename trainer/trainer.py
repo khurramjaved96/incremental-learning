@@ -130,38 +130,18 @@ class Trainer(GenericTrainer):
         length_epoch/= int(self.args.batch_size)
         print("Current Epoch : ", epoch, "size : ", length_epoch)
         bar = progressbar.ProgressBar(redirect_stdout=True)
-        counter=0
         for batch_idx, (data, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
-
-
-            counter+=1
 
             weight_vector = (target * 0).int()
             for elem in self.older_classes:
                 weight_vector = weight_vector + (target == elem).int()
 
+            # Use this to implement decayed distillation
+
             old_classes_indices = torch.squeeze(torch.nonzero((weight_vector > 0)).long())
             new_classes_indices = torch.squeeze(torch.nonzero((weight_vector == 0)).long())
-
-            # Compute weight for each instance; weight is proportional to no of samples of the class in the training set.
-
-            daTemp = np.ones((len(data)))
-            weight = torch.FloatTensor(daTemp)
-
-            # print ("Weight", weight)
-
-            OrigSize = self.dataset.labels_per_class_train
-            if len(self.older_classes)>0:
-                ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
-                if (len(old_classes_indices.cpu())>0):
-                    weight[old_classes_indices.cpu()] = max(1, float(OrigSize) / float(ChangedSize))
-
-            # weight[new_classes_indices.cpu()] = 1.0/float(OrigSize)
-
-            if epoch==0 and batch_idx==0:
-                print (weight.cpu().numpy())
 
             self.optimizer.zero_grad()
 
@@ -174,49 +154,13 @@ class Trainer(GenericTrainer):
             y_onehot.scatter_(1, target, 1)
 
             output = self.model(Variable(data))
-            if len(self.older_classes) > 0:
+            if self.args.no_distill:
+                pass
+            elif len(self.older_classes) > 0:
                 pred2 = self.model_fixed(Variable(data))
                 y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
 
-            # if self.args.lwf:
-            #
-            #     assert (len(old_classes_indices) == 0)
-            #     assert (self.args.memory_budget == 0)
-            #
-            #     if len(self.older_classes) > 0:
-            #         if epoch == 0 and batch_idx == 0 :
-            #             print("Warm up step for 2 epochs")
-            #             for param in self.model.named_parameters():
-            #                 if "fc" in param[0]:
-            #                     print ("Setting gradient of FC layers to be True")
-            #                     param[1].requies_grad = True
-            #                 else:
-            #                     param[1].requires_grad = False
-            #         if epoch == 2 and batch_idx == 0:
-            #             print("Shifting to all weight training from warm up training")
-            #             for param in self.model.parameters():
-            #                 param.requires_grad = True
-            #
-            #         pred2 = self.model_fixed(Variable(data))
-            #         output = self.model(Variable(data))
-            #         y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
-            #
-            #     else:
-            #         output = self.model(Variable(data))
-            #
-            #
-            # else:
-            # print (data.shape)
-            # print (y_onehot.shape)
-
-            weight = weight.unsqueeze(1)
-            if self.args.cuda:
-                weight = weight.cuda()
-
-            if self.args.no_upsampling:
-                loss = F.binary_cross_entropy(output, Variable(y_onehot),weight)
-            else:
-                loss = F.binary_cross_entropy(output, Variable(y_onehot), weight)
+            loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
             self.optimizer.step()
             bar.update(int(float(batch_idx+1)/float(len(self.train_data_iterator))*100))
