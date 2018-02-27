@@ -155,6 +155,7 @@ class Trainer(GenericTrainer):
             if len(self.older_classes)>0:
                 ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
                 weight[old_classes_indices.cpu().numpy()] = 1 / ChangedSize
+            print ("Indices",new_classes_indices.cpu().numpy())
             weight[new_classes_indices.cpu().numpy()] = 1 / OrigSize
 
 
