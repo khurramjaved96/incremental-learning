@@ -150,6 +150,7 @@ class Trainer(GenericTrainer):
             weight = torch.ones(self.args.batch_size).long()
             if self.args.cuda:
                 weight.cuda()
+            print ("Weight", weight)
             OrigSize = self.dataset.labels_per_class_train
             if len(self.older_classes)>0:
                 ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
