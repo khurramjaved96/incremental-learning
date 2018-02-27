@@ -153,8 +153,8 @@ class Trainer(GenericTrainer):
             OrigSize = self.dataset.labels_per_class_train
             if len(self.older_classes)>0:
                 ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
-                weight[old_classes_indices] = 1 / ChangedSize
-            weight[new_classes_indices] = 1 / OrigSize
+                weight[old_classes_indices.cpu().numpy()] = 1 / ChangedSize
+            weight[new_classes_indices.cpu().numpy()] = 1 / OrigSize
 
 
 
@@ -204,8 +204,10 @@ class Trainer(GenericTrainer):
             #
             #
             # else:
-
-            loss = F.binary_cross_entropy(output, Variable(y_onehot),weight)
+            if self.args.no_upsampling:
+                loss = F.binary_cross_entropy(output, Variable(y_onehot),weight)
+            else:
+                loss = F.binary_cross_entropy(output, Variable(y_onehot), weight)
             loss.backward()
             self.optimizer.step()
             bar.update(int(float(batch_idx+1)/float(len(self.train_data_iterator))*100))
