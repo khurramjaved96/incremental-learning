@@ -208,13 +208,14 @@ class Trainer(GenericTrainer):
             # print (data.shape)
             # print (y_onehot.shape)
 
+            weight = weight.unsqueeze(1)
             if self.args.cuda:
-                weight.cuda()
+                weight = weight.cuda()
 
             if self.args.no_upsampling:
-                loss = F.binary_cross_entropy(output, Variable(y_onehot),weight.unsqueeze(1))
+                loss = F.binary_cross_entropy(output, Variable(y_onehot),weight)
             else:
-                loss = F.binary_cross_entropy(output, Variable(y_onehot), weight.unsqueeze(1))
+                loss = F.binary_cross_entropy(output, Variable(y_onehot), weight)
             loss.backward()
             self.optimizer.step()
             bar.update(int(float(batch_idx+1)/float(len(self.train_data_iterator))*100))
