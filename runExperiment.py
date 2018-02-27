@@ -53,6 +53,7 @@ parser.add_argument('--outputDir', default="../",
 parser.add_argument('--no-upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
 parser.add_argument('--decay', type=float, default=0.00005, help='Weight decay (L2 penalty).')
+parser.add_argument('--distill-decay', type=float, default=0.5, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[2000],
                     help='How many images can we store at max. 0 will result in fine-tuning')

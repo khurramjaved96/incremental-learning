@@ -119,6 +119,7 @@ class Trainer(GenericTrainer):
         self.model_fixed = copy.deepcopy(self.model)
         for param in self.model_fixed.parameters():
             param.requires_grad = False
+        self.model_fixed.eval()
 
 
     def train(self, epoch):
@@ -143,80 +144,65 @@ class Trainer(GenericTrainer):
 
             old_classes_indices = torch.squeeze(torch.nonzero((weight_vector > 0)).long())
             new_classes_indices = torch.squeeze(torch.nonzero((weight_vector == 0)).long())
+
+            # Compute weight for each instance; weight is proportional to no of samples of the class in the training set.
+
+            weight = torch.ones(self.args.batch_size).long()
+            if self.cuda:
+                weight.cuda()
+            OrigSize = self.dataset.labels_per_class_train
+            ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
+
+            weight[old_classes_indices] = 1/ChangedSize
+            weight[new_classes_indices] = 1/OrigSize
+            if epoch==0:
+                print (weight)
+
             self.optimizer.zero_grad()
 
-            if self.args.lwf:
+            y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
+            if self.args.cuda:
+                y_onehot = y_onehot.cuda()
 
-                assert (len(old_classes_indices) == 0)
-                assert (self.args.memory_budget == 0)
+            y_onehot.zero_()
+            target.unsqueeze_(1)
+            y_onehot.scatter_(1, target, 1)
 
-                rightIndices = list(range(int(len(data)/2),len(data)))
-                rightHalf = data[rightIndices]
+            output = self.model(data)
+            if len(self.older_classes) > 0:
+                pred2 = self.model_fixed(Variable(data))
+                y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
 
-                y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
-                if self.args.cuda:
-                    y_onehot = y_onehot.cuda()
-                y_onehot.zero_()
-                target.unsqueeze_(1)
-                y_onehot.scatter_(1, target, 1)
+            # if self.args.lwf:
+            #
+            #     assert (len(old_classes_indices) == 0)
+            #     assert (self.args.memory_budget == 0)
+            #
+            #     if len(self.older_classes) > 0:
+            #         if epoch == 0 and batch_idx == 0 :
+            #             print("Warm up step for 2 epochs")
+            #             for param in self.model.named_parameters():
+            #                 if "fc" in param[0]:
+            #                     print ("Setting gradient of FC layers to be True")
+            #                     param[1].requies_grad = True
+            #                 else:
+            #                     param[1].requires_grad = False
+            #         if epoch == 2 and batch_idx == 0:
+            #             print("Shifting to all weight training from warm up training")
+            #             for param in self.model.parameters():
+            #                 param.requires_grad = True
+            #
+            #         pred2 = self.model_fixed(Variable(data))
+            #         output = self.model(Variable(data))
+            #         y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
+            #
+            #     else:
+            #         output = self.model(Variable(data))
+            #
+            #
+            # else:
 
-                if len(self.older_classes) > 0:
-                    if epoch == 0 and batch_idx == 0 :
-                        print("Warm up step for 2 epochs")
-                        for param in self.model.named_parameters():
-                            if "fc" in param[0]:
-                                print ("Setting gradient of FC layers to be True")
-                                param[1].requies_grad = True
-                            else:
-                                param[1].requires_grad = False
-                    if epoch == 2 and batch_idx == 0:
-                        print("Shifting to all weight training from warm up training")
-                        for param in self.model.parameters():
-                            param.requires_grad = True
-
-                    pred2 = self.model_fixed(Variable(data))
-                    output = self.model(Variable(data))
-                    y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
-
-                else:
-                    output = self.model(Variable(data))
-
-
-
-            elif len(old_classes_indices) == 0:
-                data_old_classes = data[new_classes_indices]
-                targets_old_classes = target[new_classes_indices]
-                target2 = targets_old_classes
-                data_old_classes, target = Variable(data_old_classes), Variable(targets_old_classes)
-
-                output = self.model(data_old_classes)
-                y_onehot = torch.FloatTensor(len(data_old_classes), self.dataset.classes)
-                if self.args.cuda:
-                    y_onehot = y_onehot.cuda()
-
-                y_onehot.zero_()
-                target2.unsqueeze_(1)
-                y_onehot.scatter_(1, target2, 1)
-
-            else:
-                y_onehot = torch.FloatTensor(len(data), self.dataset.classes)
-                if self.args.cuda:
-                    y_onehot = y_onehot.cuda()
-
-                y_onehot.zero_()
-                target.unsqueeze_(1)
-                y_onehot.scatter_(1, target, 1)
-
-                output = self.model(Variable(data))
-                if not self.args.no_distill:
-                    # dataDis = Variable(data[old_classes_indices])
-                    # outpu2 = self.model_fixed(dataDis)
-                    # y_onehot[old_classes_indices] = outpu2.data
-                    pred2 = self.model_fixed(Variable(data))
-                    y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
-
-            loss = F.binary_cross_entropy(output, Variable(y_onehot))
-            # loss = F.multilabel_margin_loss(output, Variable(y_onehot.long()))
+            loss = F.binary_cross_entropy(output, Variable(y_onehot),weight)
             loss.backward()
             self.optimizer.step()
             bar.update(int(float(batch_idx+1)/float(len(self.train_data_iterator))*100))
