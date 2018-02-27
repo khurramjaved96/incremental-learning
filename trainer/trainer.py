@@ -150,13 +150,13 @@ class Trainer(GenericTrainer):
             weight = torch.ones(self.args.batch_size).long()
             if self.args.cuda:
                 weight.cuda()
-            print ("Weight", weight)
+            # print ("Weight", weight)
             OrigSize = self.dataset.labels_per_class_train
             if len(self.older_classes)>0:
                 ChangedSize = min(self.args.memory_budget//len(self.older_classes), OrigSize)
                 weight[old_classes_indices.cpu().numpy()] = 1 / ChangedSize
-            print ("Indices",new_classes_indices.cpu().numpy())
-            weight[new_classes_indices.cpu().numpy()] = 1 / OrigSize
+            # print ("Indices",new_classes_indices, )
+            weight[new_classes_indices,] = 1 / OrigSize
 
 
 
