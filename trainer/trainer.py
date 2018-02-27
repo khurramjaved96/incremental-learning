@@ -149,8 +149,7 @@ class Trainer(GenericTrainer):
 
             daTemp = np.ones((self.args.batch_size))
             weight = torch.FloatTensor(daTemp)
-            if self.args.cuda:
-                weight.cuda()
+
             # print ("Weight", weight)
 
             OrigSize = self.dataset.labels_per_class_train
@@ -208,6 +207,10 @@ class Trainer(GenericTrainer):
             # else:
             # print (data.shape)
             # print (y_onehot.shape)
+
+            if self.args.cuda:
+                weight.cuda()
+                
             if self.args.no_upsampling:
                 loss = F.binary_cross_entropy(output, Variable(y_onehot),weight.unsqueeze(1))
             else:
