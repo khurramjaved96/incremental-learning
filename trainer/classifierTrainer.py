@@ -114,8 +114,6 @@ class trainer():
         self.model.train()
 
         for batch_idx, (data, target) in enumerate(self.trainDataIterator):
-            data, target = self.insert_generated_images(data, target, gan_images,
-                                                        gan_labels, batch_size)
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 

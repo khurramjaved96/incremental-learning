@@ -48,15 +48,14 @@ class incrementalLoader(td.Dataset):
 
     def replaceData(self, data, k):
         #     Code to replace images with GAN generated images
-        print ("replacing data")
+        print ("Replacing data")
         for a in data:
             d = data[a].data.squeeze().cpu().numpy()
-            nump = resize(d, (1000, 28, 28))
-            print (nump.shape,self.data[self.indices[a][0]:self.indices[a][0]+1000].shape)
-            self.data[self.indices[a][0]:self.indices[a][0]+1000] = nump
+            nump = resize(d, (k, 28, 28))
+            self.data[self.indices[a][0]:self.indices[a][0]+k] = nump
             if a not in self.activeClasses:
                 self.activeClasses.append(a)
-            self.limitClass(a,1000)
+            self.limitClass(a, k)
 
 
     def updateLen(self):

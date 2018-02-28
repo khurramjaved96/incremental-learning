@@ -42,30 +42,25 @@ class trainer():
             #Get new iterator with reduced batch_size
             if classGroup > 0:
                 self.increment = self.increment + 1
-                self.batch_size = self.batch_size // 2
                 self.old_classes = self.classifierTrainer.olderClasses
-                self.trainIterator = ut.get_new_iterator(self.args.cuda,
-                                                         self.trainLoader,
-                                                         self.batch_size)
                 #Generate examples
                 self.examples, self.labels = self.generateExamples(self.G,
                                                                    self.args.gan_num_examples,
                                                                    self.old_classes,
                                                                    "Final-Inc"+str(self.increment-1),
                                                                    True)
+                if not self.is_C:
+                    print("replaceData is not handling standard GAN yet")
+                    assert False
+                self.trainIterator.dataset.replaceData(self.examples, self.args.gan_num_examples)
                 #This is done because the insert_generated_examples is given cpu data
                 #TODO See if we can keep this on GPU
                 if self.is_C:
                     for k in self.examples:
                         self.examples[k] = self.examples[k].data.cpu()
             epoch = 0
-            is_iter_replaced = False
             for epoch in range(0, self.args.epochs_class):
                 self.classifierTrainer.updateLR(epoch)
-                if classGroup > 0 and not is_iter_replaced:
-                    is_iter_replaced = True
-                    self.classifierTrainer.updateIterator(self.trainIterator)
-
                 self.classifierTrainer.train(self.examples, self.old_classes,
                                              self.batch_size)
                 if epoch % self.args.log_interval == 0:
@@ -74,6 +69,7 @@ class trainer():
                           "Test:",
                           self.classifierTrainer.evaluate(self.testIterator))
 
+            self.classifierTrainer.updateFrozenModel()
             #Get a new Generator and Discriminator
             if self.args.process == "cgan":
                 G, D = self.modelFactory.getModel("cdcgan", self.args.dataset)
@@ -99,11 +95,8 @@ class trainer():
                             self.dataset.classes + 1, self.args.name)
 
     def trainGan(self, G, D, is_C):
-        if self.old_classes != None:
-            activeClasses = self.trainIterator.dataset.activeClasses + self.old_classes
-        else:
-            activeClasses = self.trainIterator.dataset.activeClasses
-        print("ACTIVE: ", activeClasses)
+        activeClasses = self.trainIterator.dataset.activeClasses
+        print("ACTIVE CLASSES: ", activeClasses)
 
         #TODO Change batchsize of dataIterator here to gan_batch_size
         criterion = nn.BCELoss()
@@ -125,17 +118,16 @@ class trainer():
 
         print("Starting GAN Training")
         for epoch in range(int(self.args.gan_epochs[self.increment])):
+            G.train() #Remove the one from generate_examples too if this is removed
             D_Losses = []
             G_Losses = []
             self.updateLR(epoch, G_Opt, D_Opt)
 
             #Iterate over examples that the classifier trainer just iterated on
             for image, label in self.trainIterator:
-                if self.old_classes != None:
-                    image, label = self.classifierTrainer.insert_generated_images(
-                                   image, label, self.examples, self.old_classes,
-                                   self.batch_size, is_C)
                 batch_size = image.shape[0]
+                if self.increment > 0:
+                    print(label)
 
                 #Make vectors of ones and zeros of same shape as output by
                 #Discriminator so that it can be used in BCELoss
@@ -226,6 +218,7 @@ class trainer():
 
     #Uses GAN to generate examples
     def generateExamples(self, G, num_examples, active_classes, name="", save=False):
+        G.eval()
         if self.is_C:
             examples = {}
             labels = {}
