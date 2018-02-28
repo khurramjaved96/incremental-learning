@@ -12,7 +12,7 @@ import model.modelFactory as mF
 
 
 class incrementalLoader(td.Dataset):
-    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False):
+    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, ganTransform=None, cuda=False):
 
         self.len = classSize * len(activeClasses)
         sortIndex = np.argsort(labels)
@@ -23,6 +23,7 @@ class incrementalLoader(td.Dataset):
         labels = np.array(labels)
         self.labels = labels[sortIndex]
         self.transform = transform
+        self.ganTransform = ganTransform
         self.activeClasses = activeClasses
         self.limitedClasses = {}
         self.totalClasses = classes
@@ -212,7 +213,11 @@ class incrementalLoader(td.Dataset):
         if "torch" in str(type(img)):
             img = img.numpy()
         img = Image.fromarray(img)
-        if self.transform is not None:
+
+        if self.labels[index] in self.limitedClasses and self.ganTransform != None:
+            img = self.ganTransform(img)
+
+        elif self.transform is not None:
             img = self.transform(img)
 
         if not self.labels[index] in self.activeClasses:

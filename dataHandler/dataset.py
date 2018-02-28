@@ -33,6 +33,11 @@ class MNIST(dataset):
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
         ])
 
+        self.ganTransform = transforms.Compose([
+        transforms.Scale(32),
+        transforms.ToTensor()
+        ])
+
         self.testTransform = transforms.Compose(
             [transforms.Scale(32), transforms.ToTensor(),
              transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
