@@ -52,7 +52,7 @@ class trainer():
                 self.examples, self.labels = self.generateExamples(self.G,
                                                                    self.args.gan_num_examples,
                                                                    self.old_classes,
-                                                                   "Final-Inc"+str(self.increment),
+                                                                   "Final-Inc"+str(self.increment-1),
                                                                    True)
                 #if self.is_C:
                 #    for k in self.examples:

@@ -28,7 +28,7 @@ class MNIST(dataset):
         super().__init__(10, "MNIST", 6000, 1000)
 
         self.trainTransform = transforms.Compose([
-        transforms.RandomCrop(32, padding=6),
+        transforms.Scale(32),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
         ])
