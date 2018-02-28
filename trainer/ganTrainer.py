@@ -33,7 +33,6 @@ class trainer():
         self.is_C = args.process == "cgan"
 
     def train(self):
-        print(self.is_C)
         x = []
         y = []
 
@@ -54,9 +53,11 @@ class trainer():
                                                                    self.old_classes,
                                                                    "Final-Inc"+str(self.increment-1),
                                                                    True)
-                #if self.is_C:
-                #    for k in self.examples:
-                #        self.examples[k] = self.examples[k].data.cpu()
+                #This is done because the insert_generated_examples is given cpu data
+                #TODO See if we can keep this on GPU
+                if self.is_C:
+                    for k in self.examples:
+                        self.examples[k] = self.examples[k].data.cpu()
             epoch = 0
             is_iter_replaced = False
             for epoch in range(0, self.args.epochs_class):

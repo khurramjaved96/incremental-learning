@@ -93,7 +93,7 @@ class trainer():
                     images
         batch_size: Current batch_size of training iterator
         '''
-        if self.args.process == 'gan':
+        if self.args.process == 'gan' or self.args.process == 'cgan':
             if not len(gan_images) == 0:
                 if is_C:
                     per_k_batch = (self.args.batch_size - batch_size) // len(gan_labels)
