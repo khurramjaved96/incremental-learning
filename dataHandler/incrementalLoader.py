@@ -7,7 +7,7 @@ import torchvision
 from PIL import Image
 from torch.autograd import Variable
 from torchvision import datasets, transforms
-
+from skimage.transform import resize
 import model.modelFactory as mF
 
 
@@ -50,12 +50,11 @@ class incrementalLoader(td.Dataset):
         #     Code to replace images with GAN generated images
         print ("replacing data")
         for a in data:
-            print (data[a].shape)
-            nump = data[a].cpu().data.numpy()
+            d = data[a].data.squeeze().cpu().numpy()
+            nump = resize(d, (1000, 28, 28))
             print (nump.shape,self.data[self.indices[a][0]:self.indices[a][0]+1000].shape)
             self.data[self.indices[a][0]:self.indices[a][0]+1000] = nump
             self.limitClass(a,1000)
-        0/0
 
 
     def updateLen(self):
@@ -64,7 +63,6 @@ class incrementalLoader(td.Dataset):
         :return: 
         '''
         # Computing len if no oversampling
-        lenVar = 0
         # for a in self.activeClasses:
         #     if a in self.limitedClasses:
         #         self.weights[lenVar:lenVar + min(self.classSize, self.limitedClasses[a])] = 1.0 / float(

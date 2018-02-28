@@ -55,12 +55,13 @@ class trainer():
 
                 for k in self.examples:
                     # self.examples[k] = ut.normalize_images(self.examples[k]).data.cpu()
+                    self.examples[k] = self.examples[k].data.cpu()
                     self.saveResults(self.examples[k], str(self.increment) + "_Final", k, True)
 
             epoch = 0
             for epoch in range(0, self.args.epochs_class):
                 self.classifierTrainer.updateLR(epoch)
-                self.classifierTrainer.updateIterator(self.trainIterator)
+                #self.classifierTrainer.updateIterator(self.trainIterator)
                 self.classifierTrainer.train(self.examples, self.old_classes,
                                              self.batch_size)
                 if epoch % self.args.log_interval == 0:
@@ -96,7 +97,6 @@ class trainer():
             activeClasses = self.trainIterator.dataset.activeClasses + self.old_classes
         else:
             activeClasses = self.trainIterator.dataset.activeClasses
-        print("ACTIVE: ", activeClasses)
 
         #TODO Change batchsize of dataIterator here to gan_batch_size
         criterion = nn.BCELoss()
@@ -123,10 +123,10 @@ class trainer():
 
             #Iterate over examples that the classifier trainer just iterated on
             for image, label in self.trainIterator:
-                if self.old_classes != None:
-                    image, label = self.classifierTrainer.insert_generated_images(
-                                   image, label, self.examples, self.old_classes,
-                                   self.batch_size)
+                #if self.old_classes != None:
+                #    image, label = self.classifierTrainer.insert_generated_images(
+                #                   image, label, self.examples, self.old_classes,
+                #                   self.batch_size)
                 batch_size = image.shape[0]
 
                 #Make vectors of ones and zeros of same shape as output by
