@@ -12,7 +12,7 @@ import model.modelFactory as mF
 
 
 class incrementalLoader(td.Dataset):
-    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, ganTransform=None, cuda=False):
+    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False):
 
         self.len = classSize * len(activeClasses)
         sortIndex = np.argsort(labels)
@@ -23,7 +23,6 @@ class incrementalLoader(td.Dataset):
         labels = np.array(labels)
         self.labels = labels[sortIndex]
         self.transform = transform
-        self.ganTransform = ganTransform
         self.activeClasses = activeClasses
         self.limitedClasses = {}
         self.totalClasses = classes
@@ -48,16 +47,22 @@ class incrementalLoader(td.Dataset):
         self.updateLen()
 
     def replaceData(self, data, k):
-        #     Code to replace images with GAN generated images
+        '''
+        Code to replace images with GAN generated images
+        data: Generated images with values in range [-1,1] and of
+              shape [C x W x H]
+        k   : Number of images to replace per class
+        '''
         print ("Replacing data")
         for a in data:
-            d = data[a].data.squeeze().cpu().numpy()
-            nump = np.ndarray((k, 28, 28))
-            for i in range(k):
-                nump[i] = resize(d[i], (28, 28), preserve_range=True)
-            print("DDDD",d[0].shape)
-            print(nump[0].shape)
+            new_data = data[a].data.squeeze().cpu().numpy()
+            nump = resize(new_data, (k, 28, 28), preserve_range=True)
+
+            #Converting from [-1,1] range to [0,255] because that is what
+            #toTensor transform expects
+            nump = (((nump/2) + 0.5) * 255).astype(np.uint8)
             self.data[self.indices[a][0]:self.indices[a][0]+k] = nump
+
             if a not in self.activeClasses:
                 self.activeClasses.append(a)
             self.limitClass(a, k)
@@ -218,10 +223,7 @@ class incrementalLoader(td.Dataset):
             img = img.numpy()
         img = Image.fromarray(img)
 
-        if self.labels[index] in self.limitedClasses and self.ganTransform != None:
-            img = self.ganTransform(img)
-
-        elif self.transform is not None:
+        if self.transform is not None:
             img = self.transform(img)
 
         if not self.labels[index] in self.activeClasses:

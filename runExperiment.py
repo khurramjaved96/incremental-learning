@@ -84,7 +84,7 @@ dataset = dF.datasetFactory.getDataset(args.dataset)
 trainDatasetLoader = dL.incrementalLoader(dataset.trainData.train_data, dataset.trainData.train_labels,
                                           dataset.labelsPerClassTrain,
                                           dataset.classes, [], transform=dataset.trainTransform,
-                                          ganTransform=dataset.ganTransform, cuda=args.cuda,
+                                          cuda=args.cuda
                                           )
 
 testDatasetLoader = dL.incrementalLoader(dataset.testData.test_data, dataset.testData.test_labels,

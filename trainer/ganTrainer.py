@@ -129,8 +129,8 @@ class trainer():
             #Iterate over examples that the classifier trainer just iterated on
             for image, label in self.trainIterator:
                 batch_size = image.shape[0]
-                if self.increment > 0:
-                    self.saveResults(image, "sample", is_tensor=True, axis_size=11)
+                #if self.increment > 0:
+                #    self.saveResults(image, "sample", is_tensor=True, axis_size=11)
 
                 #Make vectors of ones and zeros of same shape as output by
                 #Discriminator so that it can be used in BCELoss
