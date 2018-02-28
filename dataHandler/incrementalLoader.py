@@ -52,7 +52,11 @@ class incrementalLoader(td.Dataset):
         print ("Replacing data")
         for a in data:
             d = data[a].data.squeeze().cpu().numpy()
-            nump = resize(d, (k, 28, 28))
+            nump = np.ndarray((k, 28, 28))
+            for i in range(k):
+                nump[i] = resize(d[i], (28, 28), preserve_range=True)
+            print("DDDD",d[0].shape)
+            print(nump[0].shape)
             self.data[self.indices[a][0]:self.indices[a][0]+k] = nump
             if a not in self.activeClasses:
                 self.activeClasses.append(a)

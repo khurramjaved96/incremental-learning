@@ -27,6 +27,8 @@ class trainer():
         self.experiment = experiment
         self.old_classes = None
         self.G = None
+        self.D = None
+        self.fixed_G = None
         self.examples = {}
         self.labels = {}
         self.increment = 0
@@ -44,7 +46,7 @@ class trainer():
                 self.increment = self.increment + 1
                 self.old_classes = self.classifierTrainer.olderClasses
                 #Generate examples
-                self.examples, self.labels = self.generateExamples(self.G,
+                self.examples, self.labels = self.generateExamples(self.fixed_G,
                                                                    self.args.gan_num_examples,
                                                                    self.old_classes,
                                                                    "Final-Inc"+str(self.increment-1),
@@ -71,15 +73,16 @@ class trainer():
 
             self.classifierTrainer.updateFrozenModel()
             #Get a new Generator and Discriminator
-            if self.args.process == "cgan":
-                G, D = self.modelFactory.getModel("cdcgan", self.args.dataset)
-            else:
-                G, D = self.modelFactory.getModel("dcgan", self.args.dataset)
-            if self.args.cuda:
-                G.cuda()
-                D.cuda()
-            self.trainGan(G, D, self.is_C)
-            self.updateFrozenGenerator(G)
+            if self.G == None or not self.args.persist_gan:
+                if self.args.process == "cgan":
+                    self.G, self.D = self.modelFactory.getModel("cdcgan", self.args.dataset)
+                else:
+                    self.G, self.D = self.modelFactory.getModel("dcgan", self.args.dataset)
+                if self.args.cuda:
+                    self.G = self.G.cuda()
+                    self.D = self.D.cuda()
+            self.trainGan(self.G, self.D, self.is_C)
+            self.updateFrozenGenerator(self.G)
 
             # Saving confusion matrix
             ut.saveConfusionMatrix(int(classGroup / self.args.step_size) *
@@ -127,7 +130,7 @@ class trainer():
             for image, label in self.trainIterator:
                 batch_size = image.shape[0]
                 if self.increment > 0:
-                    print(label)
+                    self.saveResults(image, "sample", is_tensor=True, axis_size=11)
 
                 #Make vectors of ones and zeros of same shape as output by
                 #Discriminator so that it can be used in BCELoss
@@ -257,13 +260,13 @@ class trainer():
 
     def updateFrozenGenerator(self, G):
         G.eval()
-        self.G = copy.deepcopy(G)
-        for param in self.G.parameters():
+        self.fixed_G = copy.deepcopy(G)
+        for param in self.fixed_G.parameters():
             param.requires_grad = False
 
     def saveResults(self, images, name, is_tensor=False, axis_size=10):
-        _, sub = plt.subplots(10, 10, figsize=(5, 5))
-        for i, j in itertools.product(range(10), range(10)):
+        _, sub = plt.subplots(axis_size, axis_size, figsize=(5, 5))
+        for i, j in itertools.product(range(axis_size), range(axis_size)):
             sub[i, j].get_xaxis().set_visible(False)
             sub[i, j].get_yaxis().set_visible(False)
 
@@ -277,8 +280,9 @@ class trainer():
                 sub[i, j].imshow(images[k, 0].cpu().data.numpy(), cmap='gray')
 
         plt.savefig(self.experiment.path + "results/" + name + ".png")
-        plt.gcf().clear()
+        plt.cla()
         plt.clf()
+        plt.close()
 
     def updateLR(self, epoch, G_Opt, D_Opt):
         for temp in range(0, len(self.args.gan_schedule)):
