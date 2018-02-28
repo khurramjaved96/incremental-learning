@@ -54,6 +54,8 @@ class incrementalLoader(td.Dataset):
             nump = resize(d, (1000, 28, 28))
             print (nump.shape,self.data[self.indices[a][0]:self.indices[a][0]+1000].shape)
             self.data[self.indices[a][0]:self.indices[a][0]+1000] = nump
+            if a not in self.activeClasses:
+                self.activeClasses.append(a)
             self.limitClass(a,1000)
 
 
