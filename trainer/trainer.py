@@ -161,7 +161,7 @@ class Trainer(GenericTrainer):
             elif decayed and len(self.older_classes) > 0:
                 pred2 = self.model_fixed(Variable(data))
                 y_onehot[:, self.older_classes][old_classes_indices] = pred2.data[:, self.older_classes][old_classes_indices]
-                # y_onehot[new_classes_indices, self.older_classes] = pred2.data[new_classes_indices, self.older_classes]*decayFactor
+                y_onehot[:, self.older_classes][new_classes_indices] = pred2.data[:, self.older_classes][new_classes_indices]*decayFactor
             elif len(self.older_classes) > 0:
                 pred2 = self.model_fixed(Variable(data))
                 y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
