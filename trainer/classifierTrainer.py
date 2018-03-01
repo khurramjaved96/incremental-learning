@@ -93,6 +93,9 @@ class trainer():
                     images
         batch_size: Current batch_size of training iterator
         '''
+        if not is_C:
+            print("Classifier not ready for standard GAN yet")
+            assert False
         if self.args.process == 'gan' or self.args.process == 'cgan':
             if not len(gan_images) == 0:
                 if is_C:

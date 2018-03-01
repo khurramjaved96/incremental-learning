@@ -30,7 +30,6 @@ class trainer():
         self.D = None
         self.fixed_G = None
         self.examples = {}
-        self.labels = {}
         self.increment = 0
         self.is_C = args.process == "cgan"
 
@@ -46,15 +45,14 @@ class trainer():
                 self.increment = self.increment + 1
                 self.old_classes = self.classifierTrainer.olderClasses
                 #Generate examples
-                self.examples, self.labels = self.generateExamples(self.fixed_G,
-                                                                   self.args.gan_num_examples,
-                                                                   self.old_classes,
-                                                                   "Final-Inc"+str(self.increment-1),
-                                                                   True)
-                if not self.is_C:
-                    print("replaceData is not handling standard GAN yet")
-                    assert False
-                self.trainIterator.dataset.replaceData(self.examples, self.args.gan_num_examples)
+                self.examples = self.generateExamples(self.fixed_G,
+                                                      self.args.gan_num_examples,
+                                                      self.old_classes,
+                                                      "Final-Inc"+str(self.increment-1),
+                                                      True)
+
+                self.trainIterator.dataset.replaceData(self.examples,
+                                                       self.args.gan_num_examples)
                 #This is done because the insert_generated_examples is given cpu data
                 #TODO See if we can keep this on GPU
                 if self.is_C:
@@ -221,42 +219,26 @@ class trainer():
 
     #Uses GAN to generate examples
     def generateExamples(self, G, num_examples, active_classes, name="", save=False):
+        '''
+        Returns a dict[class] of generated samples.
+        In case of Non-Conditional GAN, the samples in the dict are random, they do
+        not correspond to the keys in the dict
+        '''
         G.eval()
-        if self.is_C:
-            examples = {}
-            labels = {}
-            for klass in active_classes:
-                for _ in range(num_examples//100):
-                    noise = torch.randn(100,100,1,1)
-                    targets = torch.zeros(100,10,1,1)
-                    targets[:, klass] = 1
-                    if self.args.cuda:
-                        noise  = Variable(noise.cuda(), volatile=True)
-                        targets = Variable(targets.cuda(), volatile=True)
-                    images = G(noise, targets)
-                    if not klass in examples.keys():
-                        labels[klass] = targets
-                        examples[klass] = images
-                    else:
-                        labels[klass] = torch.cat((labels[klass], targets), dim=0)
-                        examples[klass] = torch.cat((examples[klass],images), dim=0)
-                if save:
-                    self.saveResults(examples[klass][0:100], name + "_C" + str(klass))
-        else:
-            examples = []
-            labels = None
-            for i in range(num_examples//100):
+        examples = {}
+        for klass in active_classes:
+            for _ in range(num_examples//100):
                 noise = torch.randn(100,100,1,1)
                 if self.args.cuda:
                     noise  = Variable(noise.cuda(), volatile=True)
-                images = G(noise)
-                if len(examples) == 0:
-                    examples = images
+                images = G(noise, targets)
+                if not klass in examples.keys():
+                    examples[klass] = images
                 else:
-                    examples = torch.cat((examples, images), dim=0)
+                    examples[klass] = torch.cat((examples[klass],images), dim=0)
             if save:
-                self.saveResults(examples[0:100], name + "_smpl" + str(i))
-        return examples, labels
+                self.saveResults(examples[klass][0:100], name + "_C" + str(klass))
+        return examples
 
     def updateFrozenGenerator(self, G):
         G.eval()
