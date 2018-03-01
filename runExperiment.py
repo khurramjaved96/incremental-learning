@@ -33,6 +33,8 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--no-distill', action='store_true', default=False,
                     help='disable distillation loss')
+parser.add_argument('--decayed', action='store_true', default=False,
+                    help='should we decay the contribution of distillation loss on old classes.')
 parser.add_argument('--no-random', action='store_true', default=False,
                     help='Disable random shuffling of classes')
 parser.add_argument('--no-herding', action='store_true', default=False,

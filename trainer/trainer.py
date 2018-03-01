@@ -157,12 +157,17 @@ class Trainer(GenericTrainer):
             decayed = True
             decayFactor = 0.5
             if self.args.no_distill:
-                pass
+                if epoch==0 and batch_idx ==0:
+                    print ("Not using Distillation Loss")
             elif decayed and len(self.older_classes) > 0:
+                if epoch==0 and batch_idx == 0:
+                    print ("Not using Decayed Loss")
                 pred2 = self.model_fixed(Variable(data))
                 y_onehot[:, self.older_classes][old_classes_indices] = pred2.data[:, self.older_classes][old_classes_indices]
                 y_onehot[:, self.older_classes][new_classes_indices] = pred2.data[:, self.older_classes][new_classes_indices]*decayFactor
             elif len(self.older_classes) > 0:
+                if epoch==0 and batch_idx == 0:
+                    print ("Using standard distillation loss")
                 pred2 = self.model_fixed(Variable(data))
                 y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
 
