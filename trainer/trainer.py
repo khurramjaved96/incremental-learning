@@ -164,8 +164,12 @@ class Trainer(GenericTrainer):
                 pred2 = self.model_fixed(Variable(data))
                 if len(old_classes_indices)>0:
                     y_onehot[:, self.older_classes][old_classes_indices] = pred2.data[:, self.older_classes][old_classes_indices]
+                    if batch_idx==0 and epoch==0:
+                        print (pred2.data[:, self.older_classes][old_classes_indices].shape)
                 if not self.args.distill_only_exemplars:
                     y_onehot[:, self.older_classes][new_classes_indices] = pred2.data[:, self.older_classes][new_classes_indices]*decayFactor
+                    if batch_idx==0 and epoch==0:
+                        print (pred2.data[:, self.older_classes][new_classes_indices]*decayFactor.shape)
                 elif epoch==0 and batch_idx==0:
                     print ("Only distilling the instances from the exemplar set")
 
