@@ -124,35 +124,22 @@ class trainer():
             newClassesIndices = torch.squeeze(torch.nonzero((weightVector == 0)).long())
             self.optimizer.zero_grad()
 
-            if len(oldClassesIndices) == 0:
-                dataOldClasses = data[newClassesIndices]
-                targetsOldClasses = target[newClassesIndices]
-                target2 = targetsOldClasses
-                dataOldClasses, target = Variable(dataOldClasses), Variable(targetsOldClasses)
+            y_onehot = torch.FloatTensor(len(data), self.dataset.classes)
+            if self.args.cuda:
+                y_onehot = y_onehot.cuda()
 
-                output = self.model(dataOldClasses)
-                y_onehot = torch.FloatTensor(len(dataOldClasses), self.dataset.classes)
-                if self.args.cuda:
-                    y_onehot = y_onehot.cuda()
+            y_onehot.zero_()
+            target.unsqueeze_(1)
+            y_onehot.scatter_(1, target, 1)
 
-                y_onehot.zero_()
-                target2.unsqueeze_(1)
-                y_onehot.scatter_(1, target2, 1)
 
-            else:
-                y_onehot = torch.FloatTensor(len(data), self.dataset.classes)
-                if self.args.cuda:
-                    y_onehot = y_onehot.cuda()
+            output = self.model(Variable(data))
+            if not self.args.no_distill:
+                if len(self.olderClasses) > 0:
+                    pred2 = self.modelFixed(Variable(data))
+                    y_onehot[:, self.olderClasses] = pred2.data[:, self.olderClasses]
 
-                y_onehot.zero_()
-                target.unsqueeze_(1)
-                y_onehot.scatter_(1, target, 1)
 
-                output = self.model(Variable(data))
-                if not self.args.no_distill:
-                    dataDis = Variable(data[oldClassesIndices])
-                    outpu2 = self.modelFixed(dataDis)
-                    y_onehot[oldClassesIndices] = outpu2.data
 
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
