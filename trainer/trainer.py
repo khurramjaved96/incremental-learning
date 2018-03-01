@@ -154,8 +154,7 @@ class Trainer(GenericTrainer):
             y_onehot.scatter_(1, target, 1)
 
             output = self.model(Variable(data))
-            decayed = True
-            decayFactor = 0.5
+            decayFactor = 1.0
             if self.args.no_distill:
                 if epoch==0 and batch_idx ==0:
                     print ("Not using Distillation Loss")
@@ -165,7 +164,11 @@ class Trainer(GenericTrainer):
                 pred2 = self.model_fixed(Variable(data))
                 if len(old_classes_indices)>0:
                     y_onehot[:, self.older_classes][old_classes_indices] = pred2.data[:, self.older_classes][old_classes_indices]
-                y_onehot[:, self.older_classes][new_classes_indices] = pred2.data[:, self.older_classes][new_classes_indices]*decayFactor
+                if not self.args.distill_only_exemplars:
+                    y_onehot[:, self.older_classes][new_classes_indices] = pred2.data[:, self.older_classes][new_classes_indices]*decayFactor
+                elif epoch==0 and batch_idx==0:
+                    print ("Only distilling the instances from the exemplar set")
+
             elif len(self.older_classes) > 0:
                 if epoch==0 and batch_idx == 0:
                     print ("Using standard distillation loss")
