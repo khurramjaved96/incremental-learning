@@ -229,9 +229,13 @@ class trainer():
         for klass in active_classes:
             for _ in range(num_examples//100):
                 noise = torch.randn(100,100,1,1)
+                if self.is_C:
+                    targets = torch.zeros(100,10,1,1)
+                    targets[:, klass] = 1
                 if self.args.cuda:
                     noise  = Variable(noise.cuda(), volatile=True)
-                images = G(noise, targets)
+                    targets = Variable(targets.cuda(), volatile=True) if self.is_C else None
+                images = G(noise, targets) if self.is_C else G(noise)
                 if not klass in examples.keys():
                     examples[klass] = images
                 else:
