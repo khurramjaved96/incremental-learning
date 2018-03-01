@@ -152,9 +152,6 @@ for seed in args.seeds:
                     tError = t_classifier.evaluate(myModel, train_iterator)
                     print("Train Classifier", tError)
                     print("Test Classifier", t_classifier.evaluate(myModel, test_iterator))
-                    if tError>99.7 and class_group > 0:
-                        print ("Ending training early")
-                        break
                 bar.update(int(float(epoch)/float(args.epochs_class))*100)
 
             nmc.update_means(myModel, train_iterator, dataset.classes)
