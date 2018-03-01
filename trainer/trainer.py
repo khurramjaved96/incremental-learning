@@ -165,11 +165,11 @@ class Trainer(GenericTrainer):
                 if len(old_classes_indices)>0:
                     y_onehot[:, self.older_classes][old_classes_indices] = pred2.data[:, self.older_classes][old_classes_indices]
                     if batch_idx==0 and epoch==0:
-                        print ("Printing hsape of old class distill", pred2.data[:, self.older_classes][old_classes_indices].shape)
+                        print ("Printing hsape of old class distill", pred2.data[:, self.older_classes][old_classes_indices].data)
                 if not self.args.distill_only_exemplars:
                     y_onehot[:, self.older_classes][new_classes_indices] = pred2.data[:, self.older_classes][new_classes_indices]*decayFactor
                     if batch_idx==0 and epoch==0:
-                        print ("Printing shape of new class", (pred2.data[:, self.older_classes][new_classes_indices]*decayFactor).shape)
+                        print ("Printing shape of new class", (pred2.data[:, self.older_classes][new_classes_indices]*decayFactor).data)
                 elif epoch==0 and batch_idx==0:
                     print ("Only distilling the instances from the exemplar set")
 
@@ -178,6 +178,8 @@ class Trainer(GenericTrainer):
                     print ("Using standard distillation loss")
                 pred2 = self.model_fixed(Variable(data))
                 y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
+                if batch_idx==0 and epoch==0:
+                    print (y_onehot[:, self.older_classes].data)
 
 
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
