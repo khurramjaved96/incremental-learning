@@ -36,6 +36,11 @@ class trainer():
     def train(self):
         x = []
         y = []
+        y_nmc = []
+
+        if not self.args.no_distill:
+            myTestFactory = tF.classifierFactory()
+            nmc = myTestFactory.getTester("nmc", self.args.cuda)    
 
         for classGroup in range(0, self.dataset.classes, self.args.step_size):
             self.classifierTrainer.setupTraining()
@@ -70,6 +75,20 @@ class trainer():
                           self.classifierTrainer.evaluate(self.testIterator))
 
             self.classifierTrainer.updateFrozenModel()
+
+            # Using NMC classifier if distillation is used
+            if not self.args.no_distill:
+                nmc.updateMeans(self.model, self.trainIterator, self.args.cuda,
+                                self.dataset.classes)
+                nmc_train = nmc.classify(self.model, self.trainIterator,
+                                         self.args.cuda, True)
+                nmc_test = nmc.classify(self.model, self.testIterator,
+                                        self.args.cuda, True)
+                y_nmc.append(nmc_test)
+
+                print("Train NMC: ", nmc_train)
+                print("Test NMC: ", nmc_test)    
+
             #Get a new Generator and Discriminator
             if self.G == None or not self.args.persist_gan:
                 if self.args.process == "cgan":
@@ -91,8 +110,12 @@ class trainer():
 
             y.append(self.classifierTrainer.evaluate(self.testIterator))
             x.append(classGroup + self.args.step_size)
+            if not self.args.no_distill:
+                results = [("Trained Classifier",y), ("NMC Classifier", y_nmc)]
+            else:
+                results = [("Trained Classifier",y)]
             ut.plotAccuracy(self.experiment, x,
-                            [("Trained Classifier",y)],
+                            results,
                             self.dataset.classes + 1, self.args.name)
 
     def trainGan(self, G, D, is_C):
