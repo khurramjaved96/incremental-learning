@@ -149,12 +149,9 @@ class trainer():
             G_Losses = []
             self.updateLR(epoch, G_Opt, D_Opt)
 
-            j = 0
             #Iterate over examples that the classifier trainer just iterated on
             for image, label in self.trainIterator:
                 batch_size = image.shape[0]
-                j = j+1
-                self.saveResults(image, str(j), is_tensor=True, axis_size=11)
 
                 #Make vectors of ones and zeros of same shape as output by
                 #Discriminator so that it can be used in BCELoss
