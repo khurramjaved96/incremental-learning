@@ -12,7 +12,7 @@ import model.modelFactory as mF
 
 
 class incrementalLoader(td.Dataset):
-    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False):
+    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False, oversampling=True):
 
         self.len = classSize * len(activeClasses)
         sortIndex = np.argsort(labels)
@@ -31,6 +31,7 @@ class incrementalLoader(td.Dataset):
         self.weights = np.zeros(self.totalClasses * self.classSize)
         self.classIndices()
         self.transformData()
+        self.over_sampling = oversampling
 
 
     def transformData(self):
@@ -122,9 +123,14 @@ class incrementalLoader(td.Dataset):
             k = self.classSize
         if n in self.limitedClasses:
             self.limitedClasses[n] = k
+            # Remove this line; this turns off oversampling
+            if not self.over_sampling:
+                self.indices[n] = (self.indices[n][0], self.indices[n][0] + k)
             self.updateLen()
             return False
         else:
+            if not self.over_sampling:
+                self.indices[n] = (self.indices[n][0], self.indices[n][0] + k)
             self.limitedClasses[n] = k
             self.updateLen()
             return True
