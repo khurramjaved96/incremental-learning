@@ -42,20 +42,22 @@ class modelFactory():
 
         elif modelType=="cdcgan":
             if dataset=="CIFAR100":
-                print("CIFAR100 not supported")
-                assert(False)
-            G = cdcgan.Generator(128)
-            D = cdcgan.Discriminator(128)
+                G = cdcgan.Generator(128, c=3)
+                D = cdcgan.Discriminator(128, c=3)
+            else:
+                G = cdcgan.Generator(128)
+                D = cdcgan.Discriminator(128)
             G.init_weights(mean=0.0, std=0.02)
             D.init_weights(mean=0.0, std=0.02)
             return G, D
 
         elif modelType=="dcgan":
             if dataset=="CIFAR100":
-                print("CIFAR100 not supported")
-                assert(False)
-            G = dcgan.Generator(128)
-            D = dcgan.Discriminator(128)
+                G = dcgan.Generator(128, c=3)
+                D = dcgan.Discriminator(128, c=3)
+            else:
+                G = dcgan.Generator(128)
+                D = dcgan.Discriminator(128)
             G.init_weights(mean=0.0, std=0.02)
             D.init_weights(mean=0.0, std=0.02)
             return G, D

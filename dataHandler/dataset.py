@@ -49,10 +49,10 @@ class CIFAR100(dataset):
         std = [x / 255 for x in [63.0, 62.1, 66.7]]
 
         self.trainTransform = transforms.Compose(
-            [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
-             transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-10, 10)),
-             transforms.ToTensor(),
-             transforms.Normalize(mean, std)])
+            #[transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
+            # transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-10, 10)),
+             [transforms.ToTensor(),
+             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
 
         self.testTransform = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize(mean, std)])

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from .gan_utils import normal_init
 
 class Generator(nn.Module):
-    def __init__(self, d=128):
+    def __init__(self, d=128, c=1):
         super(Generator, self).__init__()
         #ConvTranspose2d(in_channels, out_channels, kernel_size, stride=1, padding=0)
         self.ct1_noise = nn.ConvTranspose2d(100, d*2, 4, 1, 0)
@@ -15,7 +15,7 @@ class Generator(nn.Module):
         self.ct2_bn = nn.BatchNorm2d(d*2)
         self.ct3 = nn.ConvTranspose2d(d*2, d, 4, 2, 1)
         self.ct3_bn = nn.BatchNorm2d(d)
-        self.ct4 = nn.ConvTranspose2d(d, 1, 4, 2, 1)
+        self.ct4 = nn.ConvTranspose2d(d, c, 4, 2, 1)
 
     def forward(self, noise, label):
         x = F.relu(self.ct1_noise_bn(self.ct1_noise(noise)))
@@ -31,9 +31,9 @@ class Generator(nn.Module):
             normal_init(self._modules[m], mean, std)
 
 class Discriminator(nn.Module):
-    def __init__(self, d=128):
+    def __init__(self, d=128, c=1):
         super(Discriminator, self).__init__()
-        self.conv1_img = nn.Conv2d(1, d//2, 4, 2, 1)
+        self.conv1_img = nn.Conv2d(c, d//2, 4, 2, 1)
         self.conv1_label = nn.Conv2d(10, d//2, 4, 2, 1)
         self.conv2 = nn.Conv2d(d, d*2, 4, 2, 1)
         self.conv2_bn = nn.BatchNorm2d(d*2)

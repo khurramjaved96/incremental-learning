@@ -81,15 +81,18 @@ if args.cuda:
 
 dataset = dF.datasetFactory.getDataset(args.dataset)
 
-trainDatasetLoader = dL.incrementalLoader(dataset.trainData.train_data, dataset.trainData.train_labels,
+trainDatasetLoader = dL.incrementalLoader(args.dataset, dataset.trainData.train_data,
+                                          dataset.trainData.train_labels,
                                           dataset.labelsPerClassTrain,
                                           dataset.classes, [], transform=dataset.trainTransform,
-                                          cuda=args.cuda
+                                          cuda=args.cuda, args.no_upsampling
                                           )
 
-testDatasetLoader = dL.incrementalLoader(dataset.testData.test_data, dataset.testData.test_labels,
+testDatasetLoader = dL.incrementalLoader(args.dataset, dataset.testData.test_data,
+                                         dataset.testData.test_labels,
                                          dataset.labelsPerClassTest, dataset.classes,
                                          [], transform=dataset.testTransform, cuda=args.cuda,
+                                         args.no_upsampling
                                          )
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
