@@ -38,6 +38,8 @@ class incrementalLoader(td.Dataset):
         Rescale the dataset to 32x32
         TODO: Complete all the transformations here instead of in __getItem__
         '''
+        if not self.data.shape[0] == 60000:
+            return
         temp_data = np.ndarray([self.data.shape[0], 32, 32])
         self.data = np.expand_dims(self.data, axis=3)
         for i in range(len(self.data)):
@@ -235,7 +237,9 @@ class incrementalLoader(td.Dataset):
         if "torch" in str(type(img)):
             img = img.numpy()
         img = Image.fromarray(img)
-        img = np.expand_dims(img, axis=2)
+        
+        if self.data.shape[0] == 60000:
+            img = np.expand_dims(img, axis=2)
 
         if self.transform is not None:
             img = self.transform(img)

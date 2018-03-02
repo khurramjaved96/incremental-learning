@@ -66,7 +66,8 @@ parser.add_argument('--gan-gammas', type=float, nargs='+', default=[0.1, 0.1],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 parser.add_argument('--persist-gan', action='store_true', default=False,
                     help='GAN is not thrown away and trained from scratch each increment')
-
+parser.add_argument('--nmc-classifier', action='store_true', default=False,
+                    help='Use nmc classifier')
 args = parser.parse_args()
 
 if args.process == "gan" and args.dataset == "MNIST" and len(args.gan_epochs) < 10//args.step_size:

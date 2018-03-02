@@ -38,7 +38,7 @@ class trainer():
         y = []
         y_nmc = []
 
-        if not self.args.no_distill:
+        if self.args.nmc_classifier:
             myTestFactory = tF.classifierFactory()
             nmc = myTestFactory.getTester("nmc", self.args.cuda)    
 
@@ -77,7 +77,7 @@ class trainer():
             self.classifierTrainer.updateFrozenModel()
 
             # Using NMC classifier if distillation is used
-            if not self.args.no_distill:
+            if self.args.nmc_classifier:
                 nmc.updateMeans(self.model, self.trainIterator, self.args.cuda,
                                 self.dataset.classes)
                 nmc_train = nmc.classify(self.model, self.trainIterator,
