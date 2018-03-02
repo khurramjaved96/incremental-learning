@@ -12,7 +12,7 @@ import model.modelFactory as mF
 
 
 class incrementalLoader(td.Dataset):
-    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False):
+    def __init__(self, data, labels, classSize, classes, activeClasses, transform=None, cuda=False, oversampling=True):
 
         self.len = classSize * len(activeClasses)
         sortIndex = np.argsort(labels)
@@ -30,6 +30,7 @@ class incrementalLoader(td.Dataset):
         self.cuda = cuda
         self.weights = np.zeros(self.totalClasses * self.classSize)
         self.classIndices()
+        self.over_sampling = oversampling
 
     def classIndices(self):
         self.indices = {}
@@ -98,25 +99,23 @@ class incrementalLoader(td.Dataset):
 
     def limitClass(self, n, k):
         if k == 0:
-            self.remove_class(n)
-            print("Removed class", n)
-            print("Current classes", self.activeClasses)
+            self.removeClass(n)
             return False
         if k > self.classSize:
             k = self.classSize
         if n in self.limitedClasses:
             self.limitedClasses[n] = k
+            # Remove this line; this turns off oversampling
+            if not self.over_sampling:
+                self.indices[n] = (self.indices[n][0], self.indices[n][0] + k)
             self.updateLen()
             return False
         else:
+            if not self.over_sampling:
+                self.indices[n] = (self.indices[n][0], self.indices[n][0] + k)
             self.limitedClasses[n] = k
             self.updateLen()
             return True
-
-    def remove_class(self, n):
-        while n in self.activeClasses:
-            self.activeClasses.remove(n)
-        self.updateLen()
 
 
     def limitClassAndSort(self, n, k, model):

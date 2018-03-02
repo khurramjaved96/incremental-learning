@@ -139,8 +139,6 @@ class trainer():
                     pred2 = self.modelFixed(Variable(data))
                     y_onehot[:, self.olderClasses] = pred2.data[:, self.olderClasses]
 
-
-
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
             self.optimizer.step()
