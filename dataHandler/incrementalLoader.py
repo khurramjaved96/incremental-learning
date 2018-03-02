@@ -30,7 +30,22 @@ class incrementalLoader(td.Dataset):
         self.cuda = cuda
         self.weights = np.zeros(self.totalClasses * self.classSize)
         self.classIndices()
-        self.over_sampling = oversampling
+        self.transformData()
+
+
+    def transformData(self):
+        '''
+        Rescale the dataset to 32x32
+        TODO: Complete all the transformations here instead of in __getItem__
+        '''
+        if not self.data.shape[0] == 60000:
+            return
+        temp_data = np.ndarray([self.data.shape[0], 32, 32])
+        self.data = np.expand_dims(self.data, axis=3)
+        for i in range(len(self.data)):
+            temp_data[i] = transforms.Scale(32)(transforms.ToPILImage()(self.data[i]))
+        self.data = temp_data
+
 
     def classIndices(self):
         self.indices = {}
@@ -56,8 +71,8 @@ class incrementalLoader(td.Dataset):
         '''
         print ("Replacing data")
         for a in data:
-            new_data = data[a].data.squeeze().cpu().numpy()
-            nump = resize(new_data, (k, 28, 28), preserve_range=True)
+            nump = data[a].data.squeeze().cpu().numpy()
+            #nump = resize(new_data, (k, 28, 28), anti_aliasing=True, preserve_range=True)
 
             #Converting from [-1,1] range to [0,255] because that is what
             #toTensor transform expects
@@ -99,7 +114,9 @@ class incrementalLoader(td.Dataset):
 
     def limitClass(self, n, k):
         if k == 0:
-            self.removeClass(n)
+            self.remove_class(n)
+            print("Removed class", n)
+            print("Current classes", self.activeClasses)
             return False
         if k > self.classSize:
             k = self.classSize
@@ -116,6 +133,11 @@ class incrementalLoader(td.Dataset):
             self.limitedClasses[n] = k
             self.updateLen()
             return True
+
+    def remove_class(self, n):
+        while n in self.activeClasses:
+            self.activeClasses.remove(n)
+        self.updateLen()
 
 
     def limitClassAndSort(self, n, k, model):
@@ -189,7 +211,6 @@ class incrementalLoader(td.Dataset):
 
     def getStartIndex(self, n):
         '''
-        
         :param n: 
         :return: Returns starting index of classs n
         '''
@@ -221,6 +242,9 @@ class incrementalLoader(td.Dataset):
         if "torch" in str(type(img)):
             img = img.numpy()
         img = Image.fromarray(img)
+        
+        if self.data.shape[0] == 60000:
+            img = np.expand_dims(img, axis=2)
 
         if self.transform is not None:
             img = self.transform(img)
