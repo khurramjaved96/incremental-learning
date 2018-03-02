@@ -42,8 +42,8 @@ class modelFactory():
 
         elif modelType=="cdcgan":
             if dataset=="CIFAR100":
-                G = cdcgan.Generator(128, 3)
-                D = cdcgan.Discriminator(128, 3)
+                G = cdcgan.Generator(128, 3, 100)
+                D = cdcgan.Discriminator(128, 3, 100)
             else:
                 G = cdcgan.Generator(128)
                 D = cdcgan.Discriminator(128)

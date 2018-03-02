@@ -4,12 +4,17 @@ import torch.nn.functional as F
 from .gan_utils import normal_init
 
 class Generator(nn.Module):
-    def __init__(self, d=128, c=1):
+    '''
+    d = base multiplier
+    c = number of channels in the image
+    l = number of unique classes in the dataset
+    '''
+    def __init__(self, d=128, c=1, l=10):
         super(Generator, self).__init__()
         #ConvTranspose2d(in_channels, out_channels, kernel_size, stride=1, padding=0)
         self.ct1_noise = nn.ConvTranspose2d(100, d*2, 4, 1, 0)
         self.ct1_noise_bn = nn.BatchNorm2d(d*2)
-        self.ct1_label = nn.ConvTranspose2d(10, d*2, 4, 1, 0)
+        self.ct1_label = nn.ConvTranspose2d(l, d*2, 4, 1, 0)
         self.ct1_label_bn = nn.BatchNorm2d(d*2)
         self.ct2 = nn.ConvTranspose2d(d*4, d*2, 4, 2, 1)
         self.ct2_bn = nn.BatchNorm2d(d*2)
@@ -31,10 +36,15 @@ class Generator(nn.Module):
             normal_init(self._modules[m], mean, std)
 
 class Discriminator(nn.Module):
-    def __init__(self, d=128, c=1):
+    '''
+    d = base multiplier
+    c = number of channels in the image
+    l = number of unique classes in the dataset
+    '''
+    def __init__(self, d=128, c=1, l=10):
         super(Discriminator, self).__init__()
         self.conv1_img = nn.Conv2d(c, d//2, 4, 2, 1)
-        self.conv1_label = nn.Conv2d(10, d//2, 4, 2, 1)
+        self.conv1_label = nn.Conv2d(l, d//2, 4, 2, 1)
         self.conv2 = nn.Conv2d(d, d*2, 4, 2, 1)
         self.conv2_bn = nn.BatchNorm2d(d*2)
         self.conv3 = nn.Conv2d(d*2, d*4, 4, 2, 1)

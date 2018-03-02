@@ -39,8 +39,8 @@ class trainer():
         y = []
         y_nmc = []
 
-        myTestFactory = tF.classifierFactory()
-        nmc = myTestFactory.getTester("nmc", self.args.cuda)    
+        testFactory = tF.classifierFactory()
+        nmc = testFactory.getTester("nmc", self.args.cuda)
 
         for classGroup in range(0, self.dataset.classes, self.args.step_size):
             self.classifierTrainer.setupTraining()
@@ -49,20 +49,21 @@ class trainer():
             if classGroup > 0:
                 self.increment = self.increment + 1
                 self.old_classes = self.classifierTrainer.olderClasses
-                #Generate examples
                 self.examples = self.generateExamples(self.fixed_G,
                                                       self.args.gan_num_examples,
                                                       self.old_classes,
                                                       "Final-Inc"+str(self.increment-1),
                                                       True)
-
                 self.trainIterator.dataset.replaceData(self.examples,
                                                        self.args.gan_num_examples)
-                #This is done because the insert_generated_examples is given cpu data
-                #TODO See if we can keep this on GPU
+                # Send examples to CPU
                 if self.is_C:
                     for k in self.examples:
                         self.examples[k] = self.examples[k].data.cpu()
+
+            ######################
+            # Train Classifier
+            ######################
             epoch = 0
             for epoch in range(0, self.args.epochs_class):
                 self.classifierTrainer.updateLR(epoch)
@@ -88,7 +89,9 @@ class trainer():
             print("Train NMC: ", nmc_train)
             print("Test NMC: ", nmc_test)    
 
-            #Get a new Generator and Discriminator
+            #####################
+            # Get a new Generator and Discriminator
+            ####################
             if self.G == None or not self.args.persist_gan:
                 if self.args.process == "cgan":
                     self.G, self.D = self.modelFactory.getModel("cdcgan", self.args.dataset)
@@ -107,12 +110,10 @@ class trainer():
                                    self.model, self.args, self.dataset,
                                    self.testIterator)
 
+            # Plot
             y.append(self.classifierTrainer.evaluate(self.testIterator))
             x.append(classGroup + self.args.step_size)
-            if not self.args.no_distill:
-                results = [("Trained Classifier",y), ("NMC Classifier", y_nmc)]
-            else:
-                results = [("Trained Classifier",y)]
+            results = [("Trained Classifier",y), ("NMC Classifier", y_nmc)]
             ut.plotAccuracy(self.experiment, x,
                             results,
                             self.dataset.classes + 1, self.args.name)
@@ -144,14 +145,18 @@ class trainer():
 
         print("Starting GAN Training")
         for epoch in range(int(self.args.gan_epochs[self.increment])):
-            G.train() #Remove the one from generate_examples too if this is removed
+            G.train()
             D_Losses = []
             G_Losses = []
             self.updateLR(epoch, G_Opt, D_Opt)
 
             #Iterate over examples that the classifier trainer just iterated on
+            one_sample_saved = False
             for image, label in self.trainIterator:
                 batch_size = image.shape[0]
+                if not one_sample_printed:
+                    self.saveResults(image, "sample_E" + str(j), True)
+                    one_sample_saved = True
 
                 #Make vectors of ones and zeros of same shape as output by
                 #Discriminator so that it can be used in BCELoss
@@ -240,12 +245,12 @@ class trainer():
             self.generateExamples(G, 100, activeClasses,
                                   "Inc"+str(self.increment) + "_E" + str(epoch), True)
 
-    #Uses GAN to generate examples
     def generateExamples(self, G, num_examples, active_classes, name="", save=False):
         '''
         Returns a dict[class] of generated samples.
         In case of Non-Conditional GAN, the samples in the dict are random, they do
         not correspond to the keys in the dict
+        Just passing in random noise to the generator and storing the results in dict
         '''
         G.eval()
         examples = {}
@@ -253,7 +258,7 @@ class trainer():
             for _ in range(num_examples//100):
                 noise = torch.randn(100,100,1,1)
                 if self.is_C:
-                    targets = torch.zeros(100,10,1,1)
+                    targets = torch.zeros(100,self.num_classes,1,1)
                     targets[:, klass] = 1
                 if self.args.cuda:
                     noise  = Variable(noise.cuda(), volatile=True)
