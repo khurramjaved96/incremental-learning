@@ -143,6 +143,7 @@ class trainer():
             for i in range(K):
                 DVec[i, i, :, :] = 1
 
+        one_sample_saved = False
         print("Starting GAN Training")
         for epoch in range(int(self.args.gan_epochs[self.increment])):
             G.train()
@@ -151,11 +152,10 @@ class trainer():
             self.updateLR(epoch, G_Opt, D_Opt)
 
             #Iterate over examples that the classifier trainer just iterated on
-            one_sample_saved = False
             for image, label in self.trainIterator:
                 batch_size = image.shape[0]
-                if not one_sample_printed:
-                    self.saveResults(image, "sample_E" + str(j), True)
+                if not one_sample_saved:
+                    self.saveResults(image, "sample_E" + str(epoch), True)
                     one_sample_saved = True
 
                 #Make vectors of ones and zeros of same shape as output by
@@ -242,8 +242,9 @@ class trainer():
             print("[GAN] Epoch:", epoch,
                   "G_Loss:", (sum(G_Losses)/len(G_Losses)).cpu().data.numpy()[0],
                   "D_Loss:", (sum(D_Losses)/len(D_Losses)).cpu().data.numpy()[0])
-            self.generateExamples(G, 100, activeClasses,
-                                  "Inc"+str(self.increment) + "_E" + str(epoch), True)
+            if epoch % self.args.gan_img_save_interval:
+                self.generateExamples(G, 100, activeClasses,
+                                      "Inc"+str(self.increment) + "_E" + str(epoch), True)
 
     def generateExamples(self, G, num_examples, active_classes, name="", save=False):
         '''
