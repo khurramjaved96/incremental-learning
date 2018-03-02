@@ -31,6 +31,7 @@ class incrementalLoader(td.Dataset):
         self.weights = np.zeros(self.totalClasses * self.classSize)
         self.classIndices()
         self.transformData()
+        self.over_sampling = oversampling
 
 
     def transformData(self):
