@@ -242,7 +242,7 @@ class trainer():
             print("[GAN] Epoch:", epoch,
                   "G_Loss:", (sum(G_Losses)/len(G_Losses)).cpu().data.numpy()[0],
                   "D_Loss:", (sum(D_Losses)/len(D_Losses)).cpu().data.numpy()[0])
-            if epoch % self.args.gan_img_save_interval:
+            if epoch % self.args.gan_img_save_interval == 0:
                 self.generateExamples(G, 100, activeClasses,
                                       "Inc"+str(self.increment) + "_E" + str(epoch), True)
 
