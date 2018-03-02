@@ -38,9 +38,8 @@ class trainer():
         y = []
         y_nmc = []
 
-        if self.args.nmc_classifier:
-            myTestFactory = tF.classifierFactory()
-            nmc = myTestFactory.getTester("nmc", self.args.cuda)    
+        myTestFactory = tF.classifierFactory()
+        nmc = myTestFactory.getTester("nmc", self.args.cuda)    
 
         for classGroup in range(0, self.dataset.classes, self.args.step_size):
             self.classifierTrainer.setupTraining()
@@ -77,17 +76,16 @@ class trainer():
             self.classifierTrainer.updateFrozenModel()
 
             # Using NMC classifier if distillation is used
-            if self.args.nmc_classifier:
-                nmc.updateMeans(self.model, self.trainIterator, self.args.cuda,
-                                self.dataset.classes)
-                nmc_train = nmc.classify(self.model, self.trainIterator,
-                                         self.args.cuda, True)
-                nmc_test = nmc.classify(self.model, self.testIterator,
+            nmc.updateMeans(self.model, self.trainIterator, self.args.cuda,
+                            self.dataset.classes)
+            nmc_train = nmc.classify(self.model, self.trainIterator,
                                         self.args.cuda, True)
-                y_nmc.append(nmc_test)
+            nmc_test = nmc.classify(self.model, self.testIterator,
+                                    self.args.cuda, True)
+            y_nmc.append(nmc_test)
 
-                print("Train NMC: ", nmc_train)
-                print("Test NMC: ", nmc_test)    
+            print("Train NMC: ", nmc_train)
+            print("Test NMC: ", nmc_test)    
 
             #Get a new Generator and Discriminator
             if self.G == None or not self.args.persist_gan:
