@@ -32,6 +32,7 @@ class trainer():
         self.examples = {}
         self.increment = 0
         self.is_C = args.process == "cgan"
+        self.num_classes = 10 if args.dataset=="MNIST" else 100
 
     def train(self):
         x = []
@@ -96,7 +97,7 @@ class trainer():
                 if self.args.cuda:
                     self.G = self.G.cuda()
                     self.D = self.D.cuda()
-            self.trainGan(self.G, self.D, self.is_C)
+            self.trainGan(self.G, self.D, self.is_C, self.num_classes)
             self.updateFrozenGenerator(self.G)
 
             # Saving confusion matrix
@@ -116,7 +117,7 @@ class trainer():
                             results,
                             self.dataset.classes + 1, self.args.name)
 
-    def trainGan(self, G, D, is_C):
+    def trainGan(self, G, D, is_C, K):
         activeClasses = self.trainIterator.dataset.activeClasses
         print("ACTIVE CLASSES: ", activeClasses)
 
@@ -128,14 +129,17 @@ class trainer():
         #Matrix of shape [10,10,1,1] with 1s at positions
         #where shape[0]==shape[1]
         if is_C:
-            GVec = torch.zeros(10, 10)
-            GVec = GVec.scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7,
-                                 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
+            tensor = []
+            GVec = torch.zeros(K, K)
+            for i in range(K):
+                tensor.append(i)
+            GVec = GVec.scatter_(1, torch.LongTensor(tensor).view(K,1),
+                                 1).view(K, K, 1, 1)
 
             #Matrix of shape [10,10,32,32] with 32x32 matrix of 1s
             #where shape[0]==shape[1]
-            DVec = torch.zeros([10, 10, 32, 32])
-            for i in range(10):
+            DVec = torch.zeros([K, K, 32, 32])
+            for i in range(K):
                 DVec[i, i, :, :] = 1
 
         print("Starting GAN Training")
@@ -145,11 +149,12 @@ class trainer():
             G_Losses = []
             self.updateLR(epoch, G_Opt, D_Opt)
 
+            j = 0
             #Iterate over examples that the classifier trainer just iterated on
             for image, label in self.trainIterator:
                 batch_size = image.shape[0]
-                #if self.increment > 0:
-                #    self.saveResults(image, "sample", is_tensor=True, axis_size=11)
+                j = j+1
+                self.saveResults(image, str(j), is_tensor=True, axis_size=11)
 
                 #Make vectors of ones and zeros of same shape as output by
                 #Discriminator so that it can be used in BCELoss
@@ -281,10 +286,16 @@ class trainer():
             i = k // axis_size
             j = k % axis_size
             sub[i, j].cla()
-            if is_tensor:
-                sub[i, j].imshow(images[k, 0].cpu().numpy(), cmap='gray')
-            else:
-                sub[i, j].imshow(images[k, 0].cpu().data.numpy(), cmap='gray')
+            if self.args.dataset == "CIFAR100":
+                if is_tensor:
+                    sub[i, j].imshow((images[k].cpu().numpy().transpose(1, 2, 0) + 1)/2)
+                else:
+                    sub[i, j].imshow((images[k].cpu().data.numpy().transpose(1, 2, 0) + 1)/2)
+            elif self.args.dataset == "MNIST":
+                if is_tensor:
+                    sub[i, j].imshow(images[k, 0].cpu().numpy(), cmap='gray')
+                else:
+                    sub[i, j].imshow(images[k, 0].cpu().data.numpy(), cmap='gray')
 
         plt.savefig(self.experiment.path + "results/" + name + ".png")
         plt.cla()

@@ -40,7 +40,7 @@ class incrementalLoader(td.Dataset):
         Rescale the dataset to 32x32
         TODO: Complete all the transformations here instead of in __getItem__
         '''
-        if self.datasetName == "MNIST":
+        if not self.datasetName == "MNIST":
             return
         temp_data = np.ndarray([self.data.shape[0], 32, 32])
         self.data = np.expand_dims(self.data, axis=3)

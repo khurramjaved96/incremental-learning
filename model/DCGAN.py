@@ -27,7 +27,7 @@ class Generator(nn.Module):
             normal_init(self._modules[m], mean, std)
 
 class Discriminator(nn.Module):
-    def __init__(self, d=128):
+    def __init__(self, d=128, c=1):
         super(Discriminator, self).__init__()
         self.conv1_img = nn.Conv2d(c, d//2, 4, 2, 1)
         self.conv1_bn = nn.BatchNorm2d(d//2)
