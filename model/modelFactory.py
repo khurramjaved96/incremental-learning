@@ -3,6 +3,7 @@ import model.resnet32 as res
 import model.testModel as tm
 import model.cDCGAN as cdcgan
 import model.DCGAN as dcgan
+import model.WGAN as wgan
 
 class modelFactory():
     def __init__(self):
@@ -58,6 +59,17 @@ class modelFactory():
             else:
                 G = dcgan.Generator(128)
                 D = dcgan.Discriminator(128)
+            G.init_weights(mean=0.0, std=0.02)
+            D.init_weights(mean=0.0, std=0.02)
+            return G, D
+
+        elif modelType=="wgan":
+            if dataset=="CIFAR100":
+                G = wgan.Generator(128, 3)
+                D = wgan.Discriminator(128, 3)
+            else:
+                G = wgan.Generator(128)
+                D = wgan.Discriminator(128)
             G.init_weights(mean=0.0, std=0.02)
             D.init_weights(mean=0.0, std=0.02)
             return G, D

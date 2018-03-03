@@ -55,7 +55,7 @@ parser.add_argument('--epochs-class', type=int, default=60, help='Number of epoc
 parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
 parser.add_argument('--no-upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
-parser.add_argument('--process', default="nmc", help='Process to be used to prevent forgetting; Example: nmc, cgan, gan')
+parser.add_argument('--process', default="nmc", help='Process to be used to prevent forgetting; Example: nmc, cdcgan, dcgan, wgan')
 
 parser.add_argument('--gan-epochs', type=int, nargs='+', default=[50, 30, 20, 20, 20], help='Epochs for each increment for training the GANs')
 parser.add_argument('--gan-lr', type=float, default=0.0002, help='Learning Rate for training the GANs')
@@ -68,6 +68,7 @@ parser.add_argument('--gan-gammas', type=float, nargs='+', default=[0.1, 0.1],
 parser.add_argument('--persist-gan', action='store_true', default=False,
                     help='GAN is not thrown away and trained from scratch each increment')
 parser.add_argument('--gan-img-save-interval', type=int, default=5, help='Save generator samples every x epochs')
+parser.add_argument('--d_iter', type=int, default=1, help='Number of iterations of discriminatori/critic for each iteration of generator.')
 args = parser.parse_args()
 
 if args.process == "gan" and args.dataset == "MNIST" and len(args.gan_epochs) < 10//args.step_size:
@@ -103,18 +104,10 @@ trainIterator = torch.utils.data.DataLoader(trainDatasetLoader,
 testIterator = torch.utils.data.DataLoader(testDatasetLoader,
                                            batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
-G = D = None
 myFactory = mF.modelFactory()
 model = myFactory.getModel(args.model_type, args.dataset)
-
-if args.process == "gan":
-    G, D = myFactory.getModel("cdcgan", args.dataset)
-
 if args.cuda:
     model.cuda()
-    if args.process == "gan":
-        G.cuda()
-        D.cuda()
 
 myExperiment = ex.experiment(args.name, args)
 
@@ -129,7 +122,7 @@ if args.process == "nmc":
                          trainIterator, testIterator, trainDatasetLoader,
                          myExperiment)
 
-if args.process == "gan" or args.process == "cgan":
+if args.process == "dcgan" or args.process == "cdcgan" or args.process == "wgan":
     trainer = gt.trainer(args, dataset, classifierTrainer, model,
                          trainIterator, testIterator, trainDatasetLoader,
                          myFactory, myExperiment)

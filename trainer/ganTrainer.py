@@ -31,7 +31,7 @@ class trainer():
         self.fixed_G = None
         self.examples = {}
         self.increment = 0
-        self.is_C = args.process == "cgan"
+        self.is_C = args.process == "cdcgan"
         self.num_classes = 10 if args.dataset=="MNIST" else 100
 
     def train(self):
@@ -87,16 +87,13 @@ class trainer():
             y_nmc.append(nmc_test)
 
             print("Train NMC: ", nmc_train)
-            print("Test NMC: ", nmc_test)    
+            print("Test NMC: ", nmc_test)
 
             #####################
             # Get a new Generator and Discriminator
             ####################
             if self.G == None or not self.args.persist_gan:
-                if self.args.process == "cgan":
-                    self.G, self.D = self.modelFactory.getModel("cdcgan", self.args.dataset)
-                else:
-                    self.G, self.D = self.modelFactory.getModel("dcgan", self.args.dataset)
+                self.G, self.D = self.modelFactory.getModel(self.args.process, self.args.dataset)
                 if self.args.cuda:
                     self.G = self.G.cuda()
                     self.D = self.D.cuda()
@@ -123,11 +120,17 @@ class trainer():
         print("ACTIVE CLASSES: ", activeClasses)
 
         #TODO Change batchsize of dataIterator here to gan_batch_size
-        criterion = nn.BCELoss()
-        G_Opt = optim.Adam(G.parameters(), lr=self.args.gan_lr, betas=(0.5, 0.999))
-        D_Opt = optim.Adam(D.parameters(), lr=self.args.gan_lr, betas=(0.5, 0.999))
+        if self.args.process == "wgan":
+            if self.args.gan_lr > 5e-5 or len(self.args.gan_schedule):
+                print(">>> NOTICE: Did you mean to set GAN lr/schedule to this value?")
+            G_Opt = optim.RMSprop(G.parameters(), lr=self.args.gan_lr)
+            D_Opt = optim.RMSprop(D.parameters(), lr=self.args.gan_lr)
+        elif self.args.process == "dcgan" or self.args.process == "cdcgan":
+            criterion = nn.BCELoss()
+            G_Opt = optim.Adam(G.parameters(), lr=self.args.gan_lr, betas=(0.5, 0.999))
+            D_Opt = optim.Adam(D.parameters(), lr=self.args.gan_lr, betas=(0.5, 0.999))
 
-        #Matrix of shape [10,10,1,1] with 1s at positions
+        #Matrix of shape [K,K,1,1] with 1s at positions
         #where shape[0]==shape[1]
         if is_C:
             tensor = []
@@ -136,8 +139,7 @@ class trainer():
                 tensor.append(i)
             GVec = GVec.scatter_(1, torch.LongTensor(tensor).view(K,1),
                                  1).view(K, K, 1, 1)
-
-            #Matrix of shape [10,10,32,32] with 32x32 matrix of 1s
+            #Matrix of shape [K,K,32,32] with 32x32 matrix of 1s
             #where shape[0]==shape[1]
             DVec = torch.zeros([K, K, 32, 32])
             for i in range(K):
@@ -152,7 +154,7 @@ class trainer():
             self.updateLR(epoch, G_Opt, D_Opt)
 
             #Iterate over examples that the classifier trainer just iterated on
-            for image, label in self.trainIterator:
+            for batch_idx, (image, label) in enumerate(self.trainIterator):
                 batch_size = image.shape[0]
                 if not one_sample_saved:
                     self.saveResults(image, "sample_E" + str(epoch), True)
@@ -160,11 +162,12 @@ class trainer():
 
                 #Make vectors of ones and zeros of same shape as output by
                 #Discriminator so that it can be used in BCELoss
-                D_like_real = torch.ones(batch_size)
-                D_like_fake = torch.zeros(batch_size)
-                if self.args.cuda:
-                    D_like_real = Variable(D_like_real.cuda())
-                    D_like_fake = Variable(D_like_fake.cuda())
+                if self.args.process == "dcgan" or self.args.process == "cdcgan":
+                    D_like_real = torch.ones(batch_size)
+                    D_like_fake = torch.zeros(batch_size)
+                    if self.args.cuda:
+                        D_like_real = Variable(D_like_real.cuda())
+                        D_like_fake = Variable(D_like_fake.cuda())
                 ##################################
                 #Train Discriminator
                 ##################################
@@ -180,9 +183,7 @@ class trainer():
                     D_labels = Variable(D_labels.cuda()) if is_C else None
 
                 #Discriminator output for real image and labels
-                D_output = D(image, D_labels).squeeze() if is_C else D(image).squeeze()
-                #Maximize the probability of D_output to be all 1s
-                D_real_loss = criterion(D_output, D_like_real)
+                D_output_real = D(image, D_labels).squeeze() if is_C else D(image).squeeze()
 
                 #Train with fake image and labels
                 G_random_noise = torch.randn((batch_size, 100))
@@ -203,26 +204,39 @@ class trainer():
                     D_random_labels = Variable(D_random_labels.cuda()) if is_C else None
 
                 G_output = G(G_random_noise, G_random_labels) if is_C else G(G_random_noise)
-                D_output = D(G_output, D_random_labels).squeeze() if is_C else D(G_output).squeeze()
+                D_output_fake = D(G_output, D_random_labels).squeeze() if is_C else D(G_output).squeeze()
 
-                D_fake_loss = criterion(D_output, D_like_fake)
-                D_Loss = D_real_loss + D_fake_loss
+                if self.args.process == "wgan":
+                    D_Loss = -(torch.mean(D_real_loss) - torch.mean(D_fake_loss))
+
+                elif self.args.process == "dcgan" or self.args.process == "cdcgan":
+                    D_real_loss = criterion(D_output_real, D_like_real)
+                    D_fake_loss = criterion(D_output_fake, D_like_fake)
+                    D_Loss = D_real_loss + D_fake_loss
+
                 D_Losses.append(D_Loss)
                 D_Loss.backward()
                 D_Opt.step()
 
+                if self.args.process == "wgan":
+                    for p in D.parameters():
+                        p.data.clamp_(-0.01, 0.01)
+
                 #################################
                 #Train Generator
                 #################################
+                #Train discriminator more in case of WGAN because the
+                #critic needs to be trained to optimality
+                if batch_idx % self.args.D_iter != 0:
+                    continue
+
                 G.zero_grad()
-                #Follow same steps, but change the loss
                 G_random_noise = torch.randn((batch_size, 100))
                 G_random_noise = G_random_noise.view(-1, 100, 1, 1)
 
                 if is_C:
                     random_labels = torch.from_numpy(np.random.choice(activeClasses,
                                                                       batch_size))
-                    #Convert labels to appropriate shapes
                     G_random_labels = GVec[random_labels]
                     D_random_labels = DVec[random_labels]
 
@@ -234,11 +248,15 @@ class trainer():
                 G_output = G(G_random_noise, G_random_labels) if is_C else G(G_random_noise)
                 D_output = D(G_output, D_random_labels).squeeze() if is_C else D(G_output).squeeze()
 
-                G_Loss = criterion(D_output, D_like_real)
+                if self.args.process == "wgan":
+                    G_Loss = -torch.mean(D_output)
+                elif self.args.process == "dcgan" or self.args.process == "cdcgan":
+                    G_Loss = criterion(D_output, D_like_real)
                 G_Loss.backward()
                 G_Losses.append(G_Loss)
                 G_Opt.step()
 
+            #Print Stats and save results
             print("[GAN] Epoch:", epoch,
                   "G_Loss:", (sum(G_Losses)/len(G_Losses)).cpu().data.numpy()[0],
                   "D_Loss:", (sum(D_Losses)/len(D_Losses)).cpu().data.numpy()[0])
@@ -318,5 +336,5 @@ class trainer():
                 for param_group in D_Opt.param_groups:
                     currentLr_D = param_group['lr']
                     param_group['lr'] = currentLr_D * self.args.gan_gammas[temp]
-                    print("Changing GAN Generator learning rate from",
+                    print("Changing GAN Discriminator learning rate from",
                           currentLr_D, "to", currentLr_D * self.args.gan_gammas[temp])
