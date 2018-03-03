@@ -75,6 +75,9 @@ if args.process == "gan" and args.dataset == "MNIST" and len(args.gan_epochs) < 
     print("ERROR: Number of values in gan-epochs must be greater than number of increments")
     assert False
 
+if args.process == "wgan" and args.d_iter == 1:
+    print("NOTICE: Recommended to set --d_iter to 5 for WGAN")
+
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
 torch.manual_seed(args.seed)

@@ -1,5 +1,6 @@
 import os
 import copy
+import time
 import torch
 import itertools
 import numpy as np
@@ -118,13 +119,12 @@ class trainer():
     def trainGan(self, G, D, is_C, K):
         G_Losses = []
         D_Losses = []
-        startTime = time.time()
         activeClasses = self.trainIterator.dataset.activeClasses
         print("ACTIVE CLASSES: ", activeClasses)
 
         #TODO Change batchsize of dataIterator here to gan_batch_size
         if self.args.process == "wgan":
-            if self.args.gan_lr > 5e-5 or len(self.args.gan_schedule):
+            if self.args.gan_lr > 5e-5 or len(self.args.gan_schedule) > 1:
                 print(">>> NOTICE: Did you mean to set GAN lr/schedule to this value?")
             G_Opt = optim.RMSprop(G.parameters(), lr=self.args.gan_lr)
             D_Opt = optim.RMSprop(D.parameters(), lr=self.args.gan_lr)
@@ -154,6 +154,7 @@ class trainer():
             G.train()
             D_Losses_E = []
             G_Losses_E = []
+            startTime = time.time()
             self.updateLR(epoch, G_Opt, D_Opt)
 
             #Iterate over examples that the classifier trainer just iterated on
@@ -210,7 +211,7 @@ class trainer():
                 D_output_fake = D(G_output, D_random_labels).squeeze() if is_C else D(G_output).squeeze()
 
                 if self.args.process == "wgan":
-                    D_Loss = -(torch.mean(D_real_loss) - torch.mean(D_fake_loss))
+                    D_Loss = -(torch.mean(D_output_real) - torch.mean(D_output_fake))
 
                 elif self.args.process == "dcgan" or self.args.process == "cdcgan":
                     D_real_loss = criterion(D_output_real, D_like_real)
@@ -230,7 +231,7 @@ class trainer():
                 #################################
                 #Train discriminator more in case of WGAN because the
                 #critic needs to be trained to optimality
-                if batch_idx % self.args.D_iter != 0:
+                if batch_idx % self.args.d_iter != 0:
                     continue
 
                 G.zero_grad()
@@ -260,16 +261,19 @@ class trainer():
                 G_Opt.step()
 
             #Print Stats and save results
-            print("[GAN] Epoch:", epoch,
-                  "G_Loss:", (sum(G_Losses_E)/len(G_Losses_E)).cpu().data.numpy()[0],
-                  "D_Loss:", (sum(D_Losses_E)/len(D_Losses_E)).cpu().data.numpy()[0],
-                  "Time taken:", startTime - time.time())
-            D_Losses.append(torch.mean(torch.FloatTensor(D_Losses_E)))
-            G_Losses.append(torch.mean(torch.FloatTensor(D_Losses_G)))
+            mean_G = (sum(G_Losses_E)/len(G_Losses_E)).cpu().data.numpy()[0]
+            mean_D = (sum(D_Losses_E)/len(D_Losses_E)).cpu().data.numpy()[0]
+            G_Losses.append(mean_G)
+            D_Losses.append(mean_D)
             if epoch % self.args.gan_img_save_interval == 0:
                 self.generateExamples(G, 100, activeClasses,
-                                      "Inc"+str(self.increment) + "_E" + str(epoch), True)
-                self.saveGANLosses(G_Losses, D_Losses):
+                                      "Inc"+str(self.increment) +
+                                      "_E" + str(epoch), True)
+                self.saveGANLosses(G_Losses, D_Losses)
+            print("[GAN] Epoch:", epoch,
+                  "G_Loss:", mean_G,
+                  "D_Loss:", mean_D,
+                  "Time taken:", time.time() - startTime)
 
     def generateExamples(self, G, num_examples, active_classes, name="", save=False):
         '''
@@ -331,17 +335,17 @@ class trainer():
         plt.close()
 
     def saveGANLosses(self, G_Loss, D_Loss, name='GAN_LOSS'):
-        x = range(len(G_loss))
-        plt.plot(x, G_loss, label='G_loss')
-        plt.plot(x, D_loss, label='D_loss')
+        x = range(len(G_Loss))
+        plt.plot(x, G_Loss, label='G_loss')
+        plt.plot(x, D_Loss, label='D_loss')
 
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.legend(loc=4)
         plt.grid(True)
-        plt.tight_layout()
+        plt.xlim((0, self.args.gan_epochs[self.increment]))
 
-        plt.savefig(self.experiment.path + name + ".png")
+        plt.savefig(self.experiment.path + name + "_" + str(self.increment) + ".png")
         plt.cla()
         plt.clf()
         plt.close()
