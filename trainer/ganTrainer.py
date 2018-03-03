@@ -116,6 +116,9 @@ class trainer():
                             self.dataset.classes + 1, self.args.name)
 
     def trainGan(self, G, D, is_C, K):
+        G_Losses = []
+        D_Losses = []
+        startTime = time.time()
         activeClasses = self.trainIterator.dataset.activeClasses
         print("ACTIVE CLASSES: ", activeClasses)
 
@@ -149,8 +152,8 @@ class trainer():
         print("Starting GAN Training")
         for epoch in range(int(self.args.gan_epochs[self.increment])):
             G.train()
-            D_Losses = []
-            G_Losses = []
+            D_Losses_E = []
+            G_Losses_E = []
             self.updateLR(epoch, G_Opt, D_Opt)
 
             #Iterate over examples that the classifier trainer just iterated on
@@ -214,7 +217,7 @@ class trainer():
                     D_fake_loss = criterion(D_output_fake, D_like_fake)
                     D_Loss = D_real_loss + D_fake_loss
 
-                D_Losses.append(D_Loss)
+                D_Losses_E.append(D_Loss)
                 D_Loss.backward()
                 D_Opt.step()
 
@@ -253,16 +256,20 @@ class trainer():
                 elif self.args.process == "dcgan" or self.args.process == "cdcgan":
                     G_Loss = criterion(D_output, D_like_real)
                 G_Loss.backward()
-                G_Losses.append(G_Loss)
+                G_Losses_E.append(G_Loss)
                 G_Opt.step()
 
             #Print Stats and save results
             print("[GAN] Epoch:", epoch,
-                  "G_Loss:", (sum(G_Losses)/len(G_Losses)).cpu().data.numpy()[0],
-                  "D_Loss:", (sum(D_Losses)/len(D_Losses)).cpu().data.numpy()[0])
+                  "G_Loss:", (sum(G_Losses_E)/len(G_Losses_E)).cpu().data.numpy()[0],
+                  "D_Loss:", (sum(D_Losses_E)/len(D_Losses_E)).cpu().data.numpy()[0],
+                  "Time taken:", startTime - time.time())
+            D_Losses.append(torch.mean(torch.FloatTensor(D_Losses_E)))
+            G_Losses.append(torch.mean(torch.FloatTensor(D_Losses_G)))
             if epoch % self.args.gan_img_save_interval == 0:
                 self.generateExamples(G, 100, activeClasses,
                                       "Inc"+str(self.increment) + "_E" + str(epoch), True)
+                self.saveGANLosses(G_Losses, D_Losses):
 
     def generateExamples(self, G, num_examples, active_classes, name="", save=False):
         '''
@@ -319,6 +326,22 @@ class trainer():
                     sub[i, j].imshow(images[k, 0].cpu().data.numpy(), cmap='gray')
 
         plt.savefig(self.experiment.path + "results/" + name + ".png")
+        plt.cla()
+        plt.clf()
+        plt.close()
+
+    def saveGANLosses(self, G_Loss, D_Loss, name='GAN_LOSS'):
+        x = range(len(G_loss))
+        plt.plot(x, G_loss, label='G_loss')
+        plt.plot(x, D_loss, label='D_loss')
+
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.legend(loc=4)
+        plt.grid(True)
+        plt.tight_layout()
+
+        plt.savefig(self.experiment.path + name + ".png")
         plt.cla()
         plt.clf()
         plt.close()
