@@ -111,6 +111,8 @@ class CifarResNet(nn.Module):
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
         if feature:
+            print("Shape of norm vector", torch.norm(x, 2, 1).unsqueeze(1).cpu().numpy().shape)
+            print("Shaoe of feature vector", x.cpu().numpy().shape)
             return x / torch.norm(x, 2, 1).unsqueeze(1)
         return F.sigmoid(self.fc(x))
         # return F.softmax(self.fc(x))
