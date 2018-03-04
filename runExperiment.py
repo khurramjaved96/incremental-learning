@@ -43,7 +43,7 @@ parser.add_argument('--no-herding', action='store_true', default=False,
                     help='Disable herding for NMC')
 parser.add_argument('--seeds', type=int, nargs='+', default=[200],
                     help='Seeds values to be used')
-parser.add_argument('--log-interval', type=int, default=2, metavar='N',
+parser.add_argument('--log-interval', type=int, default=20, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--model-type', default="resnet32",
                     help='model type to be used. Example : resnet32, resnet20, densenet, test')
@@ -141,7 +141,7 @@ for seed in args.seeds:
             train_dataset_loader.sort_by_importance(args.sortby)
 
         for class_group in range(0, dataset.classes, args.step_size):
-
+            print ("SEED:",seed, "MEMORY_BUDGET:", m, "CLASS_GROUP:", class_group)
             my_trainer.setup_training()
 
             my_trainer.increment_classes(class_group)

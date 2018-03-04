@@ -128,7 +128,7 @@ class Trainer(GenericTrainer):
         length_epoch = self.dataset.labels_per_class_train*(len(self.train_data_iterator.dataset.active_classes)-len(self.train_data_iterator.dataset.limited_classes))
         length_epoch += self.args.memory_budget
         length_epoch/= int(self.args.batch_size)
-        print("Current Epoch : ", epoch, "size : ", length_epoch)
+        # print("Current Epoch : ", epoch, "size : ", length_epoch)
         bar = progressbar.ProgressBar(redirect_stdout=True)
         for batch_idx, (data, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
@@ -156,15 +156,14 @@ class Trainer(GenericTrainer):
             output = self.model(Variable(data))
             decayFactor = 1.0
             if self.args.no_distill:
-                if epoch==0 and batch_idx ==0:
-                    print ("Not using Distillation Loss")
+                pass
             elif self.args.decayed and len(self.older_classes) > 0:
                 if epoch==0 and batch_idx == 0:
                     print ("Not using Decayed Loss")
                 pred2 = self.model_fixed(Variable(data))
                 if len(old_classes_indices)>0:
                     y_onehot[:, self.older_classes][old_classes_indices] = pred2.data[:, self.older_classes][old_classes_indices]
-                    if batch_idx==0 and epoch==0:
+                    if batch_idx==0 and epoch==0 and False:
                         print ("Printing hsape of old class distill", pred2.data[:, self.older_classes][old_classes_indices].cpu().numpy())
                 if not self.args.distill_only_exemplars:
                     y_onehot[:, self.older_classes][new_classes_indices] = pred2.data[:, self.older_classes][new_classes_indices]*decayFactor
