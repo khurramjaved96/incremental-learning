@@ -56,7 +56,7 @@ parser.add_argument('--outputDir', default="../",
                          'in the specified directory to save the results.')
 parser.add_argument('--no-upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
-parser.add_argument('--decay', type=float, default=0.00005, help='Weight decay (L2 penalty).')
+parser.add_argument('--decay', type=float, default=0.00001, help='Weight decay (L2 penalty).')
 parser.add_argument('--distill-decay', type=float, default=0.5, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[2000],
@@ -149,7 +149,7 @@ for seed in args.seeds:
             epoch = 0
             import progressbar
             bar = progressbar.ProgressBar(redirect_stdout=True)
-            for epoch in bar(range(0, args.epochs_class)):
+            for epoch in range(0, args.epochs_class):
                 my_trainer.update_lr(epoch)
                 my_trainer.train(epoch)
                 if epoch % args.log_interval == 0:

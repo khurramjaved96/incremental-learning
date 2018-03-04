@@ -129,7 +129,7 @@ class Trainer(GenericTrainer):
         length_epoch += self.args.memory_budget
         length_epoch/= int(self.args.batch_size)
         # print("Current Epoch : ", epoch, "size : ", length_epoch)
-        bar = progressbar.ProgressBar(redirect_stdout=True)
+
         for batch_idx, (data, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
@@ -167,13 +167,13 @@ class Trainer(GenericTrainer):
                         print ("Printing hsape of old class distill", pred2.data[:, self.older_classes][old_classes_indices].cpu().numpy())
                 if not self.args.distill_only_exemplars:
                     y_onehot[:, self.older_classes][new_classes_indices] = pred2.data[:, self.older_classes][new_classes_indices]*decayFactor
-                    if batch_idx==0 and epoch==0:
+                    if batch_idx==0 and epoch==0 and False:
                         print ("Printing shape of new class", (pred2.data[:, self.older_classes][new_classes_indices]*decayFactor).cpu().numpy())
-                elif epoch==0 and batch_idx==0:
+                elif epoch==0 and batch_idx==0 and False:
                     print ("Only distilling the instances from the exemplar set")
 
             elif len(self.older_classes) > 0:
-                if epoch==0 and batch_idx == 0:
+                if epoch==0 and batch_idx == 0 and False:
                     print ("Using standard distillation loss")
                 pred2 = self.model_fixed(Variable(data))
                 y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
@@ -184,4 +184,3 @@ class Trainer(GenericTrainer):
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
             self.optimizer.step()
-            bar.update(int(float(batch_idx+1)/float(len(self.train_data_iterator))*100))

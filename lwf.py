@@ -39,5 +39,5 @@ for e in experimentCon:
     myPlotter.plot(x, ncm, legend=legend[counter]+" with NCM", error=ncmStd)
     myPlotter.plot(x, tc, legend=legend[counter]+" with TC", error=tcStd)
     counter+=1
-myPlotter.save_fig("../temp", 102)
+myPlotter.save_fig("../tempLWF", 102)
 
