@@ -149,6 +149,8 @@ class trainer():
                 DVec[i, i, :, :] = 1
 
         one_sample_saved = False
+        a = 0
+        b = 0
         print("Starting GAN Training")
         for epoch in range(int(self.args.gan_epochs[self.increment])):
             G.train()
@@ -161,7 +163,7 @@ class trainer():
             for batch_idx, (image, label) in enumerate(self.trainIterator):
                 batch_size = image.shape[0]
                 if not one_sample_saved:
-                    self.saveResults(image, "sample_E" + str(epoch), True)
+                    self.saveResults(image, "sample_E" + str(epoch), True, np.sqrt(self.args.batch_size))
                     one_sample_saved = True
 
                 #Make vectors of ones and zeros of same shape as output by
@@ -177,6 +179,7 @@ class trainer():
                 ##################################
                 #Train with real image and labels
                 D.zero_grad()
+                a = a + 1
 
                 #Shape [batch_size, 10, 32, 32]. Each entry at D_labels[0]
                 #contains 32x32 matrix of 1s inside D_labels[label] index
@@ -234,6 +237,7 @@ class trainer():
                 if batch_idx % self.args.d_iter != 0:
                     continue
 
+                b = b + 1
                 G.zero_grad()
                 G_random_noise = torch.randn((batch_size, 100))
                 G_random_noise = G_random_noise.view(-1, 100, 1, 1)
@@ -271,6 +275,8 @@ class trainer():
                                       "_E" + str(epoch), True)
                 self.saveGANLosses(G_Losses, D_Losses)
             print("[GAN] Epoch:", epoch,
+                  "G_iters:", b,
+                  "D_iters:", a,
                   "G_Loss:", mean_G,
                   "D_Loss:", mean_D,
                   "Time taken:", time.time() - startTime)
@@ -299,7 +305,7 @@ class trainer():
                 else:
                     examples[klass] = torch.cat((examples[klass],images), dim=0)
             if save:
-                self.saveResults(examples[klass][0:100], name + "_C" + str(klass))
+                self.saveResults(examples[klass][0:100], name + "_C" + str(klass), False, np.sqrt(self.args.batch_size))
         return examples
 
     def updateFrozenGenerator(self, G):
@@ -309,6 +315,7 @@ class trainer():
             param.requires_grad = False
 
     def saveResults(self, images, name, is_tensor=False, axis_size=10):
+        axis_size = int(axis_size)
         _, sub = plt.subplots(axis_size, axis_size, figsize=(5, 5))
         for i, j in itertools.product(range(axis_size), range(axis_size)):
             sub[i, j].get_xaxis().set_visible(False)

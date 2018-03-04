@@ -68,7 +68,7 @@ parser.add_argument('--gan-gammas', type=float, nargs='+', default=[0.1, 0.1],
 parser.add_argument('--persist-gan', action='store_true', default=False,
                     help='GAN is not thrown away and trained from scratch each increment')
 parser.add_argument('--gan-img-save-interval', type=int, default=5, help='Save generator samples every x epochs')
-parser.add_argument('--d_iter', type=int, default=1, help='Number of iterations of discriminatori/critic for each iteration of generator.')
+parser.add_argument('--d-iter', type=int, default=1, help='Number of iterations of discriminatori/critic for each iteration of generator.')
 args = parser.parse_args()
 
 if args.process == "gan" and args.dataset == "MNIST" and len(args.gan_epochs) < 10//args.step_size:
