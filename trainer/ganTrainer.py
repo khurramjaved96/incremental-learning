@@ -305,7 +305,7 @@ class trainer():
                 else:
                     examples[klass] = torch.cat((examples[klass],images), dim=0)
             if save:
-                self.saveResults(examples[klass][0:100], name + "_C" + str(klass), False, np.sqrt(self.args.batch_size))
+                self.saveResults(examples[klass][0:100], name + "_C" + str(klass), False)
         return examples
 
     def updateFrozenGenerator(self, G):
