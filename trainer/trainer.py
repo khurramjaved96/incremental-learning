@@ -92,7 +92,7 @@ class Trainer(GenericTrainer):
         for temp in range(classGroup, classGroup + self.args.step_size):
             pop_val = self.all_classes.pop()
             self.train_data_iterator.dataset.add_class(pop_val)
-            self.ideal_iterator.add_class(pop_val)
+            self.ideal_iterator.dataset.add_class(pop_val)
             self.test_data_iterator.dataset.add_class(pop_val)
             # print("Train Classes", self.train_data_iterator.dataset.active_classes)
             self.left_over.append(pop_val)
