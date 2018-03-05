@@ -29,6 +29,7 @@ class trainer():
         self.leftOver = []
         if not args.no_random:
             print("Randomly shuffling classes")
+            random.seed(args.seed)
             random.shuffle(self.allClasses)
 
     def updateIterator(self, trainIterator):

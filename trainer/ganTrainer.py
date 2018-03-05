@@ -393,9 +393,11 @@ class trainer():
             max_e = -1
             filename = None
             for f in os.listdir(g_path):
-                vals = f.split['_']
-                if int(vals[2]) == increment and int(vals[4]) > max_e:
-                    max_e = int(vals[4])
+                vals = f.split('_')
+                incr = int(vals[2])
+                epoch = int(vals[4].split('.')[0])
+                if incr == increment and epoch > max_e:
+                    max_e = epoch
                     filename = f
             if max_e == -1:
                 print('[*]Failed to load checkpoint')
