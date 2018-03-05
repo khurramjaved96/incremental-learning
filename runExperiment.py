@@ -19,9 +19,9 @@ parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
                     help='input batch size for testing (default: 128)')
-parser.add_argument('--epochs', type=int, default=200, metavar='N',
-                    help='number of epochs to train (default: 200)')
-parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
+parser.add_argument('--epochs', type=int, default=70, metavar='N',
+                    help='number of epochs to train (default: 70)')
+parser.add_argument('--lr', type=float, default=2.0, metavar='LR',
                     help='learning rate (default: 0.1)')
 parser.add_argument('--schedule', type=int, nargs='+', default=[45, 60, 68],
                     help='Decrease learning rate at these epochs.')
