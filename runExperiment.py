@@ -82,13 +82,15 @@ if args.process == "gan" and args.dataset == "MNIST" and len(args.gan_epochs) < 
 if args.process == "wgan" and args.d_iter == 1:
     print("NOTICE: Recommended to set --d_iter to 5 for WGAN")
 
+print("Remember: Set decay 10x smaller on MNIST, was performing better")
+
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
+dataset = dF.datasetFactory.getDataset(args.dataset)
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
-dataset = dF.datasetFactory.getDataset(args.dataset)
 
 trainDatasetLoader = dL.incrementalLoader(args.dataset, dataset.trainData.train_data,
                                           dataset.trainData.train_labels,

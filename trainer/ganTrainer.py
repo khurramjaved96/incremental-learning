@@ -389,23 +389,22 @@ class trainer():
         '''
         Loads the latest generator for given increment
         '''
-        if self.args.g_ckpt != '':
-            max_e = -1
-            filename = None
-            for f in os.listdir(g_path):
-                vals = f.split('_')
-                incr = int(vals[2])
-                epoch = int(vals[4].split('.')[0])
-                if incr == increment and epoch > max_e:
-                    max_e = epoch
-                    filename = f
-            if max_e == -1:
-                print('[*]Failed to load checkpoint')
-                return False
-            path = os.path.join(self.args.g_path, filename)
-            self.G.load_state_dict(torch.load(path))
-            print('[*]Loaded Generator from %s' % path)
-            return True
+        max_e = -1
+        filename = None
+        for f in os.listdir(self.args.load_g_ckpt):
+            vals = f.split('_')
+            incr = int(vals[2])
+            epoch = int(vals[4].split('.')[0])
+            if incr == increment and epoch > max_e:
+                max_e = epoch
+                filename = f
+        if max_e == -1:
+            print('[*] Failed to load checkpoint')
+            return False
+        path = os.path.join(self.args.load_g_ckpt, filename)
+        self.G.load_state_dict(torch.load(path))
+        print('[*] Loaded Generator from %s' % path)
+        return True
 
     def updateLR(self, epoch, G_Opt, D_Opt):
         for temp in range(0, len(self.args.gan_schedule)):
