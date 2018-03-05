@@ -11,7 +11,7 @@ from torch.autograd import Variable
 import numpy as np
 
 class GenericTrainer:
-    def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer):
+    def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
         self.train_data_iterator = trainDataIterator
         self.test_data_iterator = testDataIterator
         self.model = model
@@ -29,6 +29,7 @@ class GenericTrainer:
         self.all_classes = list(range(dataset.classes))
         self.all_classes.sort(reverse=True)
         self.left_over = []
+        self.ideal_iterator = ideal_iterator
 
         random.seed(args.seed)
         random.shuffle(self.all_classes)
@@ -74,8 +75,8 @@ class AutoEncoderTrainer(GenericTrainer):
 
 
 class Trainer(GenericTrainer):
-    def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer):
-        super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer)
+    def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
+        super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
 
 
     def update_lr(self, epoch):
@@ -91,6 +92,7 @@ class Trainer(GenericTrainer):
         for temp in range(classGroup, classGroup + self.args.step_size):
             pop_val = self.all_classes.pop()
             self.train_data_iterator.dataset.add_class(pop_val)
+            self.ideal_iterator.add_class(pop_val)
             self.test_data_iterator.dataset.add_class(pop_val)
             # print("Train Classes", self.train_data_iterator.dataset.active_classes)
             self.left_over.append(pop_val)

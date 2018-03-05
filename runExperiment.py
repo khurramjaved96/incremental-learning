@@ -125,8 +125,6 @@ for seed in args.seeds:
         train_iterator_nmc = torch.utils.data.DataLoader(train_dataset_loader_nmc,
                                                      batch_size=args.batch_size, shuffle=True, **kwargs)
 
-        for temp in range(0, dataset.classes):
-            train_iterator_nmc.dataset.add_class(temp)
 
         test_iterator = torch.utils.data.DataLoader(
             test_dataset_loader,
@@ -141,7 +139,7 @@ for seed in args.seeds:
         optimizer = torch.optim.SGD(myModel.parameters(), args.lr, momentum=args.momentum,
                                     weight_decay=args.decay, nesterov=True)
 
-        my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, myModel, args, optimizer)
+        my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, myModel, args, optimizer, train_iterator_nmc)
 
 
 
