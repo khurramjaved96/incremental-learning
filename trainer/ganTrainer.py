@@ -91,15 +91,21 @@ class trainer():
             print("Test NMC: ", nmc_test)
 
             #####################
-            # Get a new Generator and Discriminator
+            # Train GAN
             ####################
             if self.G == None or not self.args.persist_gan:
                 self.G, self.D = self.modelFactory.getModel(self.args.process, self.args.dataset)
                 if self.args.cuda:
                     self.G = self.G.cuda()
                     self.D = self.D.cuda()
-            self.trainGan(self.G, self.D, self.is_C, self.num_classes)
-            self.updateFrozenGenerator(self.G)
+            is_loaded = False
+            if self.args.load_g_ckpt != '':
+                is_loaded = self.loadCheckpoint(self.increment)
+            if not is_loaded:
+                self.trainGan(self.G, self.D, self.is_C, self.num_classes)
+            self.updateFrozenGenerator()
+            if self.args.save_g_ckpt:
+                self.saveCheckpoint(self.args.gan_epochs[self.increment])
 
             # Saving confusion matrix
             ut.saveConfusionMatrix(int(classGroup / self.args.step_size) *
@@ -153,6 +159,9 @@ class trainer():
         b = 0
         print("Starting GAN Training")
         for epoch in range(int(self.args.gan_epochs[self.increment])):
+            #######################
+            #Start Epoch
+            #######################
             G.train()
             D_Losses_E = []
             G_Losses_E = []
@@ -260,20 +269,28 @@ class trainer():
                     G_Loss = -torch.mean(D_output)
                 elif self.args.process == "dcgan" or self.args.process == "cdcgan":
                     G_Loss = criterion(D_output, D_like_real)
+
                 G_Loss.backward()
                 G_Losses_E.append(G_Loss)
                 G_Opt.step()
 
+            #############################
+            #End epoch
             #Print Stats and save results
+            #############################
             mean_G = (sum(G_Losses_E)/len(G_Losses_E)).cpu().data.numpy()[0]
             mean_D = (sum(D_Losses_E)/len(D_Losses_E)).cpu().data.numpy()[0]
             G_Losses.append(mean_G)
             D_Losses.append(mean_D)
+
             if epoch % self.args.gan_img_save_interval == 0:
                 self.generateExamples(G, 100, activeClasses,
                                       "Inc"+str(self.increment) +
                                       "_E" + str(epoch), True)
                 self.saveGANLosses(G_Losses, D_Losses)
+
+            if self.args.save_g_ckpt and epoch % self.args.ckpt_interval == 0:
+                self.saveCheckpoint(epoch)
             print("[GAN] Epoch:", epoch,
                   "G_iters:", b,
                   "D_iters:", a,
@@ -308,9 +325,9 @@ class trainer():
                 self.saveResults(examples[klass][0:100], name + "_C" + str(klass), False)
         return examples
 
-    def updateFrozenGenerator(self, G):
-        G.eval()
-        self.fixed_G = copy.deepcopy(G)
+    def updateFrozenGenerator(self):
+        self.G.eval()
+        self.fixed_G = copy.deepcopy(self.G)
         for param in self.fixed_G.parameters():
             param.requires_grad = False
 
@@ -356,6 +373,37 @@ class trainer():
         plt.cla()
         plt.clf()
         plt.close()
+
+    def saveCheckpoint(self, epoch):
+        '''
+        Saves Generator
+        '''
+        if epoch == 0:
+            return
+        print("[*] Saving Generator checkpoint")
+        path = self.experiment.path + "checkpoints/"
+        torch.save(self.G.state_dict(),
+                   '{0}G_inc_{1}_e_{2}.pth'.format(path, self.increment, epoch))
+
+    def loadCheckpoint(self, increment):
+        '''
+        Loads the latest generator for given increment
+        '''
+        if self.args.g_ckpt != '':
+            max_e = -1
+            filename = None
+            for f in os.listdir(g_path):
+                vals = f.split['_']
+                if int(vals[2]) == increment and int(vals[4]) > max_e:
+                    max_e = int(vals[4])
+                    filename = f
+            if max_e == -1:
+                print('[*]Failed to load checkpoint')
+                return False
+            path = os.path.join(self.args.g_path, filename)
+            self.G.load_state_dict(torch.load(path))
+            print('[*]Loaded Generator from %s' % path)
+            return True
 
     def updateLR(self, epoch, G_Opt, D_Opt):
         for temp in range(0, len(self.args.gan_schedule)):

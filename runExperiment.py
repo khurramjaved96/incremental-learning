@@ -69,6 +69,10 @@ parser.add_argument('--persist-gan', action='store_true', default=False,
                     help='GAN is not thrown away and trained from scratch each increment')
 parser.add_argument('--gan-img-save-interval', type=int, default=5, help='Save generator samples every x epochs')
 parser.add_argument('--d-iter', type=int, default=1, help='Number of iterations of discriminatori/critic for each iteration of generator.')
+parser.add_argument('--ckpt-interval', type=int, default=1000, help='After how many epochs should the Generator be saved')
+parser.add_argument('--load-g-ckpt', default="", help='Path to folder which contains Generator ckpts')
+parser.add_argument('--save-g-ckpt', default=False, action='store_true', help='Whether the Generator ckpt will be saved or not')
+
 args = parser.parse_args()
 
 if args.process == "gan" and args.dataset == "MNIST" and len(args.gan_epochs) < 10//args.step_size:

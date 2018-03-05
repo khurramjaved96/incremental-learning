@@ -19,6 +19,7 @@ class experiment:
 
             os.makedirs("../" + self.name + "_" + str(ver))
             os.makedirs("../" + self.name + "_" + str(ver) + "/results")
+            os.makedirs("../" + self.name + "_" + str(ver) + "/checkpoints")
             self.path = "../" + self.name + "_" + str(ver) + "/"
 
             self.results["Temp Results"]= [[1,2,3,4], [5,6,2,6]]
