@@ -23,9 +23,9 @@ parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 200)')
 parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                     help='learning rate (default: 0.1)')
-parser.add_argument('--schedule', type=int, nargs='+', default=[20, 30, 40, 50, 57],
+parser.add_argument('--schedule', type=int, nargs='+', default=[45, 60, 68],
                     help='Decrease learning rate at these epochs.')
-parser.add_argument('--gammas', type=float, nargs='+', default=[0.2, 0.2, 0.2, 0.2, 0.2],
+parser.add_argument('--gammas', type=float, nargs='+', default=[0.2, 0.2, 0.2],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 
 parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
@@ -44,7 +44,7 @@ parser.add_argument('--no-herding', action='store_true', default=False,
                     help='Disable herding for NMC')
 parser.add_argument('--seeds', type=int, nargs='+', default=[200],
                     help='Seeds values to be used')
-parser.add_argument('--log-interval', type=int, default=20, metavar='N',
+parser.add_argument('--log-interval', type=int, default=5, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--model-type', default="resnet32",
                     help='model type to be used. Example : resnet32, resnet20, densenet, test')
@@ -55,14 +55,14 @@ parser.add_argument('--sortby', default="none",
 parser.add_argument('--outputDir', default="../",
                     help='Directory to store the results; the new folder will be created '
                          'in the specified directory to save the results.')
-parser.add_argument('--no-upsampling', action='store_true', default=False,
+parser.add_argument('--no-upsampling', action='store_true', default=True,
                     help='Do not do upsampling.')
-parser.add_argument('--decay', type=float, default=0.0005, help='Weight decay (L2 penalty).')
+parser.add_argument('--decay', type=float, default=0.0001, help='Weight decay (L2 penalty).')
 parser.add_argument('--distill-decay', type=float, default=0.5, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[2000],
                     help='How many images can we store at max. 0 will result in fine-tuning')
-parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
+parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; example CIFAR, MNIST')
 parser.add_argument('--lwf', action='store_true', default=False,
                     help='Use learning without forgetting. Ignores memory-budget '
