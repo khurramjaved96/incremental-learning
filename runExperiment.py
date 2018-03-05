@@ -48,7 +48,7 @@ parser.add_argument('--name', default="noname",
                     help='Name of the experiment')
 parser.add_argument('--sortby', default="none",
                     help='Examplars sorting strategy')
-parser.add_argument('--decay', type=float, default=0.00001, help='Weight decay (L2 penalty).')
+parser.add_argument('--decay', type=float, default=0.0001, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=2, help='How many classes to add in each increment')
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
 parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
