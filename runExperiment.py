@@ -12,6 +12,7 @@ import plotter as plt
 import trainer
 import utils.utils as ut
 import logging
+import copy
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
@@ -104,6 +105,13 @@ for seed in args.seeds:
                                                              cuda=args.cuda, oversampling=not args.no_upsampling,
                                                              )
 
+        train_dataset_loader_nmc = dataHandler.IncrementalLoader(dataset.train_data.train_data,
+                                                             dataset.train_data.train_labels,
+                                                             dataset.labels_per_class_train,
+                                                             dataset.classes, [], transform=dataset.train_transform,
+                                                             cuda=args.cuda, oversampling=not args.no_upsampling,
+                                                             )
+
         test_dataset_loader = dataHandler.IncrementalLoader(dataset.test_data.test_data, dataset.test_data.test_labels,
                                                             dataset.labels_per_class_test, dataset.classes,
                                                             [], transform=dataset.test_transform, cuda=args.cuda,
@@ -113,6 +121,13 @@ for seed in args.seeds:
 
         train_iterator = torch.utils.data.DataLoader(train_dataset_loader,
                                                      batch_size=args.batch_size, shuffle=True, **kwargs)
+
+        train_iterator_nmc = torch.utils.data.DataLoader(train_dataset_loader_nmc,
+                                                     batch_size=args.batch_size, shuffle=True, **kwargs)
+
+        for temp in range(0, dataset.classes):
+            train_iterator_nmc.dataset.add_class(temp)
+
         test_iterator = torch.utils.data.DataLoader(
             test_dataset_loader,
             batch_size=args.test_batch_size, shuffle=True, **kwargs)
@@ -128,13 +143,20 @@ for seed in args.seeds:
 
         my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, myModel, args, optimizer)
 
+
+
         x = []
         y = []
         y1 = []
         train_y = []
 
+        nmc_ideal_cum = []
+
         nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
+        nmc_ideal = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
+
         t_classifier = trainer.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
+
 
         if not args.sortby == "none":
             print("Sorting by", args.sortby)
@@ -148,17 +170,19 @@ for seed in args.seeds:
             my_trainer.update_frozen_model()
             epoch = 0
             import progressbar
-            bar = progressbar.ProgressBar(redirect_stdout=True)
             for epoch in range(0, args.epochs_class):
+                if epoch%5==0:
+                    print ("Current Epoch", epoch)
                 my_trainer.update_lr(epoch)
                 my_trainer.train(epoch)
                 if epoch % args.log_interval == 0:
                     tError = t_classifier.evaluate(myModel, train_iterator)
                     print("Train Classifier", tError)
                     print("Test Classifier", t_classifier.evaluate(myModel, test_iterator))
-                bar.update(int(float(epoch)/float(args.epochs_class))*100)
+
 
             nmc.update_means(myModel, train_iterator, dataset.classes)
+            nmc_ideal.update_means(myModel, train_iterator_nmc, dataset.classes)
 
             tempTrain = nmc.evaluate(myModel, train_iterator)
             train_y.append(tempTrain)
@@ -171,20 +195,25 @@ for seed in args.seeds:
             #                          my_experiment.path + "CONFUSION", myModel, args, dataset, test_iterator)
             # Computing test error for graphing
             testY = nmc.evaluate(myModel, test_iterator)
+            testY_ideal = nmc_ideal.evaluate(myModel, test_iterator)
             y.append(testY)
+            nmc_ideal_cum.append(testY_ideal)
 
             tcMatrix = t_classifier.getConfusionMatrix(myModel, test_iterator, dataset.classes)
             nmcMatrix = nmc.getConfusionMatrix(myModel, test_iterator, dataset.classes)
+            nmcMatrixIdeal = nmc_ideal.getConfusionMatrix(myModel, test_iterator, dataset.classes)
 
             print("Train NMC", tempTrain)
             print("Test NMC", testY)
 
             y1.append(t_classifier.evaluate(myModel, test_iterator))
+
             x.append(class_group + args.step_size)
 
-            my_experiment.results["NCM"] = [x, y]
+            my_experiment.results["NMC"] = [x, y]
             my_experiment.results["Trained Classifier"] = [x, y1]
             my_experiment.results["Train Error Classifier"] = [x, train_y]
+            my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
             my_experiment.store_json()
 
 
@@ -193,7 +222,10 @@ for seed in args.seeds:
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
                                   nmcMatrix)
-            my_plotter.plot(x, y, title=args.name, legend="NCM")
+            my_plotter.plot(x, y, title=args.name, legend="NMC")
+            my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
             my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
+            my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
+
 
             my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
