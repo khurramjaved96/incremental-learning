@@ -159,14 +159,7 @@ class Trainer(GenericTrainer):
             decayFactor = 1.0
             if self.args.no_distill:
                 pass
-            elif self.args.decayed and len(self.older_classes) > 0:
-                pred2 = self.model_fixed(Variable(data))
-                if len(old_classes_indices) > 0:
-                    y_onehot[:, self.older_classes][old_classes_indices] = pred2.data[:, self.older_classes][
-                        old_classes_indices]
-                if not self.args.distill_only_exemplars:
-                    y_onehot[:, self.older_classes][new_classes_indices] = pred2.data[:, self.older_classes][
-                                                                               new_classes_indices] * decayFactor
+
             elif len(self.older_classes) > 0:
                 if self.args.lwf:
                     if epoch == 0 and batch_idx == 0:
@@ -181,7 +174,7 @@ class Trainer(GenericTrainer):
                         print("Shifting to all weight training from warm up training")
                         for param in self.model.parameters():
                             param.requires_grad = True
-                pred2 = self.model_fixed(Variable(data))
+                pred2 = self.model_fixed(Variable(data), T=2)
                 y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
 
             loss = F.binary_cross_entropy(output, Variable(y_onehot))

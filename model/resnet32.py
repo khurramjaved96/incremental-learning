@@ -101,7 +101,7 @@ class CifarResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x, feature=False):
+    def forward(self, x, feature=False, T=1):
         # print ("X shape", x.shape)
         x = self.conv_1_3x3(x)
         x = F.relu(self.bn_1(x), inplace=True)
@@ -114,8 +114,8 @@ class CifarResNet(nn.Module):
             # print("Shape of norm vector", torch.norm(x, 2, 1).unsqueeze(1).data.cpu().numpy().shape)
             # print("Shaoe of feature vector", x.data.cpu().numpy().shape)
             return x / torch.norm(x, 2, 1).unsqueeze(1)
-        return F.sigmoid(self.fc(x))
-        # return F.softmax(self.fc(x))
+        # return F.sigmoid(self.fc(x))
+        return F.softmax(self.fc(x)/T)
 
     def forwardFeature(self, x):
         pass
