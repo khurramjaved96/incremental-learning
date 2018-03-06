@@ -7,6 +7,7 @@ class Generator(nn.Module):
     def __init__(self, d=128, c=1):
         super(Generator, self).__init__()
         #ConvTranspose2d(in_channels, out_channels, kernel_size, stride=1, padding=0)
+        print(">>> NOTICE: Adjust the network to match CDCGAN one")
         self.ct1_noise = nn.ConvTranspose2d(100, d*4, 4, 1, 0)
         self.ct1_noise_bn = nn.BatchNorm2d(d*4)
         self.ct2 = nn.ConvTranspose2d(d*4, d*2, 4, 2, 1)
