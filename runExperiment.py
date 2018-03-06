@@ -220,6 +220,9 @@ for seed in args.seeds:
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
                                   nmcMatrix)
+            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+                                  my_experiment.path + "nmcMatrixIdeal",
+                                  nmcMatrixIdeal)
             my_plotter.plot(x, y, title=args.name, legend="NMC")
             my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
             my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")

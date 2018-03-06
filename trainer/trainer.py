@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-import numpy as np
+
 
 class GenericTrainer:
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
@@ -78,14 +78,14 @@ class Trainer(GenericTrainer):
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
         super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
 
-
     def update_lr(self, epoch):
         for temp in range(0, len(self.args.schedule)):
             if self.args.schedule[temp] == epoch:
                 for param_group in self.optimizer.param_groups:
                     self.current_lr = param_group['lr']
                     param_group['lr'] = self.current_lr * self.args.gammas[temp]
-                    print("Changing learning rate from", self.current_lr, "to", self.current_lr * self.args.gammas[temp])
+                    print("Changing learning rate from", self.current_lr, "to",
+                          self.current_lr * self.args.gammas[temp])
                     self.current_lr *= self.args.gammas[temp]
 
     def increment_classes(self, classGroup):
@@ -123,13 +123,13 @@ class Trainer(GenericTrainer):
             param.requires_grad = False
         self.model_fixed.eval()
 
-
     def train(self, epoch):
 
         self.model.train()
-        length_epoch = self.dataset.labels_per_class_train*(len(self.train_data_iterator.dataset.active_classes)-len(self.train_data_iterator.dataset.limited_classes))
+        length_epoch = self.dataset.labels_per_class_train * (
+        len(self.train_data_iterator.dataset.active_classes) - len(self.train_data_iterator.dataset.limited_classes))
         length_epoch += self.args.memory_budget
-        length_epoch/= int(self.args.batch_size)
+        length_epoch /= int(self.args.batch_size)
         # print("Current Epoch : ", epoch, "size : ", length_epoch)
 
         for batch_idx, (data, target) in enumerate(self.train_data_iterator):
@@ -160,28 +160,29 @@ class Trainer(GenericTrainer):
             if self.args.no_distill:
                 pass
             elif self.args.decayed and len(self.older_classes) > 0:
-                if epoch==0 and batch_idx == 0:
-                    print ("Not using Decayed Loss")
                 pred2 = self.model_fixed(Variable(data))
-                if len(old_classes_indices)>0:
-                    y_onehot[:, self.older_classes][old_classes_indices] = pred2.data[:, self.older_classes][old_classes_indices]
-                    # if batch_idx==0 and epoch==0 and False:
-                    #     print ("Printing hsape of old class distill", pred2.data[:, self.older_classes][old_classes_indices].cpu().numpy())
+                if len(old_classes_indices) > 0:
+                    y_onehot[:, self.older_classes][old_classes_indices] = pred2.data[:, self.older_classes][
+                        old_classes_indices]
                 if not self.args.distill_only_exemplars:
-                    y_onehot[:, self.older_classes][new_classes_indices] = pred2.data[:, self.older_classes][new_classes_indices]*decayFactor
-                    # if batch_idx==0 and epoch==0 and False:
-                    #     print ("Printing shape of new class", (pred2.data[:, self.older_classes][new_classes_indices]*decayFactor).cpu().numpy())
-                elif epoch==0 and batch_idx==0 and False:
-                    print ("Only distilling the instances from the exemplar set")
-
+                    y_onehot[:, self.older_classes][new_classes_indices] = pred2.data[:, self.older_classes][
+                                                                               new_classes_indices] * decayFactor
             elif len(self.older_classes) > 0:
-                if epoch==0 and batch_idx == 0 and False:
-                    print ("Using standard distillation loss")
+                if self.args.lwf:
+                    if epoch == 0 and batch_idx == 0:
+                        print("Warm up step for 4 epochs")
+                        for param in self.model.named_parameters():
+                            if "fc" in param[0]:
+                                print("Setting gradient of FC layers to be True")
+                                param[1].requies_grad = True
+                            else:
+                                param[1].requires_grad = False
+                    if epoch == 4 and batch_idx == 0:
+                        print("Shifting to all weight training from warm up training")
+                        for param in self.model.parameters():
+                            param.requires_grad = True
                 pred2 = self.model_fixed(Variable(data))
                 y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
-                # if batch_idx==0 and epoch==0:
-                #     print (y_onehot[:, self.older_classes].cpu().numpy())
-
 
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
