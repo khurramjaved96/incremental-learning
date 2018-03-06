@@ -220,6 +220,7 @@ class trainer():
                     D_random_labels = Variable(D_random_labels.cuda()) if is_C else None
 
                 G_output = G(G_random_noise, G_random_labels) if is_C else G(G_random_noise)
+                G_output = G_output.detach()
                 D_output_fake = D(G_output, D_random_labels).squeeze() if is_C else D(G_output).squeeze()
 
                 if self.args.process == "wgan":
