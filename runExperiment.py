@@ -90,6 +90,7 @@ dataset = dF.datasetFactory.getDataset(args.dataset)
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
+    torch.backends.cudnn.deterministic = True
 
 
 trainDatasetLoader = dL.incrementalLoader(args.dataset, dataset.trainData.train_data,
