@@ -54,11 +54,16 @@ class Discriminator(nn.Module):
         self.conv3_bn = nn.BatchNorm2d(d*4)
         self.conv4 = nn.Conv2d(d*4, d*8, 4, 2, 1)
         self.conv4_bn = nn.BatchNorm2d(d*8)
-        self.conv5 = nn.Conv2d(d*8, 1, 4, 1, 0)
+        #TODO Why does it not work with padding 0?
+        self.conv5 = nn.Conv2d(d*8, 1, 4, 1, 1)
 
     def forward(self, img, label):
+        print("img",img.shape)
+        print("lbl",label.shape)
         x = F.leaky_relu(self.conv1_img(img), 0.2)
         y = F.leaky_relu(self.conv1_label(label), 0.2)
+        print(x.shape)
+        print(y.shape)
         x = torch.cat([x, y], 1)
         x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
         x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
