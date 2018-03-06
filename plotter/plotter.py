@@ -60,7 +60,7 @@ class Plotter():
         plt.ylabel("Average Incremental Accuracy")
         # plt.yticks(list(range(0,105,10)))
         # plt.xticks(list(range(0, xticks+1, int(xticks/10))))
-        plt.savefig(path+".jpg", dpi=1200)
+        plt.savefig(path+".jpg")
         plt.gcf().clear()
 
     def plotMatrix(self, epoch, path, img):
