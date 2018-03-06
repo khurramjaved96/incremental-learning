@@ -21,11 +21,11 @@ parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
                     help='input batch size for testing (default: 128)')
 parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 200)')
-parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
+parser.add_argument('--lr', type=float, default=2.0, metavar='LR',
                     help='learning rate (default: 0.1)')
-parser.add_argument('--schedule', type=int, nargs='+', default=[20, 30, 40, 50, 57],
+parser.add_argument('--schedule', type=int, nargs='+', default=[49, 63],
                     help='Decrease learning rate at these epochs.')
-parser.add_argument('--gammas', type=float, nargs='+', default=[0.2, 0.2, 0.2, 0.2, 0.2],
+parser.add_argument('--gammas', type=float, nargs='+', default=[0.2, 0.2],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 
 parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
@@ -48,10 +48,10 @@ parser.add_argument('--name', default="noname",
                     help='Name of the experiment')
 parser.add_argument('--sortby', default="none",
                     help='Examplars sorting strategy')
-parser.add_argument('--decay', type=float, default=0.0001, help='Weight decay (L2 penalty).')
+parser.add_argument('--decay', type=float, default=0.00003, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=2, help='How many classes to add in each increment')
 parser.add_argument('--memory-budget', type=int, default=2000, help='How many images can we store at max')
-parser.add_argument('--epochs-class', type=int, default=60, help='Number of epochs for each increment')
+parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='dataset to be used; example CIFAR, MNIST')
 parser.add_argument('--no-upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
