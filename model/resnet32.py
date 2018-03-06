@@ -114,8 +114,8 @@ class CifarResNet(nn.Module):
             # print("Shape of norm vector", torch.norm(x, 2, 1).unsqueeze(1).data.cpu().numpy().shape)
             # print("Shaoe of feature vector", x.data.cpu().numpy().shape)
             return x / torch.norm(x, 2, 1).unsqueeze(1)
-        # return F.sigmoid(self.fc(x))
-        return F.softmax(self.fc(x))
+        return F.sigmoid(self.fc(x))
+        # return F.softmax(self.fc(x))
 
     def forwardFeature(self, x):
         pass
