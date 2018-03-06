@@ -22,7 +22,6 @@ class Generator(nn.Module):
         self.ct4 = nn.ConvTranspose2d(d*2, d, 4, 2, 1)
         self.ct4_bn = nn.BatchNorm2d(d)
         self.ct5 = nn.ConvTranspose2d(d, c, 4, 2, 1)
-        
 
     def forward(self, noise):
         x = F.relu(self.ct1_noise_bn(self.ct1_noise(noise)))
