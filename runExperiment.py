@@ -173,11 +173,12 @@ for seed in args.seeds:
                     print ("Current Epoch", epoch)
                 my_trainer.update_lr(epoch)
                 my_trainer.train(epoch)
-                if epoch % args.log_interval == 0:
+                if epoch % args.log_interval == (args.log_interval-1):
                     tError = t_classifier.evaluate(myModel, train_iterator)
                     print("Train Classifier", tError)
                     print("Test Classifier", t_classifier.evaluate(myModel, test_iterator))
 
+            y1.append(t_classifier.evaluate(myModel, test_iterator))
 
             nmc.update_means(myModel, train_iterator, dataset.classes)
             nmc_ideal.update_means(myModel, train_iterator_nmc, dataset.classes)
@@ -204,7 +205,7 @@ for seed in args.seeds:
             print("Train NMC", tempTrain)
             print("Test NMC", testY)
 
-            y1.append(t_classifier.evaluate(myModel, test_iterator))
+
 
             x.append(class_group + args.step_size)
 
