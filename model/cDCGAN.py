@@ -3,6 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .gan_utils import normal_init
 
+class View(nn.Module):
+    def __init__(self, *shape):
+        super(View, self).__init__()
+        self.shape = shape
+    def forward(self, input):
+        return input.view(*shape)
+
 class Generator(nn.Module):
     '''
     d = base multiplier
@@ -35,21 +42,31 @@ class Generator(nn.Module):
         for m in self._modules:
             normal_init(self._modules[m], mean, std)
 
+
 class Discriminator(nn.Module):
     '''
     d = base multiplier
     c = number of channels in the image
     l = number of unique classes in the dataset
     '''
-    def __init__(self, d=128, c=1, l=10):
+    def __init__(self, d=128, c=1, l=10, use_mbd=False, mbd_num=5, mbd_dim=3):
         super(Discriminator, self).__init__()
+        self.use_mbd = use_mbd
+        self.mbd_num = mbd_num
+        self.mbd_dim = mbd_dim
+
         self.conv1_img = nn.Conv2d(c, d//2, 4, 2, 1)
         self.conv1_label = nn.Conv2d(l, d//2, 4, 2, 1)
         self.conv2 = nn.Conv2d(d, d*2, 4, 2, 1)
         self.conv2_bn = nn.BatchNorm2d(d*2)
         self.conv3 = nn.Conv2d(d*2, d*4, 4, 2, 1)
         self.conv3_bn = nn.BatchNorm2d(d*4)
-        self.conv4 = nn.Conv2d(d * 4, 1, 4, 1, 0)
+        if self.use_mbd:
+            self.conv4 = nn.Conv2d(d * 4, d, 4, 1, 0)
+            self.mbd = nn.Linear(d, mbd_num * mbd_dim)
+            self.mbd_1 = nn.Linear(d, 1)
+        else:
+            self.conv4 = nn.Conv2d(d * 4, 1, 4, 1, 0)
 
     def forward(self, img, label):
         x = F.leaky_relu(self.conv1_img(img), 0.2)
@@ -57,11 +74,22 @@ class Discriminator(nn.Module):
         x = torch.cat([x, y], 1)
         x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
         x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
-        x = F.sigmoid(self.conv4(x))
+        x = self.conv4(x)
+        if self.use_mbd:
+            print(x.shape)
+            x = self.mbd(x)
+            x = self.minibatch_discrimination(x)
+            x = self.mbd_1(x)
+        x = F.sigmoid(x)
         return x
 
     def init_weights(self, mean, std):
         for m in self._modules:
             normal_init(self._modules[m], mean, std)
 
-
+    def minibatch_discrimination(self, x):
+        activation = x.view(-1, self.mbd_num, self.mbd_dim)
+        diffs = activation.unsqueeze(3) - activation.permute(0,2,1).unsqueeze(0)
+        abs_diff = torch.abs(diffs).sum(2)
+        mb_feats = torch.exp(-diffs).sum(2)
+        return torch.cat([x, mb_feats], 1)
