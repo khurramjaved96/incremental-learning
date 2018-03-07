@@ -49,7 +49,7 @@ class Discriminator(nn.Module):
     c = number of channels in the image
     l = number of unique classes in the dataset
     '''
-    def __init__(self, d=128, c=1, l=10, use_mbd=False, mbd_num=5, mbd_dim=3):
+    def __init__(self, d=128, c=1, l=10, use_mbd=True, mbd_num=128, mbd_dim=3):
         super(Discriminator, self).__init__()
         self.use_mbd = use_mbd
         self.mbd_num = mbd_num
@@ -62,11 +62,8 @@ class Discriminator(nn.Module):
         self.conv3 = nn.Conv2d(d*2, d*4, 4, 2, 1)
         self.conv3_bn = nn.BatchNorm2d(d*4)
         if self.use_mbd:
-            self.conv4 = nn.Conv2d(d * 4, d, 4, 1, 0)
-            self.mbd = nn.Linear(d, mbd_num * mbd_dim)
-            self.mbd_1 = nn.Linear(d, 1)
-        else:
-            self.conv4 = nn.Conv2d(d * 4, 1, 4, 1, 0)
+            self.mbd = nn.Linear(d*4*4*4, mbd_num * mbd_dim)
+        self.conv4 = nn.Conv2d(d * 4 + 8, 1, 4, 1, 0)
 
     def forward(self, img, label):
         x = F.leaky_relu(self.conv1_img(img), 0.2)
@@ -74,12 +71,15 @@ class Discriminator(nn.Module):
         x = torch.cat([x, y], 1)
         x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
         x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
-        x = self.conv4(x)
         if self.use_mbd:
-            print(x.shape)
-            x = self.mbd(x)
-            x = self.minibatch_discrimination(x)
-            x = self.mbd_1(x)
+            #print(x.shape)
+            x = x.view(-1, 128 * 4 * 4 * 4)
+            mbd = self.mbd(x)
+            #print(x.shape)
+            x = self.minibatch_discrimination(mbd, x)
+            x = x.view(-1, 520, 4, 4)
+            #print(x)
+        x = self.conv4(x)
         x = F.sigmoid(x)
         return x
 
@@ -87,9 +87,13 @@ class Discriminator(nn.Module):
         for m in self._modules:
             normal_init(self._modules[m], mean, std)
 
-    def minibatch_discrimination(self, x):
+    def minibatch_discrimination(self, x, input_to_layer):
         activation = x.view(-1, self.mbd_num, self.mbd_dim)
-        diffs = activation.unsqueeze(3) - activation.permute(0,2,1).unsqueeze(0)
+        #print(activation.shape)
+        diffs = activation.unsqueeze(3) - activation.permute(1,2,0).unsqueeze(0)
+        #print(diffs.shape)
         abs_diff = torch.abs(diffs).sum(2)
-        mb_feats = torch.exp(-diffs).sum(2)
-        return torch.cat([x, mb_feats], 1)
+        #print(abs_diff.shape)
+        mb_feats = torch.exp(-abs_diff).sum(2)
+        #print(mb_feats.shape)
+        return torch.cat([input_to_layer, mb_feats], 1)
