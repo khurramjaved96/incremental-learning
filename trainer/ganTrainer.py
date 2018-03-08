@@ -178,7 +178,10 @@ class trainer():
                 #Make vectors of ones and zeros of same shape as output by
                 #Discriminator so that it can be used in BCELoss
                 if self.args.process == "dcgan" or self.args.process == "cdcgan":
-                    D_like_real = torch.ones(batch_size)
+                    smoothing_val = 0
+                    if self.args.label_smoothing:
+                        smoothing_val = 0.1
+                    D_like_real = torch.ones(batch_size) - smoothing_val
                     D_like_fake = torch.zeros(batch_size)
                     if self.args.cuda:
                         D_like_real = Variable(D_like_real.cuda())
