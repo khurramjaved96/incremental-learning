@@ -308,7 +308,7 @@ class trainer():
         '''
         G.eval()
         examples = {}
-        for klass in active_classes:
+        for idx, klass in enumerate(active_classes):
             for _ in range(num_examples//100):
                 noise = torch.randn(100,100,1,1)
                 if self.is_C:
@@ -322,7 +322,7 @@ class trainer():
                     examples[klass] = images
                 else:
                     examples[klass] = torch.cat((examples[klass],images), dim=0)
-            if save:
+            if save and idx <= self.args.gan_save_classes:
                 self.saveResults(examples[klass][0:100], name + "_C" + str(klass), False)
         return examples
 
