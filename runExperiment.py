@@ -72,6 +72,8 @@ parser.add_argument('--d-iter', type=int, default=1, help='Number of iterations 
 parser.add_argument('--ckpt-interval', type=int, default=1000, help='After how many epochs should the Generator be saved')
 parser.add_argument('--load-g-ckpt', default="", help='Path to folder which contains Generator ckpts')
 parser.add_argument('--save-g-ckpt', default=False, action='store_true', help='Whether the Generator ckpt will be saved or not')
+parser.add_argument('--gan-save-classes', default=10, type=int, help='Number of classes whose images will be saved every gan-img-save-interval')
+#parser.add_argument('--minibatch-discrimination', default=False, action='store_true', help='Whether to use minibatch discrimination layer')
 
 args = parser.parse_args()
 
@@ -132,7 +134,7 @@ if args.process == "nmc":
                          trainIterator, testIterator, trainDatasetLoader,
                          myExperiment)
 
-if args.process == "dcgan" or args.process == "cdcgan" or args.process == "wgan":
+else:
     trainer = gt.trainer(args, dataset, classifierTrainer, model,
                          trainIterator, testIterator, trainDatasetLoader,
                          myFactory, myExperiment)
