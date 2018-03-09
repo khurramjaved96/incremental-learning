@@ -133,7 +133,6 @@ class trainer():
             target.unsqueeze_(1)
             y_onehot.scatter_(1, target, 1)
 
-
             output = self.model(Variable(data))
             if not self.args.no_distill:
                 if len(self.olderClasses) > 0:

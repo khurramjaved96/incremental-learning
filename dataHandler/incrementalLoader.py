@@ -79,7 +79,8 @@ class incrementalLoader(td.Dataset):
             #Converting from [-1,1] range to [0,255] because that is what
             #toTensor transform expects
             nump = (((nump/2) + 0.5) * 255).astype(np.uint8)
-            if self.datasetName == "CIFAR100":
+            if self.datasetName == "CIFAR100" or self.datasetName == "CIFAR10":
+                print(nump.shape)
                 nump = np.swapaxes(nump, 1, 3)
             self.data[self.indices[a][0]:self.indices[a][0]+k] = nump
 

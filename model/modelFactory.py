@@ -19,6 +19,8 @@ class modelFactory():
         elif modelType=="resnet32":
             if dataset=="MNIST":
                 return res.resnet32mnist(10)
+            elif dataset=="CIFAR10":
+                return res.resnet32(10)
             return res.resnet32(100)
 
 
@@ -45,6 +47,9 @@ class modelFactory():
             if dataset=="CIFAR100":
                 G = cdcgan.Generator(128, 3, 100)
                 D = cdcgan.Discriminator(128, 3, 100)
+            elif dataset=="CIFAR10":
+                G = cdcgan.Generator(128, 3, 10)
+                D = cdcgan.Discriminator(128, 3, 10)
             else:
                 G = cdcgan.Generator(128)
                 D = cdcgan.Discriminator(128)

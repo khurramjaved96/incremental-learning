@@ -33,7 +33,10 @@ class trainer():
         self.examples = {}
         self.increment = 0
         self.is_C = args.process == "cdcgan"
-        self.num_classes = 10 if args.dataset=="MNIST" else 100
+        if args.dataset == "MNIST" or args.dataset == "CIFAR10":
+            self.num_classes = 10
+        else:
+            self.num_classes = 100
 
     def train(self):
         x = []
@@ -346,7 +349,7 @@ class trainer():
             i = k // axis_size
             j = k % axis_size
             sub[i, j].cla()
-            if self.args.dataset == "CIFAR100":
+            if self.args.dataset == "CIFAR100" or self.args.dataset == "CIFAR10":
                 if is_tensor:
                     sub[i, j].imshow((images[k].cpu().numpy().transpose(1, 2, 0) + 1)/2)
                 else:

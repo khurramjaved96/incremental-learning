@@ -60,3 +60,20 @@ class CIFAR100(dataset):
         self.trainData = datasets.CIFAR100("data", train=True, transform=self.trainTransform, download=True)
 
         self.testData = datasets.CIFAR100("data", train=False, transform=self.testTransform, download=True)
+
+class CIFAR10(dataset):
+    def __init__(self):
+        super().__init__(10, "CIFAR10", 5000, 1000)
+
+        self.trainTransform = transforms.Compose(
+             #[torchvision.transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
+             #transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-10, 10)),
+             [transforms.ToTensor(),
+             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+
+        self.testTransform = transforms.Compose(
+            [transforms.ToTensor(), transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+
+        self.trainData = datasets.CIFAR10("data", train=True, transform=self.trainTransform, download=True)
+
+        self.testData = datasets.CIFAR10("data", train=False, transform=self.testTransform, download=True)
