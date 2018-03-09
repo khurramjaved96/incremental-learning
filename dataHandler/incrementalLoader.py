@@ -80,8 +80,9 @@ class incrementalLoader(td.Dataset):
             #toTensor transform expects
             nump = (((nump/2) + 0.5) * 255).astype(np.uint8)
             if self.datasetName == "CIFAR100" or self.datasetName == "CIFAR10":
-                print(nump.shape)
+                #TODO I think .transpose or .permute does this in one line?
                 nump = np.swapaxes(nump, 1, 3)
+                nump = np.swapaxes(nump, 1, 2)
             self.data[self.indices[a][0]:self.indices[a][0]+k] = nump
 
             if a not in self.activeClasses:
