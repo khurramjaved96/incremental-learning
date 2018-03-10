@@ -74,7 +74,7 @@ parser.add_argument('--load-g-ckpt', default="", help='Path to folder which cont
 parser.add_argument('--save-g-ckpt', default=False, action='store_true', help='Whether the Generator ckpt will be saved or not')
 parser.add_argument('--gan-save-classes', default=10, type=int, help='Number of classes whose images will be saved every gan-img-save-interval')
 parser.add_argument('--label-smoothing', default=False, action='store_true', help='Whether to use one sided label smoothing in GAN')
-#parser.add_argument('--minibatch-discrimination', default=False, action='store_true', help='Whether to use minibatch discrimination layer')
+parser.add_argument('--minibatch-discrimination', default=False, action='store_true', help='Whether to use minibatch discrimination layer')
 
 args = parser.parse_args()
 
@@ -84,6 +84,9 @@ if args.process == "gan" and args.dataset == "MNIST" and len(args.gan_epochs) < 
 
 if args.process == "wgan" and args.d_iter == 1:
     print("NOTICE: Recommended to set --d_iter to 5 for WGAN")
+
+if not args.minibatch_discrimination:
+    print("NOTICE: Not using minibatch discrimination, is this intended?")
 
 print("Remember: Set decay 10x smaller on MNIST, was performing better")
 

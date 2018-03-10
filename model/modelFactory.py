@@ -8,7 +8,7 @@ import model.WGAN as wgan
 class modelFactory():
     def __init__(self):
         pass
-    def getModel(self, modelType, dataset="CIFAR100"):
+    def getModel(self, modelType, dataset="CIFAR100", use_mbd=False):
         if modelType=="densenet":
             if dataset=="MNIST":
                 print ("MNIST dataset not supported in this model. Try resnet20 or 32")
@@ -46,13 +46,13 @@ class modelFactory():
         elif modelType=="cdcgan":
             if dataset=="CIFAR100":
                 G = cdcgan.Generator(128, 3, 100)
-                D = cdcgan.Discriminator(128, 3, 100)
+                D = cdcgan.Discriminator(128, 3, 100, use_mbd)
             elif dataset=="CIFAR10":
                 G = cdcgan.Generator(128, 3, 10)
-                D = cdcgan.Discriminator(128, 3, 10)
+                D = cdcgan.Discriminator(128, 3, 10, use_mbd)
             else:
                 G = cdcgan.Generator(128)
-                D = cdcgan.Discriminator(128)
+                D = cdcgan.Discriminator(128, 1, 10, use_mbd)
             G.init_weights(mean=0.0, std=0.02)
             D.init_weights(mean=0.0, std=0.02)
             return G, D

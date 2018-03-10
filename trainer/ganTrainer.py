@@ -97,7 +97,9 @@ class trainer():
             # Train GAN
             ####################
             if self.G == None or not self.args.persist_gan:
-                self.G, self.D = self.modelFactory.getModel(self.args.process, self.args.dataset)
+                self.G, self.D = self.modelFactory.getModel(self.args.process,
+                                                            self.args.dataset,
+                                                            self.args.minibatch_discrimination)
                 if self.args.cuda:
                     self.G = self.G.cuda()
                     self.D = self.D.cuda()

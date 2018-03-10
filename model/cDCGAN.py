@@ -61,6 +61,8 @@ class Discriminator(nn.Module):
         self.conv2_bn = nn.BatchNorm2d(d*2)
         self.conv3 = nn.Conv2d(d*2, d*4, 4, 2, 1)
         self.conv3_bn = nn.BatchNorm2d(d*4)
+        # Use linear layer to produce a matrix of shape (B, mbd_num*mbd_dim)
+        # The input to this layer is of shape [B, d*4, 4, 4], we reshape it
         if self.use_mbd:
             self.mbd = nn.Linear(d*4*4*4, mbd_num * mbd_dim)
         self.conv4 = nn.Conv2d(d * 4 + 8, 1, 4, 1, 0)
@@ -72,13 +74,15 @@ class Discriminator(nn.Module):
         x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
         x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
         if self.use_mbd:
-            #print(x.shape)
+            # Reshape for linear layer
             x = x.view(-1, 128 * 4 * 4 * 4)
+            # Use the linear layer
             mbd = self.mbd(x)
-            #print(x.shape)
+            # Calculate minibatch features and concat them
             x = self.minibatch_discrimination(mbd, x)
+            # Make it compatible for convolution layer
+            # 520 = 128 * 4 + 8
             x = x.view(-1, 520, 4, 4)
-            #print(x)
         x = self.conv4(x)
         x = F.sigmoid(x)
         return x
@@ -89,11 +93,7 @@ class Discriminator(nn.Module):
 
     def minibatch_discrimination(self, x, input_to_layer):
         activation = x.view(-1, self.mbd_num, self.mbd_dim)
-        #print(activation.shape)
         diffs = activation.unsqueeze(3) - activation.permute(1,2,0).unsqueeze(0)
-        #print(diffs.shape)
         abs_diff = torch.abs(diffs).sum(2)
-        #print(abs_diff.shape)
         mb_feats = torch.exp(-abs_diff).sum(2)
-        #print(mb_feats.shape)
         return torch.cat([input_to_layer, mb_feats], 1)
