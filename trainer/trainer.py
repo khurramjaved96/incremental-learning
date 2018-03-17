@@ -157,6 +157,8 @@ class Trainer(GenericTrainer):
 
             output = self.model(Variable(data))
             decayFactor = 1.0
+
+            myT = 2
             if self.args.no_distill:
                 pass
 
@@ -174,12 +176,13 @@ class Trainer(GenericTrainer):
                         print("Shifting to all weight training from warm up training")
                         for param in self.model.parameters():
                             param.requires_grad = True
-                pred2 = self.model_fixed(Variable(data), T=2)
+                pred2 = self.model_fixed(Variable(data), T=myT)
+                output2 = self.model(Variable(data), T=myT)
                 # y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
 
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
             if len(self.older_classes) > 0:
-                loss2 = F.binary_cross_entropy(output, Variable(pred2.data))
-                loss = loss+loss2
+                loss2 = F.binary_cross_entropy(output2, Variable(pred2.data))
+                loss = loss*0.2+loss2*(myT*myT)*0.8
             loss.backward()
             self.optimizer.step()
