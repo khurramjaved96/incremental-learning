@@ -175,8 +175,10 @@ class Trainer(GenericTrainer):
                         for param in self.model.parameters():
                             param.requires_grad = True
                 pred2 = self.model_fixed(Variable(data), T=2)
-                y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
+                # y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
 
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
+            loss2 = F.binary_cross_entropy(output, Variable(pred2.data))
+            loss = loss+loss2
             loss.backward()
             self.optimizer.step()

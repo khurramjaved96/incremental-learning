@@ -117,6 +117,9 @@ class CifarResNet(nn.Module):
         # return F.sigmoid(self.fc(x))
         # print ("Before Division", self.fc(x))
         # print ("After Divixion", self.fc(x)/T)
+        if T>2:
+            print ("WHAaaaat?", T)
+            T=2
         return F.softmax(self.fc(x)/T)
 
     def forwardFeature(self, x):
