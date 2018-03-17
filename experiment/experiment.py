@@ -12,13 +12,20 @@ class experiment:
             self.results = {}
             self.dir = output_dir
 
+
+            import datetime
+            now = datetime.datetime.now()
+            rootFolder = str(now.day) + str(now.month) + str(now.year)
+            if not os.path.exists(output_dir+rootFolder):
+                os.makedirs(output_dir+rootFolder)
+            self.name = rootFolder+output_dir+self.name
             ver = 0
 
-            while os.path.exists("../" + self.name + "_" + str(ver)):
+            while os.path.exists(output_dir + self.name + "_" + str(ver)):
                 ver += 1
 
-            os.makedirs("../" + self.name + "_" + str(ver))
-            self.path = "../" + self.name + "_" + str(ver) + "/" + name
+            os.makedirs(output_dir + self.name + "_" + str(ver))
+            self.path = output_dir + self.name + "_" + str(ver) + "/" + name
 
             self.results["Temp Results"]= [[1,2,3,4], [5,6,2,6]]
 
