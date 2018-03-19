@@ -183,6 +183,6 @@ class Trainer(GenericTrainer):
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
             if len(self.older_classes) > 0:
                 loss2 = F.binary_cross_entropy(output2, Variable(pred2.data))
-                loss = loss*0.2+loss2*(myT*myT)*0.8
+                loss = loss*0.35+loss2*(myT*myT)*0.65
             loss.backward()
             self.optimizer.step()
