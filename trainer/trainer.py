@@ -177,7 +177,7 @@ class Trainer(GenericTrainer):
                         print("Shifting to all weight training from warm up training")
                         for param in self.model.parameters():
                             param.requires_grad = True
-                pred2 = self.model_fixed(Variable(data), T=myT)
+                pred2 = self.model_fixed(Variable(data), T=myT, labels=True)
                 output2 = self.model(Variable(data), T=myT)
                 # y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
 

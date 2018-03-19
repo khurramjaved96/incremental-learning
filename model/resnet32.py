@@ -101,7 +101,7 @@ class CifarResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x, feature=False, T=1):
+    def forward(self, x, feature=False, T=1, labels=False):
         # print ("X shape", x.shape)
         x = self.conv_1_3x3(x)
         x = F.relu(self.bn_1(x), inplace=True)
@@ -117,6 +117,8 @@ class CifarResNet(nn.Module):
         # return F.sigmoid(self.fc(x))
         # print ("Before Division", self.fc(x))
         # print ("After Divixion", self.fc(x)/T)
+        if labels:
+            return F.softmax(self.fc(x)/T)
         return F.log_softmax(self.fc(x)/T)
 
     def forwardFeature(self, x):
