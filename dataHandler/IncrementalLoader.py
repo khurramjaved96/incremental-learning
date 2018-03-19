@@ -31,6 +31,8 @@ class IncrementalLoader(td.Dataset):
         self.indices = {}
         self.__class_indices()
         self.over_sampling = oversampling
+        # f(label) = new_label. We do this to ensure labels are in increasing order. For example, even if first increment chooses class 1,5,6, the training labels will be 0,1,2
+        self.indexMapper = {}
 
 
     def __class_indices(self):
@@ -43,6 +45,11 @@ class IncrementalLoader(td.Dataset):
     def add_class(self, n):
         if n in self.active_classes:
             return
+        # Mapping each new added classes to new label in increasing order; we switch the label so that the resulting confusion matrix is always in order
+        # regardless of order of classes used for incremental training.
+        indices = len(self.indexMapper)
+        if not n in self.indexMapper:
+            self.indexMapper[n] = indices
         self.active_classes.append(n)
         self.len = self.class_size * len(self.active_classes)
         self.__update_length()
@@ -195,7 +202,7 @@ class IncrementalLoader(td.Dataset):
             print("Label ", self.labels[index])
             assert (False)
 
-        return img, self.labels[index]
+        return img, self.indexMapper[self.labels[index]]
 
     def sort_by_importance(self, algorithm="Kennard-Stone"):
         if algorithm == "LDIS":

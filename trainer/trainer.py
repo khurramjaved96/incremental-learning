@@ -156,7 +156,7 @@ class Trainer(GenericTrainer):
             y_onehot.scatter_(1, target, 1)
 
             output = self.model(Variable(data))
-            decayFactor = 1.0
+            loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
             myT = 2
             if self.args.no_distill:
@@ -180,9 +180,9 @@ class Trainer(GenericTrainer):
                 output2 = self.model(Variable(data), T=myT)
                 # y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
 
-            loss = F.binary_cross_entropy(output, Variable(y_onehot))
+
             if len(self.older_classes) > 0:
                 loss2 = F.binary_cross_entropy(output2, Variable(pred2.data))
-                loss = loss*(self.args.alpha)+loss2*(myT*myT)*(1-self.args.alpha)
+                loss = loss*(self.args.alpha)+loss2*(myT*myT)*(1.0-self.args.alpha)
             loss.backward()
             self.optimizer.step()
