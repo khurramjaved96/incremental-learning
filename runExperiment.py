@@ -57,6 +57,7 @@ parser.add_argument('--outputDir', default="../",
                          'in the specified directory to save the results.')
 parser.add_argument('--no-upsampling', action='store_true', default=True,
                     help='Do not do upsampling.')
+parser.add_argument('--alpha', type=float, default=0.3, help='Weight given to new classes vs old classes in loss')
 parser.add_argument('--decay', type=float, default=0.00004, help='Weight decay (L2 penalty).')
 parser.add_argument('--distill-decay', type=float, default=0.5, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
