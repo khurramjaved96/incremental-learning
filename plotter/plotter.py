@@ -54,19 +54,15 @@ class Plotter():
 
     def save_fig2(self, path, xticks=105):
         plt.legend(handles=self.handles)
-        # plt.ylim( (0, 100) )
-        # plt.xlim((0,xticks+.2))
         plt.xlabel("Memory Budget")
         plt.ylabel("Average Incremental Accuracy")
-        # plt.yticks(list(range(0,105,10)))
-        # plt.xticks(list(range(0, xticks+1, int(xticks/10))))
         plt.savefig(path+".jpg")
         plt.gcf().clear()
 
     def plotMatrix(self, epoch, path, img):
         import matplotlib.pyplot as plt
 
-        plt.imshow(img, cmap='viridis', interpolation='nearest')
+        plt.imshow(img, cmap='jet', interpolation='nearest')
         plt.colorbar()
         plt.savefig(path + str(epoch) + ".jpg")
         plt.gcf().clear()
