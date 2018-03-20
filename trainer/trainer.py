@@ -126,11 +126,6 @@ class Trainer(GenericTrainer):
     def train(self, epoch):
 
         self.model.train()
-        length_epoch = self.dataset.labels_per_class_train * (
-        len(self.train_data_iterator.dataset.active_classes) - len(self.train_data_iterator.dataset.limited_classes))
-        length_epoch += self.args.memory_budget
-        length_epoch /= int(self.args.batch_size)
-        # print("Current Epoch : ", epoch, "size : ", length_epoch)
 
         for batch_idx, (data, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
@@ -159,33 +154,32 @@ class Trainer(GenericTrainer):
             # loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss = F.kl_div(output, Variable(y_onehot))
 
-            myT = 2
+            myT = self.args.T
             if self.args.no_distill:
                 pass
 
             elif len(self.older_classes) > 0:
                 if self.args.lwf:
+                    # This is for warm up period; i.e, for the first four epochs, only train the fc layers.
                     if epoch == 0 and batch_idx == 0:
-                        print("Warm up step for 4 epochs")
                         for param in self.model.named_parameters():
                             if "fc" in param[0]:
-                                print("Setting gradient of FC layers to be True")
                                 param[1].requies_grad = True
                             else:
                                 param[1].requires_grad = False
                     if epoch == 4 and batch_idx == 0:
-                        print("Shifting to all weight training from warm up training")
                         for param in self.model.parameters():
                             param.requires_grad = True
+                # Get softened targets generated from previous model;
                 pred2 = self.model_fixed(Variable(data), T=myT, labels=True)
+                # Softened output of the model
                 output2 = self.model(Variable(data), T=myT)
-
-                # y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
-                # loss2 = F.binary_cross_entropy(output2, Variable(pred2.data))
+                # Compute second loss
                 loss2 = F.kl_div(output2, Variable(pred2.data))
-                #loss = (loss2*0.999) + (loss*(myT*myT)*0.001)
+                # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
+                # Scale the stored gradients by a factor of my
                 for param in self.model.parameters():
-                    param.grad=param.grad*(myT*myT)
+                    param.grad=param.grad*(myT*myT)*self.args.alpha
             loss.backward()
             self.optimizer.step()

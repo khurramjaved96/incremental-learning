@@ -10,24 +10,16 @@ import experiment as ex
 import model
 import plotter as plt
 import trainer
-import utils.utils as ut
-import logging
-import copy
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for testing (default: 128)')
-parser.add_argument('--epochs', type=int, default=70, metavar='N',
-                    help='number of epochs to train (default: 70)')
 parser.add_argument('--lr', type=float, default=2.0, metavar='LR',
                     help='learning rate (default: 0.1)')
 parser.add_argument('--schedule', type=int, nargs='+', default=[45, 60, 68],
                     help='Decrease learning rate at these epochs.')
 parser.add_argument('--gammas', type=float, nargs='+', default=[0.2, 0.2, 0.2],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
-
 parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='SGD momentum (default: 0.9)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
@@ -36,8 +28,6 @@ parser.add_argument('--no-distill', action='store_true', default=False,
                     help='disable distillation loss')
 parser.add_argument('--distill-only-exemplars', action='store_true', default=False,
                     help='Only compute the distillation loss on images from the examplar set')
-parser.add_argument('--decayed', action='store_true', default=False,
-                    help='should we decay the contribution of distillation loss on old classes.')
 parser.add_argument('--no-random', action='store_true', default=False,
                     help='Disable random shuffling of classes')
 parser.add_argument('--no-herding', action='store_true', default=False,
@@ -50,8 +40,6 @@ parser.add_argument('--model-type', default="resnet32",
                     help='model type to be used. Example : resnet32, resnet20, densenet, test')
 parser.add_argument('--name', default="noname",
                     help='Name of the experiment')
-parser.add_argument('--sortby', default="none",
-                    help='Examplars sorting strategy')
 parser.add_argument('--outputDir', default="../",
                     help='Directory to store the results; the new folder will be created '
                          'in the specified directory to save the results.')
@@ -59,8 +47,8 @@ parser.add_argument('--no-upsampling', action='store_true', default=True,
                     help='Do not do upsampling.')
 parser.add_argument('--alpha', type=float, default=0.3, help='Weight given to new classes vs old classes in loss')
 parser.add_argument('--decay', type=float, default=0.00004, help='Weight decay (L2 penalty).')
-parser.add_argument('--distill-decay', type=float, default=0.5, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
+parser.add_argument('--T', type=int, default=10, help='Tempreture used for softening the targets')
 parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[2000],
                     help='How many images can we store at max. 0 will result in fine-tuning')
 parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
@@ -70,20 +58,16 @@ parser.add_argument('--lwf', action='store_true', default=False,
                          '("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')
 
 
-
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
-
-
 
 
 dataset = dataHandler.DatasetFactory.get_dataset(args.dataset)
 
 
-
 # Checks to make sure parameters are sane
 if args.step_size<2:
-    logging.warning("Step size of 1 will result in no learning;")
+    print("Step size of 1 will result in no learning;")
     assert False
 
 for seed in args.seeds:
@@ -99,20 +83,20 @@ for seed in args.seeds:
         if args.cuda:
             torch.cuda.manual_seed(seed)
 
-
+        # Loader used for training data
         train_dataset_loader = dataHandler.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
                                                              dataset.labels_per_class_train,
                                                              dataset.classes, [], transform=dataset.train_transform,
                                                              cuda=args.cuda, oversampling=not args.no_upsampling,
                                                              )
-
+        # Special loader use to compute ideal NMC; i.e, NMC that using all the data points to compute the mean embedding
         train_dataset_loader_nmc = dataHandler.IncrementalLoader(dataset.train_data.train_data,
                                                              dataset.train_data.train_labels,
                                                              dataset.labels_per_class_train,
                                                              dataset.classes, [], transform=dataset.train_transform,
                                                              cuda=args.cuda, oversampling=not args.no_upsampling,
                                                              )
-
+        # Loader for test data.
         test_dataset_loader = dataHandler.IncrementalLoader(dataset.test_data.test_data, dataset.test_data.test_labels,
                                                             dataset.labels_per_class_test, dataset.classes,
                                                             [], transform=dataset.test_transform, cuda=args.cuda,
@@ -120,30 +104,34 @@ for seed in args.seeds:
 
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
+        # Iterator to iterate over training data.
         train_iterator = torch.utils.data.DataLoader(train_dataset_loader,
                                                      batch_size=args.batch_size, shuffle=True, **kwargs)
-
+        # Iterator to iterate over all training data (Equivalent to memory-budget = infitie
         train_iterator_nmc = torch.utils.data.DataLoader(train_dataset_loader_nmc,
                                                      batch_size=args.batch_size, shuffle=True, **kwargs)
-
-
+        # Iterator to iterate over test data
         test_iterator = torch.utils.data.DataLoader(
             test_dataset_loader,
-            batch_size=args.test_batch_size, shuffle=True, **kwargs)
+            batch_size=args.batch_size, shuffle=True, **kwargs)
 
+        # Get the required model
         myModel = model.ModelFactory.get_model(args.model_type, args.dataset)
         if args.cuda:
             myModel.cuda()
 
+        # Define an experiment.
         my_experiment = ex.experiment(args.name, args)
 
+        # Define the optimizer used in the experiment
         optimizer = torch.optim.SGD(myModel.parameters(), args.lr, momentum=args.momentum,
                                     weight_decay=args.decay, nesterov=True)
 
+        # Trainer object used for training
         my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, myModel, args, optimizer, train_iterator_nmc)
 
 
-
+        # Remove this parameters somehow.
         x = []
         y = []
         y1 = []
@@ -156,58 +144,52 @@ for seed in args.seeds:
 
         t_classifier = trainer.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
 
-
-        if not args.sortby == "none":
-            print("Sorting by", args.sortby)
-            train_dataset_loader.sort_by_importance(args.sortby)
-
+        # Loop that incrementally adds more and more classes
         for class_group in range(0, dataset.classes, args.step_size):
             print ("SEED:",seed, "MEMORY_BUDGET:", m, "CLASS_GROUP:", class_group)
             my_trainer.setup_training()
-
+            # Add new classes to the train, train_nmc, and test iterator
             my_trainer.increment_classes(class_group)
             my_trainer.update_frozen_model()
             epoch = 0
             import progressbar
+
+            # Running epochs_class epochs
             for epoch in range(0, args.epochs_class):
-                if epoch%5==0:
-                    print ("Current Epoch", epoch)
                 my_trainer.update_lr(epoch)
                 my_trainer.train(epoch)
                 if epoch % args.log_interval == (args.log_interval-1):
                     tError = t_classifier.evaluate(myModel, train_iterator)
-                    print("Train Classifier", tError)
-                    print("Test Classifier", t_classifier.evaluate(myModel, test_iterator))
+                    print ("Current Epoch:", epoch)
+                    print("Train Classifier:", tError)
+                    print("Test Classifier:", t_classifier.evaluate(myModel, test_iterator))
 
+            # Evaluate the learned classifier
             y1.append(t_classifier.evaluate(myModel, test_iterator))
 
+            # Update means using the train iterator; this is iCaRL case
             nmc.update_means(myModel, train_iterator, dataset.classes)
+            # Update mean using all the data. This is equivalent to memory_budget = infinity
             nmc_ideal.update_means(myModel, train_iterator_nmc, dataset.classes)
-
+            # Compute the the nmc based classification results
             tempTrain = nmc.evaluate(myModel, train_iterator)
             train_y.append(tempTrain)
 
-            # Saving confusion matrix
-
-
-
-            # ut.save_confusion_matrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-            #                          my_experiment.path + "CONFUSION", myModel, args, dataset, test_iterator)
-            # Computing test error for graphing
             testY = nmc.evaluate(myModel, test_iterator)
             testY_ideal = nmc_ideal.evaluate(myModel, test_iterator)
             y.append(testY)
             nmc_ideal_cum.append(testY_ideal)
 
+            # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
             tcMatrix = t_classifier.getConfusionMatrix(myModel, test_iterator, dataset.classes)
             nmcMatrix = nmc.getConfusionMatrix(myModel, test_iterator, dataset.classes)
             nmcMatrixIdeal = nmc_ideal.getConfusionMatrix(myModel, test_iterator, dataset.classes)
 
+            # Printing results
             print("Train NMC", tempTrain)
             print("Test NMC", testY)
 
-
-
+            # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
             x.append(class_group + args.step_size)
 
             my_experiment.results["NMC"] = [x, y]
@@ -216,19 +198,22 @@ for seed in args.seeds:
             my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
             my_experiment.store_json()
 
-
+            # Finally, plotting the results;
             my_plotter = plt.Plotter()
 
+            # Plotting the confusion matrices
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
                                   nmcMatrix)
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
                                   my_experiment.path + "nmcMatrixIdeal",
                                   nmcMatrixIdeal)
+
+            # Plotting the line diagrams of all the possible cases
             my_plotter.plot(x, y, title=args.name, legend="NMC")
             my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
             my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
             my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
 
-
+            # Saving the line plot
             my_plotter.save_fig(my_experiment.path, dataset.classes + 1)

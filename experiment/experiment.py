@@ -7,7 +7,8 @@ class experiment:
     Class to store results of any experiment 
     '''
     def __init__(self, name, args, output_dir="../"):
-        self.gitHash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+        self.gitHash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode("utf-8")
+        print (self.gitHash)
         if not args is None:
             self.name = name
             self.params = vars(args)

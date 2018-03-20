@@ -66,10 +66,9 @@ class NearestMeanEvaluator():
     def update_means(self, model, train_loader, classes=100):
         # Set the mean to zero
         if self.means is None:
-            self.means = np.zeros((100, model.featureSize))
+            self.means = np.zeros((classes, model.featureSize))
         self.means *= 0
         self.classes = classes
-        # Remove the magic number 64
         self.means = np.zeros((classes, model.featureSize))
         self.totalFeatures = np.zeros((classes, 1)) + 1
         print("Computing means")
@@ -90,6 +89,7 @@ class NearestMeanEvaluator():
         # Divide the means array with total number of instaces to get the average
         self.means = self.means / self.totalFeatures
         self.means = torch.from_numpy(self.means).unsqueeze(0)
+        # Normalize the mean vector
         self.means =  self.means / torch.norm(self.means, 2, 1).unsqueeze(1)
         print("Mean vectors computed")
         # Return
