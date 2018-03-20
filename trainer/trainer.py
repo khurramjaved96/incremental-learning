@@ -183,6 +183,9 @@ class Trainer(GenericTrainer):
                 # y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
                 # loss2 = F.binary_cross_entropy(output2, Variable(pred2.data))
                 loss2 = F.kl_div(output2, Variable(pred2.data))
-                loss = loss*(self.args.alpha)+loss2*(myT*myT)*(1.0-self.args.alpha)
+                #loss = (loss2*0.999) + (loss*(myT*myT)*0.001)
+                loss2.backward(retain_graph=True)
+                for param in self.model.parameters():
+                    param.grad=param.grad*(myT*myT)
             loss.backward()
             self.optimizer.step()
