@@ -32,11 +32,19 @@ class trainer():
         self.fixed_G = None
         self.examples = {}
         self.increment = 0
+        self.fixed_noise = torch.randn(100,100,1,1)
+
         self.is_C = args.process == "cdcgan"
         if args.dataset == "MNIST" or args.dataset == "CIFAR10":
             self.num_classes = 10
         else:
             self.num_classes = 100
+
+        # Do not use this for training, it is volatile
+        if args.cuda:
+            self.fixed_noise  = Variable(self.fixed_noise.cuda(), volatile=True)
+
+
 
     def train(self):
         x = []
@@ -311,27 +319,33 @@ class trainer():
         '''
         Returns a dict[class] of generated samples.
         In case of Non-Conditional GAN, the samples in the dict are random, they do
-        not correspond to the keys in the dict
+        not correspond to the keys in the dict. Do not use those keys!
         Just passing in random noise to the generator and storing the results in dict
         '''
         G.eval()
         examples = {}
         for idx, klass in enumerate(active_classes):
+            # Generator outputs 100 images at a time
             for _ in range(num_examples//100):
-                noise = torch.randn(100,100,1,1)
+                # Generate images with targets if conditional
                 if self.is_C:
-                    targets = torch.zeros(100,self.num_classes,1,1)
+                    targets = torch.zeros(100, self.num_classes, 1, 1)
                     targets[:, klass] = 1
-                if self.args.cuda:
-                    noise  = Variable(noise.cuda(), volatile=True)
-                    targets = Variable(targets.cuda(), volatile=True) if self.is_C else None
-                images = G(noise, targets) if self.is_C else G(noise)
+                    if self.args.cuda:
+                        targets = Variable(targets.cuda(), volatile=True)
+                    images = G(self.fixed_noise, targets)
+                else:
+                    images = G(self.fixed_noise)
+                # Append images to examples{}
                 if not klass in examples.keys():
                     examples[klass] = images
                 else:
                     examples[klass] = torch.cat((examples[klass],images), dim=0)
+
+            # Dont save more than the required number of classes
             if save and idx <= self.args.gan_save_classes:
-                self.saveResults(examples[klass][0:100], name + "_C" + str(klass), False)
+                self.saveResults(examples[klass][0:100],
+                                 name + "_C" + str(klass), False)
         return examples
 
     def updateFrozenGenerator(self):
@@ -341,6 +355,9 @@ class trainer():
             param.requires_grad = False
 
     def saveResults(self, images, name, is_tensor=False, axis_size=10):
+        '''
+        Saves the images in a grid of axis_size * axis_size
+        '''
         axis_size = int(axis_size)
         _, sub = plt.subplots(axis_size, axis_size, figsize=(5, 5))
         for i, j in itertools.product(range(axis_size), range(axis_size)):
