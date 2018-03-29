@@ -11,6 +11,8 @@ class DatasetFactory:
             return data.MNIST()
         elif name == "CIFAR100":
             return data.CIFAR100()
+        elif name == "CIFAR10":
+            return data.CIFAR10()
         else:
             print("Unsupported Dataset")
             assert False

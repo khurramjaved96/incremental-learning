@@ -67,3 +67,25 @@ class CIFAR100(Dataset):
         self.train_data = datasets.CIFAR100("data", train=True, transform=self.train_transform, download=True)
 
         self.test_data = datasets.CIFAR100("data", train=False, transform=self.test_transform, download=True)
+
+class CIFAR10(Dataset):
+    def __init__(self):
+        super().__init__(10, "CIFAR10", 5000, 1000)
+
+        self.train_transform = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+
+        self.train_transform = transforms.Compose(
+            [transforms.RandomHorizontalFlip(),
+             transforms.RandomCrop(32, padding=4),
+             transforms.ToTensor(),])
+
+        self.test_transform = transforms.Compose(
+            [transforms.ToTensor(),])
+
+        self.train_data = datasets.CIFAR10("data", train=True, transform=self.train_transform, download=True)
+
+        self.test_data = datasets.CIFAR10("data", train=False, transform=self.test_transform, download=True)
