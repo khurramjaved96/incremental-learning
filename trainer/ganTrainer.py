@@ -319,7 +319,7 @@ class trainer():
         '''
         Returns a dict[class] of generated samples.
         In case of Non-Conditional GAN, the samples in the dict are random, they do
-        not correspond to the keys in the dict. Do not use those keys!
+        not correspond to the keys in the dict
         Just passing in random noise to the generator and storing the results in dict
         '''
         G.eval()
@@ -327,16 +327,14 @@ class trainer():
         for idx, klass in enumerate(active_classes):
             # Generator outputs 100 images at a time
             for _ in range(num_examples//100):
-                # Generate images with targets if conditional
+                #TODO refactor these conditionals
+                # Check for memory leak after refactoring
                 if self.is_C:
-                    targets = torch.zeros(100, self.num_classes, 1, 1)
+                    targets = torch.zeros(100,self.num_classes,1,1)
                     targets[:, klass] = 1
-                    if self.args.cuda:
-                        targets = Variable(targets.cuda(), volatile=True)
-                    images = G(self.fixed_noise, targets)
-                else:
-                    images = G(self.fixed_noise)
-                # Append images to examples{}
+                if self.args.cuda:
+                    targets = Variable(targets.cuda(), volatile=True) if self.is_C else None
+                images = G(self.fixed_noise, targets) if self.is_C else G(self.fixed_noise)
                 if not klass in examples.keys():
                     examples[klass] = images
                 else:
@@ -344,8 +342,7 @@ class trainer():
 
             # Dont save more than the required number of classes
             if save and idx <= self.args.gan_save_classes:
-                self.saveResults(examples[klass][0:100],
-                                 name + "_C" + str(klass), False)
+                self.saveResults(examples[klass][0:100], name + "_C" + str(klass), False)
         return examples
 
     def updateFrozenGenerator(self):
