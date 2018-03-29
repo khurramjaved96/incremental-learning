@@ -88,9 +88,13 @@ class NearestMeanEvaluator():
 
         # Divide the means array with total number of instaces to get the average
         self.means = self.means / self.totalFeatures
-        self.means = torch.from_numpy(self.means).unsqueeze(0)
+        self.means = torch.from_numpy(self.means)
+        print ("Before", self.means)
+        self.means = self.means / torch.norm(self.means, 2, 1).unsqueeze(1)
+        print ("After",self.means)
+        self.means = self.means.unsqueeze(0)
         # Normalize the mean vector
-        self.means =  self.means / torch.norm(self.means, 2, 2).unsqueeze(2)
+
         print("Mean vectors computed")
         # Return
         return
