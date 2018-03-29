@@ -12,8 +12,8 @@ import plotter as plt
 import trainer
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
-parser.add_argument('--batch-size', type=int, default=64, metavar='N',
-                    help='input batch size for training (default: 64)')
+parser.add_argument('--batch-size', type=int, default=100, metavar='N',
+                    help='input batch size for training (default: 100)')
 parser.add_argument('--lr', type=float, default=2.0, metavar='LR',
                     help='learning rate (default: 0.1)')
 parser.add_argument('--schedule', type=int, nargs='+', default=[45, 60, 68],
