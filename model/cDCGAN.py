@@ -65,7 +65,9 @@ class Discriminator(nn.Module):
         # The input to this layer is of shape [B, d*4, 4, 4], we reshape it
         if self.use_mbd:
             self.mbd = nn.Linear(d*4*4*4, mbd_num * mbd_dim)
-        self.conv4 = nn.Conv2d(d * 4 + 8, 1, 4, 1, 0)
+            self.conv4 = nn.Conv2d(d * 4 + 8, 1, 4, 1, 0)
+        else:
+            self.conv4 = nn.Conv2d(d * 4, 1, 4, 1, 0)
 
     def forward(self, img, label):
         x = F.leaky_relu(self.conv1_img(img), 0.2)
