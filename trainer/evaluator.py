@@ -70,7 +70,7 @@ class NearestMeanEvaluator():
         self.means *= 0
         self.classes = classes
         self.means = np.zeros((classes, model.featureSize))
-        self.totalFeatures = np.zeros((classes, 1)) + 1
+        self.totalFeatures = np.zeros((classes, 1)) + .001
         print("Computing means")
         # Iterate over all train Dataset
         for batch_id, (data, target) in enumerate(train_loader):
@@ -86,12 +86,12 @@ class NearestMeanEvaluator():
             # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
             np.add.at(self.totalFeatures, target, 1)
 
-        # Divide the means array with total number of instaces to get the average
+        # Divide the means array with total number of instan    ces to get the average
+        # print ("Total instances", self.totalFeatures)
         self.means = self.means / self.totalFeatures
-        self.means = torch.from_numpy(self.means)
-        print ("Before", self.means)
+        self.means = torch.from_numpy(self.means) 
         self.means = self.means / torch.norm(self.means, 2, 1).unsqueeze(1)
-        print ("After",self.means)
+        self.means[self.means != self.means] = 0
         self.means = self.means.unsqueeze(0)
         # Normalize the mean vector
 
