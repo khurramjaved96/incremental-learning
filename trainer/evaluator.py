@@ -90,7 +90,7 @@ class NearestMeanEvaluator():
         self.means = self.means / self.totalFeatures
         self.means = torch.from_numpy(self.means).unsqueeze(0)
         # Normalize the mean vector
-        # self.means =  self.means / torch.norm(self.means, 2, 1).unsqueeze(1)
+        self.means =  self.means / torch.norm(self.means, 2, 1).unsqueeze(1)
         print("Mean vectors computed")
         # Return
         return
