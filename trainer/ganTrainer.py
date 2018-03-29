@@ -91,7 +91,7 @@ class trainer():
 
             # Using NMC classifier if distillation is used
             nmc.updateMeans(self.model, self.trainIterator, self.args.cuda,
-                            self.dataset.classes)
+                            self.dataset.classes, self.old_classes, self.is_C)
             nmc_train = nmc.classify(self.model, self.trainIterator,
                                         self.args.cuda, True)
             nmc_test = nmc.classify(self.model, self.testIterator,

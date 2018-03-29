@@ -43,8 +43,9 @@ class NearestMeanClassifier():
 
         return 100. * correct / len(test_loader.dataset)
 
-    def updateMeans(self, model, train_loader, cuda, classes=100):
+    def updateMeans(self, model, train_loader, cuda, classes=100, old_classes=None, is_C=False):
         # Set the mean to zero
+        model.eval()
         self.means *= 0
         self.classes = classes
         self.means = np.zeros((classes, 64))
@@ -56,6 +57,17 @@ class NearestMeanClassifier():
             if cuda:
                 data = data.cuda()
             features = model.forward(Variable(data), True)
+
+            if (old_classes != None and is_C == False):
+                print("NMC means on non-conditional GAN not supported")
+                assert False
+                old_targets = torch.zeros(target.shape[0]).byte()
+                for klass in old_classes:
+                    old_targets += (target == klass)
+                new_targets = (old_targets == 0)
+            #TODO get features for all the examples
+            # targets = targets*new_targets + predictions*old_targets
+
             # Convert result to a numpy array
             featuresNp = features.data.cpu().numpy()
             # Accumulate the results in the means array
