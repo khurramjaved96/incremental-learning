@@ -226,7 +226,7 @@ class DisguisedFoolingSampleGeneration():
             # Process image and return variable
             # self.processed_image = preprocess_image(self.initial_image)
             # Define optimizer for the image
-            optimizer = SGD([self.processed_image], lr=0.00007)
+            optimizer = SGD([self.processed_image], lr=0.001, momentum=0.9)
             # Forward
 
             output = self.model(self.processed_image)
