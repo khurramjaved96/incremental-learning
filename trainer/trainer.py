@@ -80,21 +80,26 @@ class Trainer(GenericTrainer):
 
     def convert_to_adversarial_instance(self, instance, target_class, required_confidence = 0.90, alpha = 1, iters = 100):
         instance.unsqueeze_(0)
+        if self.args.cuda:
+            instance = instance.cuda()
         instance = Variable(instance, requires_grad=True)
 
         ce_loss = nn.CrossEntropyLoss()
-        im_label_as_var = Variable(torch.from_numpy(np.asarray([target_class])))
+        im_label_as_var = torch.from_numpy(np.asarray([target_class]))
+        if self.args.cuda:
+            im_label_as_var = im_label_as_var.cuda()
+        im_label_as_var = Variable(im_label_as_var)
 
         #self.model_fixed.eval()
         for i in range(1, iters):
             instance.grad = None
 
             # Forward
-            output = self.model_fixed(instance)
+            output = self.model_fixed(instance, T=1, labels=True)
 
             # Get confidence
-            target_confidence = (output)[0][target_class].data.numpy()[0]
-            print('Iteration:', str(i), 'Target Confidence', "{0:.4f}".format(target_confidence))
+            target_confidence = (output)[0][target_class].data.cpu().numpy()[0]
+            #print('Iteration:', str(i), 'Target Confidence', "{0:.4f}".format(target_confidence))
             if target_confidence > required_confidence:
                 break
 
