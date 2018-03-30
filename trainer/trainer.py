@@ -203,8 +203,9 @@ class DisguisedFoolingSampleGeneration():
         self.target_class = target_class
         self.minimum_confidence = minimum_confidence
         self.targetDistribution = np.zeros((1,100))
-        self.targetDistribution[0,0:10] = 0.03
-        self.targetDistribution[0,target_class] = 0.7
+        prob = 0.6
+        self.targetDistribution[0,0:10] = (1-prob)/10.
+        self.targetDistribution[0,target_class] = prob
         print ("Target distribution", self.targetDistribution)
         self.targetDistribution = torch.from_numpy(self.targetDistribution).float()
 
@@ -265,4 +266,5 @@ class DisguisedFoolingSampleGeneration():
             # Save image
             cv2.imwrite('../' + str(self.target_class) + '.jpg',
                         np.swapaxes((self.processed_image.cpu().data.numpy()[0] * 255).astype(np.uint8), 0, 2))
+        print (output)
         return confirmation_image
