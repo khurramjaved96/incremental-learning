@@ -203,7 +203,7 @@ class DisguisedFoolingSampleGeneration():
         self.target_class = target_class
         self.minimum_confidence = minimum_confidence
         self.targetDistribution = np.zeros((1,100))
-        self.targetDistribution[0:10] = 0.03
+        self.targetDistribution[0,0:10] = 0.03
         self.targetDistribution[0,target_class] = 0.7
         print ("Target distribution", self.targetDistribution)
         self.targetDistribution = torch.from_numpy(self.targetDistribution).float()
