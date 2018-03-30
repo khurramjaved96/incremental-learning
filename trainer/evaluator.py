@@ -40,10 +40,11 @@ class NearestMeanEvaluator():
 
         return 100. * correct / len(loader.dataset)
 
-    def getConfusionMatrix(self, model, loader, size):
+    def get_confusion_matrix(self, model, loader, size):
         model.eval()
         test_loss = 0
         correct = 0
+        # Get the confusion matrix object
         cMatrix = confusionmeter.ConfusionMeter(size, True)
 
         for data, target in loader:
@@ -54,11 +55,15 @@ class NearestMeanEvaluator():
             output = model(data, True).unsqueeze(1)
             result = (output.data - self.means.float())
             result = torch.norm(result, 2, 2)
+            # NMC for classification
             _, pred = torch.min(result, 1)
+            # Evaluate results
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+            # Add the results in appropriate places in the matrix.
             cMatrix.add(pred, target.data.view_as(pred))
 
         test_loss /= len(loader.dataset)
+        # Get 2d numpy matrix to remove the dependency of other code on confusionmeter
         img = cMatrix.value()
         return img
 
@@ -90,10 +95,10 @@ class NearestMeanEvaluator():
         # print ("Total instances", self.totalFeatures)
         self.means = self.means / self.totalFeatures
         self.means = torch.from_numpy(self.means)
+        # Normalize the mean vector
         self.means = self.means / torch.norm(self.means, 2, 1).unsqueeze(1)
         self.means[self.means != self.means] = 0
         self.means = self.means.unsqueeze(0)
-        # Normalize the mean vector
 
         print("Mean vectors computed")
         # Return
@@ -120,7 +125,7 @@ class softmax_evaluator():
 
         return 100. * correct / len(loader.dataset)
 
-    def getConfusionMatrix(self, model, loader, size):
+    def get_confusion_matrix(self, model, loader, size):
         model.eval()
         test_loss = 0
         correct = 0

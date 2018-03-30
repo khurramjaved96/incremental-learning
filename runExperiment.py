@@ -193,9 +193,9 @@ for seed in args.seeds:
             nmc_ideal_cum.append(testY_ideal)
 
             # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
-            tcMatrix = t_classifier.getConfusionMatrix(myModel, test_iterator, dataset.classes)
-            nmcMatrix = nmc.getConfusionMatrix(myModel, test_iterator, dataset.classes)
-            nmcMatrixIdeal = nmc_ideal.getConfusionMatrix(myModel, test_iterator, dataset.classes)
+            tcMatrix = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes)
+            nmcMatrix = nmc.get_confusion_matrix(myModel, test_iterator, dataset.classes)
+            nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(myModel, test_iterator, dataset.classes)
 
             # Printing results
             print("Train NMC", tempTrain)
