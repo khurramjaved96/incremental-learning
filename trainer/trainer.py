@@ -232,25 +232,7 @@ class DisguisedFoolingSampleGeneration():
             output = self.model(self.processed_image)
             # Get confidence from softmax
             target_confidence = F.softmax(output)[0][self.target_class].cpu().data.numpy()[0]
-            if target_confidence > self.minimum_confidence:
-                # Reading the raw image and pushing it through model to see the prediction
-                # this is needed because the format of preprocessed image is float and when
-                # it is written back to file it is converted to uint8, so there is a chance that
-                # there are some losses while writing
-
-                confirmation_image = cv2.imread('../' +
-                                                str(self.target_class) + '.jpg', 1)
-                # Preprocess image
-                # confirmation_processed_image = preprocess_image(confirmation_image)
-                # Get prediction
-                confirmation_output = self.model(confirmation_image)
-                # Get confidence
-                softmax_confirmation = \
-                    F.softmax(confirmation_output)[0][self.target_class].cpu().data.numpy()[0]
-                if softmax_confirmation > self.minimum_confidence:
-                    print('Generated disguised fooling image with', "{0:.2f}".format(softmax_confirmation),
-                          'confidence at', str(i) + 'th iteration.')
-                    break
+            
             # Target specific class
             class_loss = F.kl_div(output, Variable(self.targetDistribution))
             # class_loss = -output[0, self.target_class]
