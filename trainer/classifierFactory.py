@@ -60,11 +60,11 @@ class NearestMeanClassifier():
 
             if (old_classes != None and is_C == False):
                 print("NMC means on non-conditional GAN not supported")
-                assert False
-                old_targets = torch.zeros(target.shape[0]).byte()
-                for klass in old_classes:
-                    old_targets += (target == klass)
-                new_targets = (old_targets == 0)
+                #assert False
+                #old_targets = torch.zeros(target.shape[0]).byte()
+                #for klass in old_classes:
+                #    old_targets += (target == klass)
+                #new_targets = (old_targets == 0)
             #TODO get features for all the examples
             # targets = targets*new_targets + predictions*old_targets
 
