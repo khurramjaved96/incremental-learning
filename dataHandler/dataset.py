@@ -1,6 +1,7 @@
 import torchvision
 from torchvision import datasets, transforms
-
+import numpy
+import torch
 
 # To incdude a new Dataset, inherit from Dataset and add all the Dataset specific parameters here.
 # Goal : Remove any data specific parameters from the rest of the code
