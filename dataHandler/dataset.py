@@ -62,7 +62,7 @@ class CIFAR100(Dataset):
         #
         self.train_transform = transforms.Compose(
             [transforms.RandomHorizontalFlip(),
-             transforms.RandomCrop(32, padding=4),
+             # transforms.RandomCrop(32, padding=4),
              transforms.ToTensor(),])
 
         self.test_transform = transforms.Compose(
