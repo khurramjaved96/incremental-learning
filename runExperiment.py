@@ -56,7 +56,10 @@ parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; e
 parser.add_argument('--lwf', action='store_true', default=False,
                     help='Use learning without forgetting. Ignores memory-budget '
                          '("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')
-
+parser.add_argument('--rand', action='store_true', default=False,
+                    help='Replace exemplars with random instances')
+parser.add_argument('--adversarial', action='store_true', default=False,
+                    help='Replace exemplars with adversarial instances')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
