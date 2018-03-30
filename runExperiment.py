@@ -168,7 +168,7 @@ for seed in args.seeds:
             for batch_idx, (data, target) in enumerate(train_iterator):
                 data = data[0]
                 target = target[0]
-                adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, data, target, 0.6, args.cuda)
+                adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, data, target, 0.8, args.cuda)
                 adv.generate()
 
             y1.append(t_classifier.evaluate(myModel, test_iterator))
