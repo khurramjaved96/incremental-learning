@@ -207,12 +207,13 @@ class DisguisedFoolingSampleGeneration():
         self.targetDistribution[0,target_class] = 0.7
         print ("Target distribution", self.targetDistribution)
         self.targetDistribution = torch.from_numpy(self.targetDistribution).float()
-        if cuda:
-            self.targetDistribution = self.targetDistribution.cuda()
-            self.initial_image = self.initial_image.cuda()
+
         # Generate a random image
         self.initial_image = initial_image.unsqueeze(0)
         # Create the folder to export images if not exists
+        if cuda:
+            self.targetDistribution = self.targetDistribution.cuda()
+            self.initial_image = self.initial_image.cuda()
         if not os.path.exists('../generated'):
             os.makedirs('../generated')
 
