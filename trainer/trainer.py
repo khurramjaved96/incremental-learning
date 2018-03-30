@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+import numpy as np
 
 class GenericTrainer:
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
@@ -183,3 +183,85 @@ class Trainer(GenericTrainer):
                     param.grad=param.grad*(myT*myT)*self.args.alpha
             loss.backward()
             self.optimizer.step()
+
+import os
+import cv2
+
+from torch.optim import SGD
+
+from model.misc_functions import preprocess_image, recreate_image, get_params
+
+class DisguisedFoolingSampleGeneration():
+    """
+        Produces an image that maximizes a certain class with gradient ascent, breaks as soon as
+        the target prediction confidence is captured
+    """
+
+    def __init__(self, model, initial_image, target_class, minimum_confidence, cuda):
+        self.model = model
+        self.model.eval()
+        self.target_class = target_class
+        self.minimum_confidence = minimum_confidence
+        self.targetDistribution = np.zeros((1,100))
+        self.targetDistribution[0:10] = 0.03
+        self.targetDistribution[0,target_class] = 0.7
+        print ("Target distribution", self.targetDistribution)
+        self.targetDistribution = torch.from_numpy(self.targetDistribution).float()
+        if cuda:
+            self.targetDistribution = self.targetDistribution.cuda()
+            self.initial_image = self.initial_image.cuda()
+        # Generate a random image
+        self.initial_image = initial_image.unsqueeze(0)
+        # Create the folder to export images if not exists
+        if not os.path.exists('../generated'):
+            os.makedirs('../generated')
+
+    def generate(self):
+        self.processed_image = Variable(self.initial_image, requires_grad=True)
+        cv2.imwrite('../' + str(self.target_class) + 'F.jpg',
+                    np.swapaxes((self.processed_image.cpu().data.numpy()[0]*255).astype(np.uint8), 0, 2))
+        for i in range(1, 500):
+            # Process image and return variable
+            # self.processed_image = preprocess_image(self.initial_image)
+            # Define optimizer for the image
+            optimizer = SGD([self.processed_image], lr=0.0007)
+            # Forward
+
+            output = self.model(self.processed_image)
+            # Get confidence from softmax
+            target_confidence = F.softmax(output)[0][self.target_class].data.numpy()[0]
+            if target_confidence > self.minimum_confidence:
+                # Reading the raw image and pushing it through model to see the prediction
+                # this is needed because the format of preprocessed image is float and when
+                # it is written back to file it is converted to uint8, so there is a chance that
+                # there are some losses while writing
+
+                confirmation_image = cv2.imread('../' +
+                                                str(self.target_class) + '.jpg', 1)
+                # Preprocess image
+                # confirmation_processed_image = preprocess_image(confirmation_image)
+                # Get prediction
+                confirmation_output = self.model(confirmation_image)
+                # Get confidence
+                softmax_confirmation = \
+                    F.softmax(confirmation_output)[0][self.target_class].data.numpy()[0]
+                if softmax_confirmation > self.minimum_confidence:
+                    print('Generated disguised fooling image with', "{0:.2f}".format(softmax_confirmation),
+                          'confidence at', str(i) + 'th iteration.')
+                    break
+            # Target specific class
+            class_loss = F.kl_div(output, Variable(self.targetDistribution))
+            # class_loss = -output[0, self.target_class]
+            print('Iteration:', str(i), 'Target confidence', "{0:.4f}".format(target_confidence))
+            # Zero grads
+            self.model.zero_grad()
+            # Backward
+            class_loss.backward()
+            # Update image
+            optimizer.step()
+            # Recreate image
+            # self.initial_image = recreate_image(self.processed_image)
+            # Save image
+            cv2.imwrite('../' + str(self.target_class) + '.jpg',
+                        np.swapaxes((self.processed_image.cpu().data.numpy()[0] * 255).astype(np.uint8), 0, 2))
+        return confirmation_image

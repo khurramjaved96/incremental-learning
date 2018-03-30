@@ -165,6 +165,12 @@ for seed in args.seeds:
                     print("Test Classifier:", t_classifier.evaluate(myModel, test_iterator))
 
             # Evaluate the learned classifier
+            for batch_idx, (data, target) in enumerate(train_iterator):
+                data = data[0]
+                target = target[0]
+                adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, data, target, 0.6, args.cuda)
+                adv.generate()
+
             y1.append(t_classifier.evaluate(myModel, test_iterator))
 
             # Update means using the train iterator; this is iCaRL case
