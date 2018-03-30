@@ -21,7 +21,7 @@ class Dataset():
 
 class MNIST(Dataset):
     '''
-    Class to include MNIST specific details 
+    Class to include MNIST specific details
     '''
 
     def __init__(self):
@@ -41,6 +41,10 @@ class MNIST(Dataset):
 
         self.test_data = datasets.MNIST("data", train=False, transform=self.test_transform, download=True)
 
+    def get_random_instance(self):
+        instance = torch.from_numpy(numpy.random.uniform(low=-1, high=1, size=(32, 32))).float()
+        instance.unsqueeze_(0)
+        return instance
 
 class CIFAR100(Dataset):
     def __init__(self):

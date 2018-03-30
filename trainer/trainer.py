@@ -42,8 +42,8 @@ class AutoEncoderTrainer(GenericTrainer):
     def auto_encoder_model(self, noOfFeatures):
         '''
         :param noOfFeatures: No of features of the feature map. This is model dependant so not a constant
-        :return: An auto-encoder that reduces the dimensions by a factor of 10. The auto encoder model has the same interface as 
-        other models implemented in model module. 
+        :return: An auto-encoder that reduces the dimensions by a factor of 10. The auto encoder model has the same interface as
+        other models implemented in model module.
         '''
 
         class AutoEncoderModelClass(nn.Module):
@@ -77,6 +77,40 @@ class AutoEncoderTrainer(GenericTrainer):
 class Trainer(GenericTrainer):
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
         super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
+
+    def convert_to_adversarial_instance(self, instance, target_class, required_confidence = 0.90, alpha = 1, iters = 100):
+        instance.unsqueeze_(0)
+        instance = Variable(instance, requires_grad=True)
+
+        ce_loss = nn.CrossEntropyLoss()
+        im_label_as_var = Variable(torch.from_numpy(np.asarray([target_class])))
+
+        #self.model_fixed.eval()
+        for i in range(1, iters):
+            instance.grad = None
+
+            # Forward
+            output = self.model_fixed(instance)
+
+            # Get confidence
+            target_confidence = (output)[0][target_class].data.numpy()[0]
+            print('Iteration:', str(i), 'Target Confidence', "{0:.4f}".format(target_confidence))
+            if target_confidence > required_confidence:
+                break
+
+            # Zero grads
+            self.model_fixed.zero_grad()
+
+            # Backward
+            pred_loss = ce_loss(output, im_label_as_var)
+            pred_loss.backward()
+
+            # Update instance with adversarial noise
+            adv_noise = alpha * torch.sign(instance.grad.data)
+            instance.data = instance.data - adv_noise
+        #self.model_fixed.train()
+
+        return torch.from_numpy(instance.data.cpu().numpy().squeeze(0)).float()
 
     def update_lr(self, epoch):
         for temp in range(0, len(self.args.schedule)):
@@ -141,6 +175,13 @@ class Trainer(GenericTrainer):
             new_classes_indices = torch.squeeze(torch.nonzero((weight_vector == 0)).long())
 
             self.optimizer.zero_grad()
+
+            if self.args.rand or self.args.adversarial:
+                for old in old_classes_indices:
+                    if self.args.rand:
+                        data[old] = self.dataset.get_random_instance()
+                    elif self.args.adversarial:
+                        data[old] = self.convert_to_adversarial_instance(self.dataset.get_random_instance(), target[old])
 
             y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
             if self.args.cuda:
