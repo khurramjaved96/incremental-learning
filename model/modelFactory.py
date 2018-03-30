@@ -69,9 +69,9 @@ class modelFactory():
             return G, D
 
         elif modelType=="wgan":
-            if dataset=="CIFAR100":
-                G = wgan.Generator(128, 3)
-                D = wgan.Discriminator(128, 3)
+            if dataset=="CIFAR100" or dataset=="CIFAR10":
+                G = wgan.Generator(64, 3)
+                D = wgan.Discriminator(64, 3)
             else:
                 G = wgan.Generator(128)
                 D = wgan.Discriminator(128)
