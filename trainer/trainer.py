@@ -220,9 +220,9 @@ class DisguisedFoolingSampleGeneration():
 
     def generate(self):
         self.processed_image = Variable(self.initial_image, requires_grad=True)
-        cv2.imwrite('../' + str(self.target_class) + 'F.jpg',
-                    np.swapaxes((self.processed_image.cpu().data.numpy()[0]*255).astype(np.uint8), 0, 2))
-        for i in range(1, 500):
+
+        origImg = copy.deepcopy(np.swapaxes((self.processed_image.cpu().data.numpy()[0]*255).astype(np.uint8), 0, 2))
+        for i in range(1, 2000):
             # Process image and return variable
             # self.processed_image = preprocess_image(self.initial_image)
             # Define optimizer for the image
@@ -246,7 +246,5 @@ class DisguisedFoolingSampleGeneration():
             # Recreate image
             # self.initial_image = recreate_image(self.processed_image)
             # Save image
-            cv2.imwrite('../' + str(self.target_class) + '.jpg',
-                        np.swapaxes((self.processed_image.cpu().data.numpy()[0] * 255).astype(np.uint8), 0, 2))
-        print (output)
-        return confirmation_image
+
+        return np.swapaxes((self.processed_image.cpu().data.numpy()[0] * 255).astype(np.uint8), 0, 2),origImg

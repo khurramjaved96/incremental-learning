@@ -165,11 +165,14 @@ for seed in args.seeds:
                     print("Test Classifier:", t_classifier.evaluate(myModel, test_iterator))
 
             # Evaluate the learned classifier
+            img = None
             for batch_idx, (data, target) in enumerate(train_iterator):
                 data = data[0]
                 target = target[0]
                 adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, data, target, 0.8, args.cuda)
-                adv.generate()
+                img, oimg = adv.generate()
+                break
+
 
             y1.append(t_classifier.evaluate(myModel, test_iterator))
 
@@ -207,6 +210,11 @@ for seed in args.seeds:
             # Finally, plotting the results;
             my_plotter = plt.Plotter()
 
+            #
+            my_plotter.saveImage(img, my_experiment.path + "GENERATEDImg",
+                                 int(class_group / args.step_size) * args.epochs_class + epoch)
+            my_plotter.saveImage(oimg, my_experiment.path + "GENERATEDImgOrig",
+                                 int(class_group / args.step_size) * args.epochs_class + epoch)
             # Plotting the confusion matrices
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",

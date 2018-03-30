@@ -67,6 +67,10 @@ class Plotter():
         plt.savefig(path + str(epoch) + ".jpg")
         plt.gcf().clear()
 
+    def saveImage(self, img, path, epoch):
+        from PIL import Image
+        im = Image.fromarray(img)
+        im.save(path + str(epoch) + ".jpg")
 if __name__=="__main__":
     pl = Plotter()
     pl.plot([1,2,3,4], [2,3,6,2])
