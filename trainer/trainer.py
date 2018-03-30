@@ -226,13 +226,13 @@ class DisguisedFoolingSampleGeneration():
             # Process image and return variable
             # self.processed_image = preprocess_image(self.initial_image)
             # Define optimizer for the image
-            optimizer = SGD([self.processed_image], lr=0.0007)
+            optimizer = SGD([self.processed_image], lr=0.00007)
             # Forward
 
             output = self.model(self.processed_image)
             # Get confidence from softmax
             target_confidence = F.softmax(output)[0][self.target_class].cpu().data.numpy()[0]
-            
+
             # Target specific class
             class_loss = F.kl_div(output, Variable(self.targetDistribution))
             # class_loss = -output[0, self.target_class]
