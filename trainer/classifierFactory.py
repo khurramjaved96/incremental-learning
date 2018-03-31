@@ -60,7 +60,7 @@ class NearestMeanClassifier():
                 data = data.cuda()
             features = model.forward(Variable(data), True)
 
-            if (old_classes != None and is_C == False):
+            #if (old_classes != None and is_C == False):
                 #old_targets = torch.zeros(target.shape[0]).byte()
                 #for klass in old_classes:
                 #    old_targets += (target == klass)
