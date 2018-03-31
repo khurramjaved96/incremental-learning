@@ -95,19 +95,21 @@ class trainer():
 
             self.classifierTrainer.updateFrozenModel()
 
-            # Using NMC classifier if distillation is used
+            # Using NMC classifier
             nmc.updateMeans(self.model, self.trainIterator, self.args.cuda,
                             self.dataset.classes, self.old_classes, self.is_C)
             nmc_train = nmc.classify(self.model, self.trainIterator,
                                         self.args.cuda, True)
             nmc_test = nmc.classify(self.model, self.testIterator,
                                     self.args.cuda, True)
-            if self.args.ideal_nmc:
-                nmc_test_ideal = ideal_nmc.updateMeans(self.model, self.trainIteratorIdeal, self.args.cuda,
-                                      self.dataset.classes, [], True)
-                y_nmc_ideal.append(nmc_test_ideal)
-
             y_nmc.append(nmc_test)
+
+            if self.args.ideal_nmc:
+                ideal_nmc.updateMeans(self.model, self.trainIteratorIdeal, self.args.cuda,
+                                      self.dataset.classes, [], True)
+                nmc_test_ideal = ideal_nmc.classify(self.model, self.testIterator,
+                                                    self.args.cuda, True)
+                y_nmc_ideal.append(nmc_test_ideal)
 
             print("Train NMC: ", nmc_train)
             print("Test NMC: ", nmc_test)
