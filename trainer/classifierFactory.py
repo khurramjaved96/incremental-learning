@@ -60,14 +60,20 @@ class NearestMeanClassifier():
                 data = data.cuda()
             features = model.forward(Variable(data), True)
 
-            #if (old_classes != None and is_C == False):
-                #old_targets = torch.zeros(target.shape[0]).byte()
-                #for klass in old_classes:
-                #    old_targets += (target == klass)
-                #new_targets = (old_targets == 0)
-            #TODO get features for all the examples
-            # targets = targets*new_targets + predictions*old_targets
-            # Do targets[:, new_targets] = predictions[:, old_targets] instead of all above...
+            #TODO make efficient and calculate this once
+            #TODO make sure that the gradients and not stored
+            if (old_classes != None and is_C == False):
+                old_targets = torch.zeros(target.shape[0]).byte()
+                for klass in old_classes:
+                    old_targets += (target == klass)
+                new_targets = (old_targets == 0)
+                output = model.forward(Variable(data))
+                predictions = output.data.max(1, keepdim=True)[1].squeeze()
+                print(predictions)
+                print("SDSD")
+                print(target)
+                target = target*new_targets.long() + predictions.cpu()*old_targets.long()
+                print(target)
 
             # Convert result to a numpy array
             featuresNp = features.data.cpu().numpy()

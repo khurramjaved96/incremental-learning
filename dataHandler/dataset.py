@@ -65,14 +65,24 @@ class CIFAR10(dataset):
     def __init__(self):
         super().__init__(10, "CIFAR10", 5000, 1000)
 
+        #self.trainTransform = transforms.Compose(
+        #     #[torchvision.transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
+        #     #transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-10, 10)),
+        #     [transforms.ToTensor(),
+        #     transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+
+       # self.testTransform = transforms.Compose(
+       #     [transforms.ToTensor(), transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+
+        print("Remember to remove the horizontal flip")
         self.trainTransform = transforms.Compose(
-             #[torchvision.transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
-             #transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-10, 10)),
-             [transforms.ToTensor(),
-             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+            [transforms.RandomHorizontalFlip(),
+             transforms.RandomCrop(32, padding=4),
+             transforms.ToTensor(),])
 
         self.testTransform = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+            [transforms.ToTensor(),])
+
 
         self.trainData = datasets.CIFAR10("data", train=True, transform=self.trainTransform, download=True)
 

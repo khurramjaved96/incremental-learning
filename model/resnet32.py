@@ -107,8 +107,11 @@ class CifarResNet(nn.Module):
         x = self.stage_3(x)
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
+        #print("aaa")
+        #print(x)
         if feature:
             return x / torch.norm(x, 2, 1).unsqueeze(1)
+
 
         return F.sigmoid(self.classifier(x))
         # return F.softmax(self.classifier(x))
