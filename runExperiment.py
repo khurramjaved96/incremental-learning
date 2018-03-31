@@ -76,6 +76,7 @@ parser.add_argument('--save-g-ckpt', default=False, action='store_true', help='W
 parser.add_argument('--gan-save-classes', default=10, type=int, help='Number of classes whose images will be saved every gan-img-save-interval')
 parser.add_argument('--label-smoothing', default=False, action='store_true', help='Whether to use one sided label smoothing in GAN')
 parser.add_argument('--minibatch-discrimination', default=False, action='store_true', help='Whether to use minibatch discrimination layer')
+parser.add_argument('--ideal-nmc', default=False, action='store_true', help='Whether to calculate ideal nmc')
 
 args = parser.parse_args()
 
@@ -114,12 +115,27 @@ testDatasetLoader = dL.incrementalLoader(args.dataset, dataset.testData.test_dat
                                          oversampling=args.no_upsampling
                                          )
 
+trainDatasetLoaderIdeal = None
+if args.ideal_nmc:
+    trainDatasetLoaderIdeal = dL.incrementalLoader(args.dataset, dataset.trainData.train_data,
+                                                   dataset.trainData.train_labels,
+                                                   dataset.labelsPerClassTrain,
+                                                   dataset.classes, [], transform=dataset.trainTransform,
+                                                   cuda=args.cuda, oversampling=args.no_upsampling
+                                                   )
+
+
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
 trainIterator = torch.utils.data.DataLoader(trainDatasetLoader,
                                             batch_size=args.batch_size, shuffle=True, **kwargs)
 testIterator = torch.utils.data.DataLoader(testDatasetLoader,
                                            batch_size=args.test_batch_size, shuffle=True, **kwargs)
+
+trainIteratorIdeal = None
+if args.ideal_nmc:
+    trainIteratorIdeal = torch.utils.data.DataLoader(trainDatasetLoaderIdeal,
+                                                     batch_size=args.batch_size, shuffle=True, **kwargs)
 
 myFactory = mF.modelFactory()
 model = myFactory.getModel(args.model_type, args.dataset)
@@ -132,7 +148,7 @@ optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                       weight_decay=args.decay, nesterov=True)
 
 classifierTrainer = t.trainer(trainIterator, testIterator, dataset, model,
-                              args, optimizer)
+                              args, optimizer, trainIteratorIdeal)
 
 if args.process == "nmc":
     trainer = nt.trainer(args, dataset, classifierTrainer, model,
@@ -142,6 +158,6 @@ if args.process == "nmc":
 else:
     trainer = gt.trainer(args, dataset, classifierTrainer, model,
                          trainIterator, testIterator, trainDatasetLoader,
-                         myFactory, myExperiment)
+                         myFactory, myExperiment, trainIteratorIdeal, trainDatasetLoaderIdeal)
 
 trainer.train()

@@ -9,9 +9,10 @@ from torch.autograd import Variable
 import random
 
 class trainer():
-    def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer):
+    def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, trainDataIteratorIdeal=None):
         self.trainDataIterator = trainDataIterator
         self.testDataIerator = testDataIterator
+        self.trainDataIteratorIdeal = trainDataIteratorIdeal
         self.model = model
         self.args = args
         self.dataset = dataset
@@ -27,6 +28,8 @@ class trainer():
         self.allClasses = list(range(dataset.classes))
         self.allClasses.sort(reverse=True)
         self.leftOver = []
+        if args.ideal_nmc:
+            self.trainLoaderIdeal = self.trainDataIteratorIdeal.dataset
         if not args.no_random:
             print("Randomly shuffling classes")
             random.seed(args.seed)
@@ -50,6 +53,8 @@ class trainer():
             popVal = self.allClasses.pop()
             self.trainDataIterator.dataset.addClasses(popVal)
             self.testDataIerator.dataset.addClasses(popVal)
+            if self.args.ideal_nmc:
+                self.trainDataIteratorIdeal.dataset.addClasses(popVal)
             print("Train Classes", self.trainDataIterator.dataset.activeClasses)
             self.leftOver.append(popVal)
 

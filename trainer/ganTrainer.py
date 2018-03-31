@@ -15,7 +15,7 @@ from torch.autograd import Variable
 
 class trainer():
     def __init__(self, args, dataset, classifierTrainer, model, trainIterator,
-                 testIterator, trainLoader, modelFactory, experiment):
+                 testIterator, trainLoader, modelFactory, experiment, trainIteratorIdeal, trainLoaderIdeal):
         self.args = args
         self.batch_size = args.batch_size
         self.dataset = dataset
@@ -33,13 +33,15 @@ class trainer():
         self.examples = {}
         self.increment = 0
         self.fixed_noise = torch.randn(100,100,1,1)
-
         self.is_C = args.process == "cdcgan"
+
+        if args.ideal_nmc:
+            self.trainIteratorIdeal = trainIteratorIdeal
+            self.trainLoaderIdeal = trainLoaderIdeal
         if args.dataset == "MNIST" or args.dataset == "CIFAR10":
             self.num_classes = 10
         else:
             self.num_classes = 100
-
         # Do not use this for training, it is volatile
         if args.cuda:
             self.fixed_noise  = Variable(self.fixed_noise.cuda(), volatile=True)
@@ -50,9 +52,12 @@ class trainer():
         x = []
         y = []
         y_nmc = []
+        y_nmc_ideal = []
 
         testFactory = tF.classifierFactory()
         nmc = testFactory.getTester("nmc", self.args.cuda)
+        if self.args.ideal_nmc:
+            ideal_nmc = testFactory.getTester("nmc", self.args.cuda)
 
         for classGroup in range(0, self.dataset.classes, self.args.step_size):
             self.classifierTrainer.setupTraining()
@@ -66,6 +71,7 @@ class trainer():
                                                       self.old_classes,
                                                       "Final-Inc"+str(self.increment-1),
                                                       True)
+                #TODO put trainLoader
                 self.trainIterator.dataset.replaceData(self.examples,
                                                        self.args.gan_num_examples)
                 # Send examples to CPU
@@ -96,10 +102,17 @@ class trainer():
                                         self.args.cuda, True)
             nmc_test = nmc.classify(self.model, self.testIterator,
                                     self.args.cuda, True)
+            if self.args.ideal_nmc:
+                nmc_test_ideal = ideal_nmc.updateMeans(self.model, self.trainIteratorIdeal, self.args.cuda,
+                                      self.dataset.classes, [], True)
+                y_nmc_ideal.append(nmc_test_ideal)
+
             y_nmc.append(nmc_test)
 
             print("Train NMC: ", nmc_train)
             print("Test NMC: ", nmc_test)
+            if self.args.ideal_nmc:
+                print("Test NMC (Ideal)", nmc_test_ideal)
 
             #####################
             # Train GAN
@@ -132,6 +145,8 @@ class trainer():
             y.append(self.classifierTrainer.evaluate(self.testIterator))
             x.append(classGroup + self.args.step_size)
             results = [("Trained Classifier",y), ("NMC Classifier", y_nmc)]
+            if self.args.ideal_nmc:
+                results.append(("Ideal NMC Classifier", y_nmc_ideal))
             ut.plotAccuracy(self.experiment, x,
                             results,
                             self.dataset.classes + 1, self.args.name)
@@ -368,9 +383,9 @@ class trainer():
             sub[i, j].cla()
             if self.args.dataset == "CIFAR100" or self.args.dataset == "CIFAR10":
                 if is_tensor:
-                    sub[i, j].imshow((images[k].cpu().numpy().transpose(1, 2, 0))# + 1)/2)
+                    sub[i, j].imshow((images[k].cpu().numpy().transpose(1, 2, 0)))# + 1)/2)
                 else:
-                    sub[i, j].imshow((images[k].cpu().data.numpy().transpose(1, 2, 0))# + 1)/2)
+                    sub[i, j].imshow((images[k].cpu().data.numpy().transpose(1, 2, 0)))# + 1)/2)
             elif self.args.dataset == "MNIST":
                 if is_tensor:
                     sub[i, j].imshow(images[k, 0].cpu().numpy(), cmap='gray')
