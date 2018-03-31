@@ -8,7 +8,7 @@ import model.WGAN as wgan
 class modelFactory():
     def __init__(self):
         pass
-    def getModel(self, modelType, dataset="CIFAR100", use_mbd=False):
+    def getModel(self, modelType, dataset="CIFAR100", use_mbd=False, d=64):
         if modelType=="densenet":
             if dataset=="MNIST":
                 print ("MNIST dataset not supported in this model. Try resnet20 or 32")
@@ -45,36 +45,36 @@ class modelFactory():
 
         elif modelType=="cdcgan":
             if dataset=="CIFAR100":
-                G = cdcgan.Generator(128, 3, 100)
-                D = cdcgan.Discriminator(128, 3, 100, use_mbd)
+                G = cdcgan.Generator(d, 3, 100)
+                D = cdcgan.Discriminator(d, 3, 100, use_mbd)
             elif dataset=="CIFAR10":
-                G = cdcgan.Generator(128, 3, 10)
-                D = cdcgan.Discriminator(128, 3, 10, use_mbd)
+                G = cdcgan.Generator(d, 3, 10)
+                D = cdcgan.Discriminator(d, 3, 10, use_mbd)
             else:
-                G = cdcgan.Generator(128)
-                D = cdcgan.Discriminator(128, 1, 10, use_mbd)
+                G = cdcgan.Generator(d)
+                D = cdcgan.Discriminator(d, 1, 10, use_mbd)
             G.init_weights(mean=0.0, std=0.02)
             D.init_weights(mean=0.0, std=0.02)
             return G, D
 
         elif modelType=="dcgan":
-            if dataset=="CIFAR100":
-                G = dcgan.Generator(128, 3)
-                D = dcgan.Discriminator(128, 3)
+            if dataset=="CIFAR100" or dataset=="CIFAR10":
+                G = dcgan.Generator(d, 3)
+                D = dcgan.Discriminator(d, 3)
             else:
-                G = dcgan.Generator(128)
-                D = dcgan.Discriminator(128)
+                G = dcgan.Generator(d)
+                D = dcgan.Discriminator(d)
             G.init_weights(mean=0.0, std=0.02)
             D.init_weights(mean=0.0, std=0.02)
             return G, D
 
         elif modelType=="wgan":
             if dataset=="CIFAR100" or dataset=="CIFAR10":
-                G = wgan.Generator(64, 3)
-                D = wgan.Discriminator(64, 3)
+                G = wgan.Generator(d, 3)
+                D = wgan.Discriminator(d, 3)
             else:
-                G = wgan.Generator(128)
-                D = wgan.Discriminator(128)
+                G = wgan.Generator(d)
+                D = wgan.Discriminator(d)
             G.init_weights(mean=0.0, std=0.02)
             D.init_weights(mean=0.0, std=0.02)
             return G, D

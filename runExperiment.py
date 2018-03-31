@@ -58,6 +58,7 @@ parser.add_argument('--no-upsampling', action='store_true', default=False,
 parser.add_argument('--process', default="nmc", help='Process to be used to prevent forgetting; Example: nmc, cdcgan, dcgan, wgan')
 
 parser.add_argument('--gan-epochs', type=int, nargs='+', default=[50, 30, 20, 20, 20], help='Epochs for each increment for training the GANs')
+parser.add_argument('--gan-d', type=int, default=64, help='GAN feature size multiplier')
 parser.add_argument('--gan-lr', type=float, default=0.0002, help='Learning Rate for training the GANs')
 parser.add_argument('--gan-batch-size', type=int, default=128, help='Batch Size for training the GANs')
 parser.add_argument('--gan-num-examples', type=int, default=1000, help='Number examples GAN will generate for each class')

@@ -9,8 +9,9 @@ from .gan_utils import normal_init
 # generator output layer and the discriminator input layer."
 # DCGAN paper https://arxiv.org/pdf/1511.06434.pdf
 
+#TODO Add the jump incase of d=128 as in original WGAN
 class Generator(nn.Module):
-    def __init__(self, d=128, c=1):
+    def __init__(self, d=64, c=1):
         super(Generator, self).__init__()
         #ConvTranspose2d(in_channels, out_channels, kernel_size, stride=1, padding=0)
         self.ct1_noise = nn.ConvTranspose2d(100, d*4, 4, 1, 0)
