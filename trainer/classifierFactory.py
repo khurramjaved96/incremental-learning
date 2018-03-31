@@ -51,6 +51,8 @@ class NearestMeanClassifier():
         self.means = np.zeros((classes, 64))
         self.totalFeatures = np.zeros((classes, 1)) + 1
         print("Computing means")
+        if (is_C == False)
+            print("NMC means on non-conditional GAN not supported")
         # Iterate over all train dataset
         for batch_id, (data, target) in enumerate(train_loader):
             # Get features for a minibactch
@@ -59,7 +61,6 @@ class NearestMeanClassifier():
             features = model.forward(Variable(data), True)
 
             if (old_classes != None and is_C == False):
-                print("NMC means on non-conditional GAN not supported")
                 #old_targets = torch.zeros(target.shape[0]).byte()
                 #for klass in old_classes:
                 #    old_targets += (target == klass)
