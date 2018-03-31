@@ -368,9 +368,9 @@ class trainer():
             sub[i, j].cla()
             if self.args.dataset == "CIFAR100" or self.args.dataset == "CIFAR10":
                 if is_tensor:
-                    sub[i, j].imshow((images[k].cpu().numpy().transpose(1, 2, 0) + 1)/2)
+                    sub[i, j].imshow((images[k].cpu().numpy().transpose(1, 2, 0))# + 1)/2)
                 else:
-                    sub[i, j].imshow((images[k].cpu().data.numpy().transpose(1, 2, 0) + 1)/2)
+                    sub[i, j].imshow((images[k].cpu().data.numpy().transpose(1, 2, 0))# + 1)/2)
             elif self.args.dataset == "MNIST":
                 if is_tensor:
                     sub[i, j].imshow(images[k, 0].cpu().numpy(), cmap='gray')

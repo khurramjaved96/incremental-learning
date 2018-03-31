@@ -51,8 +51,8 @@ class NearestMeanClassifier():
         self.means = np.zeros((classes, 64))
         self.totalFeatures = np.zeros((classes, 1)) + 1
         print("Computing means")
-        if (is_C == False):
-            print("NMC means on non-conditional GAN not supported")
+        if (old_classes != None and is_C == False):
+            print("Fixing labels too")
         # Iterate over all train dataset
         for batch_id, (data, target) in enumerate(train_loader):
             # Get features for a minibactch
