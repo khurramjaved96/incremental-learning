@@ -51,7 +51,7 @@ class NearestMeanClassifier():
         self.means = np.zeros((classes, 64))
         self.totalFeatures = np.zeros((classes, 1)) + 1
         print("Computing means")
-        if (is_C == False)
+        if (is_C == False):
             print("NMC means on non-conditional GAN not supported")
         # Iterate over all train dataset
         for batch_id, (data, target) in enumerate(train_loader):
@@ -67,6 +67,7 @@ class NearestMeanClassifier():
                 #new_targets = (old_targets == 0)
             #TODO get features for all the examples
             # targets = targets*new_targets + predictions*old_targets
+            # Do targets[:, new_targets] = predictions[:, old_targets] instead of all above...
 
             # Convert result to a numpy array
             featuresNp = features.data.cpu().numpy()
