@@ -62,6 +62,7 @@ class NearestMeanClassifier():
 
             #TODO make efficient and calculate this once
             #TODO make sure that the gradients and not stored
+            #
             if (old_classes != None and is_C == False):
                 old_targets = torch.zeros(target.shape[0]).byte()
                 for klass in old_classes:
@@ -69,11 +70,7 @@ class NearestMeanClassifier():
                 new_targets = (old_targets == 0)
                 output = model.forward(Variable(data))
                 predictions = output.data.max(1, keepdim=True)[1].squeeze()
-                print(predictions)
-                print("SDSD")
-                print(target)
                 target = target*new_targets.long() + predictions.cpu()*old_targets.long()
-                print(target)
 
             # Convert result to a numpy array
             featuresNp = features.data.cpu().numpy()
