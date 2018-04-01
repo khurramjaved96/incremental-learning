@@ -50,6 +50,8 @@ class plotter():
 
     def saveEmbeddingPlot(self, subplots, labels, plot_name, experiment):
         p1, p2, p3 = subplots
+        p1.legend([labels[0]], loc="upper right")
+        p2.legend([labels[1]], loc="upper right")
         p3.legend(["Difference"], loc="upper right")
         plt.savefig(experiment.path + "embedding_" + plot_name + ".jpg")
         plt.gcf().clear()
