@@ -4,7 +4,7 @@
 # in .log file with same name.
 # Script keeps restarting every 10 seconds to look for new tasks.
 
-if [ -e experimentQueue/*.t ]
+if [ "-e experimentQueue/*.t" ]
 then
   for k in experimentQueue/*.t; do
     echo "Executing" $k
