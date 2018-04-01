@@ -77,6 +77,10 @@ parser.add_argument('--gan-save-classes', default=10, type=int, help='Number of 
 parser.add_argument('--label-smoothing', default=False, action='store_true', help='Whether to use one sided label smoothing in GAN')
 parser.add_argument('--minibatch-discrimination', default=False, action='store_true', help='Whether to use minibatch discrimination layer')
 parser.add_argument('--ideal-nmc', default=False, action='store_true', help='Whether to calculate ideal nmc')
+parser.add_argument('--optimize-features', default=False, action='store_true', help='Whether to minimize the distance between generated and real embeddings')
+parser.add_argument('--optimize-feat-epochs', type=int, default=20, help='How many epochs to run optimize-features for')
+parser.add_argument('--optimize-feat-lr', type=int, default=0.00001, help='lr for optimize-features')
+
 
 args = parser.parse_args()
 

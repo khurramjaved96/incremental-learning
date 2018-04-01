@@ -132,6 +132,8 @@ class trainer():
                 is_loaded = self.loadCheckpoint(self.increment)
             if not is_loaded:
                 self.trainGan(self.G, self.D, self.is_C, self.num_classes)
+            if self.args.optimize_features:
+                self.optimizeFeatures()
             self.updateFrozenGenerator()
             if self.args.save_g_ckpt:
                 self.saveCheckpoint(self.args.gan_epochs[self.increment])
@@ -155,6 +157,46 @@ class trainer():
             ut.plotAccuracy(self.experiment, x,
                             results,
                             self.dataset.classes + 1, self.args.name)
+
+    def optimizeFeatures(self):
+        self.unfreezeFrozenGenerator()
+        model = self.classifierTrainer.modelFixed
+        optimizer = optim.Adam(self.G.parameters(), lr=self.args.optimize_feat_lr, betas=(0.5, 0.999))
+        euclidean_dist = nn.PairwiseDistance(2)
+        print("Optimizing features")
+        for epoch in range(self.args.optimize_feat_epochs):
+            losses = []
+            startTime = time.time()
+            for batch_idx, (image, label) in enumerate(self.trainIterator):
+                batch_size = image.shape[0]
+                # Generate noise
+                G_random_noise = torch.randn((batch_size, 100))
+                G_random_noise = G_random_noise.view(-1, 100, 1, 1)
+                #TODO wrap in variable for noncuda
+                if self.args.cuda:
+                    image = Variable(image.cuda())
+                    G_random_noise  = Variable(G_random_noise.cuda())
+                # Generate examples
+                G_output = self.G(G_random_noise)
+                # Generate features for real and fake images
+                output_fake = model.forward(G_output, True)
+                output_real = model.forward(image, True)
+                # Calculate euclidean distance
+                loss = torch.mean(euclidean_dist(output_fake, output_real))
+                loss.backward()
+                optimizer.step()
+                losses.append(loss)
+
+            # Calculate mean loss, save examples and print stats
+            mean_loss = (sum(losses)/len(losses)).cpu().data.numpy()[0]
+            if epoch % self.args.gan_img_save_interval == 0:
+                self.generateExamples(self.G, 100, self.trainIterator.dataset.activeClasses,
+                                      "OPT-Inc"+str(self.increment) +
+                                      "_E" + str(epoch), True)
+            print("[GAN-OPTIMIZE] Epoch:", epoch,
+                  "Loss:", mean_loss,
+                  "Time taken:", time.time() - startTime)
+
 
     def trainGan(self, G, D, is_C, K):
         G_Losses = []
@@ -371,6 +413,11 @@ class trainer():
         self.fixed_G = copy.deepcopy(self.G)
         for param in self.fixed_G.parameters():
             param.requires_grad = False
+
+    def unfreezeFrozenGenerator(self):
+        self.G.train()
+        for param in self.G.parameters():
+            param.requires_grad = True
 
     def saveResults(self, images, name, is_tensor=False, axis_size=10):
         '''
