@@ -149,6 +149,9 @@ class trainer():
             results = [("Trained Classifier",y), ("NMC Classifier", y_nmc)]
             if self.args.ideal_nmc:
                 results.append(("Ideal NMC Classifier", y_nmc_ideal))
+                ut.plotEmbeddings(self.experiment,
+                                  [("NMC_means", nmc.means ), ("Ideal_NMC_means", ideal_nmc.means)],
+                                   "Inc"+str(self.increment))
             ut.plotAccuracy(self.experiment, x,
                             results,
                             self.dataset.classes + 1, self.args.name)

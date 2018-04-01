@@ -46,6 +46,9 @@ class NearestMeanClassifier():
     def updateMeans(self, model, train_loader, cuda, classes=100, old_classes=None, is_C=False):
         # Set the mean to zero
         model.eval()
+        # TODO Add this to init
+        if classes != 100:
+            self.means = np.zeros((classes, 64))
         self.means *= 0
         self.classes = classes
         self.means = np.zeros((classes, 64))

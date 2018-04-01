@@ -1,6 +1,7 @@
 import pickle
 import numpy as np
 import plotter.plotter as pl
+import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -89,3 +90,18 @@ def plotAccuracy(experiment, x, y, num_classes, plot_name):
 
     myPlotter.saveFig(experiment.path + "Overall" + ".jpg", num_classes)
     experiment.store_json()
+
+def plotEmbeddings(experiment, embedding_name_pairs, plot_name="", range_val=(-.20,.20)):
+    """
+    Takes avg across all classes of embedding (axis 0) then plots them
+    embedding_name_pairs: Should be of type [("Embedding Name 1", Embedding_vector_1), ....]
+
+    """
+    embeddings = []
+    labels = []
+    for i in embedding_name_pairs:
+        embeddings.append(np.mean(i[1].squeeze().cpu().numpy(), 0))
+        labels.append(i[0])
+
+    myPlotter = pl.plotter()
+    myPlotter.plotEmbeddings(embeddings, labels, range_val, experiment, plot_name)
