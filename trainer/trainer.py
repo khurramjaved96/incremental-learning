@@ -172,6 +172,7 @@ class Trainer(GenericTrainer):
 
             weight_vector = (target * 0).int()
             for elem in self.older_classes:
+                elem = self.train_loader.indexMapper[elem]
                 weight_vector = weight_vector + (target == elem).int()
 
             # Use this to implement decayed distillation
