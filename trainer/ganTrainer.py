@@ -196,6 +196,7 @@ class trainer():
             print("[GAN-OPTIMIZE] Epoch:", epoch,
                   "Loss:", mean_loss,
                   "Time taken:", time.time() - startTime)
+        self.updateFrozenGenerator()
 
 
     def trainGan(self, G, D, is_C, K):
