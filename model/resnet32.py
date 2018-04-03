@@ -118,7 +118,7 @@ class CifarResNet(nn.Module):
             x6 = self.avgpool(x5)
             x7 = x6.view(x6.size(0), -1)
             # print ("X7 shape", x7.shape)
-            finalFeature = torch.cat((x4Features, x5Features, x7), dim=1)
+            finalFeature = torch.cat((x3Features, x4Features, x5Features, x7), dim=1)
             # print (finalFeature.shape)
             # 0/0
             return finalFeature
