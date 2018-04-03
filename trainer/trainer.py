@@ -264,7 +264,10 @@ class DisguisedFoolingSampleGeneration():
         origImg = copy.deepcopy(np.swapaxes((self.processed_image.cpu().data.numpy()[0]*255).astype(np.uint8), 0, 2))
         outputTemp = self.model(self.processed_image, getAllFeatures=True)
         outputTemp = outputTemp.data
-        self.processed_image = Variable(self.initial_image*2, requires_grad=True)
+        # self.processed_image = Variable(self.initial_image*2, requires_grad=True)
+        instance = torch.from_numpy(np.random.normal(size=(3,32, 32))).float()
+        instance = instance.unsqueeze(0)
+        self.processed_image = Variable(instance, requires_grad=True)
         for i in range(1, 2000):
             # Process image and return variable
             # self.processed_image = preprocess_image(self.initial_image)
