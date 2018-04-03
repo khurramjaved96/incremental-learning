@@ -101,8 +101,32 @@ class CifarResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x, feature=False, T=1, labels=False):
+    def forward(self, x, feature=False, T=1, labels=False, getAllFeatures = False):
         # print ("X shape", x.shape)
+        if getAllFeatures:
+            x1 = self.conv_1_3x3(x)
+            x2 = F.relu(self.bn_1(x1), inplace=True)
+            x3 = self.stage_1(x2)
+            x3Features = x3.view(x3.size(0), -1)
+            # print("X3 shape", x3Features.shape)
+            x4 = self.stage_2(x3)
+            x4Features = x4.view(x4.size(0), -1)
+            # print("X4 shape", x4Features.shape)
+            x5 = self.stage_3(x4)
+            x5Features = x5.view(x5.size(0), -1)
+            # print("X5 shape", x5Features.shape)
+            x6 = self.avgpool(x5)
+            x7 = x6.view(x6.size(0), -1)
+            # print ("X7 shape", x7.shape)
+            finalFeature = torch.cat((x4Features, x5Features, x7), dim=1)
+            # print (finalFeature.shape)
+            # 0/0
+            return finalFeature
+            if feature:
+                return x7 / torch.norm(x7, 2, 1).unsqueeze(1)
+            if labels:
+                return F.softmax(self.fc(x7) / T)
+            return F.log_softmax(self.fc(x7) / T)
         x = self.conv_1_3x3(x)
         x = F.relu(self.bn_1(x), inplace=True)
         x = self.stage_1(x)

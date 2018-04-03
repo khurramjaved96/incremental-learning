@@ -238,7 +238,7 @@ class DisguisedFoolingSampleGeneration():
         the target prediction confidence is captured
     """
 
-    def __init__(self, model, initial_image, target_class, minimum_confidence, cuda):
+    def __init__(self, model, initial_image, target_class, minimum_confidence, cuda, model_fixed=None):
         self.model = model
         self.model.eval()
         self.target_class = target_class
@@ -249,7 +249,6 @@ class DisguisedFoolingSampleGeneration():
         self.targetDistribution[0,target_class] = prob
         print ("Target distribution", self.targetDistribution)
         self.targetDistribution = torch.from_numpy(self.targetDistribution).float()
-
         # Generate a random image
         self.initial_image = initial_image.unsqueeze(0)
         # Create the folder to export images if not exists
@@ -263,21 +262,25 @@ class DisguisedFoolingSampleGeneration():
         self.processed_image = Variable(self.initial_image, requires_grad=True)
 
         origImg = copy.deepcopy(np.swapaxes((self.processed_image.cpu().data.numpy()[0]*255).astype(np.uint8), 0, 2))
+        outputTemp = self.model(self.processed_image, getAllFeatures=True)
+        outputTemp = outputTemp.data
+        self.processed_image = Variable(self.initial_image*2, requires_grad=True)
         for i in range(1, 2000):
             # Process image and return variable
             # self.processed_image = preprocess_image(self.initial_image)
             # Define optimizer for the image
-            optimizer = SGD([self.processed_image], lr=0.001, momentum=0.9)
+            optimizer = SGD([self.processed_image], lr=0.00001, momentum=0.9)
             # Forward
 
-            output = self.model(self.processed_image)
+            output = self.model(self.processed_image, getAllFeatures=True)
             # Get confidence from softmax
             target_confidence = F.softmax(output)[0][self.target_class].cpu().data.numpy()[0]
 
             # Target specific class
-            class_loss = F.kl_div(output, Variable(self.targetDistribution))
+            class_loss = F.mse_loss(output, Variable(outputTemp))
+
             # class_loss = -output[0, self.target_class]
-            print('Iteration:', str(i), 'Target confidence', "{0:.4f}".format(target_confidence))
+            print('Iteration:', str(i), 'Class Loss', class_loss)
             # Zero grads
             self.model.zero_grad()
             # Backward
