@@ -257,6 +257,7 @@ class DisguisedFoolingSampleGeneration():
             self.initial_image = self.initial_image.cuda()
         if not os.path.exists('../generated'):
             os.makedirs('../generated')
+        self.cuda = cuda
 
     def generate(self):
         self.processed_image = Variable(self.initial_image, requires_grad=True)
@@ -267,6 +268,8 @@ class DisguisedFoolingSampleGeneration():
         # self.processed_image = Variable(self.initial_image*2, requires_grad=True)
         instance = torch.from_numpy(np.random.normal(size=(3,32, 32))).float()
         instance = instance.unsqueeze(0)
+        if self.cuda:
+            instance = instance.cuda()
         self.processed_image = Variable(instance, requires_grad=True)
         for i in range(1, 2000):
             # Process image and return variable
