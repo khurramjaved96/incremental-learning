@@ -264,7 +264,7 @@ class DisguisedFoolingSampleGeneration():
             if self.cuda:
                 instance = instance.cuda()
             self.processed_image = Variable(instance, requires_grad=True)
-            lRate = 0.0000001
+            lRate = 0.00001
             optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
 
             for i in range(1, 10000):
