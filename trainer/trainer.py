@@ -259,7 +259,10 @@ class DisguisedFoolingSampleGeneration():
             # self.processed_image = Variable(self.initial_image*2, requires_grad=True)
             instance = torch.mean(data,dim=0)
             instance = instance.unsqueeze(0).repeat(100,1,1,1)
-            instance = data[torch.randperm(100)]
+            perm = torch.randperm(100)
+            if self.cuda:
+                perm = perm.cuda()
+            instance = data[perm]
             # print ("shape of instance", instance.shape)
             # print ("Shape of input", self.processed_images.shape)
             if self.cuda:
