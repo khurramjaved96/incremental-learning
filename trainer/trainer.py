@@ -249,6 +249,7 @@ class DisguisedFoolingSampleGeneration():
 
         for batch_idx, (data, target) in enumerate(self.iterator):
 
+            ut.visualizeTensor(data.cpu(), "../pathData.jpg")
             if self.cuda:
                 data = data.cuda()
                 target = target.cuda()
