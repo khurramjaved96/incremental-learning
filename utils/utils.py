@@ -71,9 +71,9 @@ def visualizeTensor(t, path):
     # Function to plot images;
     fig = plt.figure(figsize=(20, 20))
     for a in t:
-        print (a.shape)
         img = a.cpu().numpy()
         img = np.swapaxes(img,0,2)
+        img /= img.max()
         plot(img,"Temp", False)
     plt.savefig(path)
 
