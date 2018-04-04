@@ -73,7 +73,9 @@ def visualizeTensor(t, path):
     for a in t:
         img = a.cpu().numpy()
         img = np.swapaxes(img,0,2)
-        img = img+np.min(img)
+        imgMin = np.min(img)
+        
+        img = img-np.min(img)
         img = img/np.max(img)
         print ("Img min", np.min(img))
         print ("Img max", np.max(img))
