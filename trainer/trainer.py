@@ -296,7 +296,7 @@ class DisguisedFoolingSampleGeneration():
                 # Recreate image
                 # self.initial_image = recreate_image(self.processed_image)
                 # Save image
-                if i%100 == 0:
+                if i%100 == 1:
                     ut.visualizeTensor(self.processed_image.data.cpu(), "../path"+str(i)+".jpg")
 
             return self.processed_image.data
