@@ -73,7 +73,7 @@ def visualizeTensor(t, path):
     for a in t:
         img = a.cpu().numpy()
         img = np.swapaxes(img,0,2)
-        img /= np.max(img)
+        img = img/np.max(img)
         plot(img,"Temp", False)
     plt.savefig(path)
 
