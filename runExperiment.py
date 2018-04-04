@@ -169,12 +169,10 @@ for seed in args.seeds:
 
             # Evaluate the learned classifier
             img = None
-            for batch_idx, (data, target) in enumerate(train_iterator):
-                data = data[0]
-                target = target[0]
-                adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, data, target, 0.8, args.cuda)
-                img, oimg = adv.generate()
-                break
+
+            adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, 0.8, args.cuda, train_iterator)
+            img = adv.generate()
+
 
 
             y1.append(t_classifier.evaluate(myModel, test_iterator))

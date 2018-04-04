@@ -48,6 +48,30 @@ def save_confusion_matrix(epoch, path, model, args, dataset, test_loader):
     return 100. * correct / len(test_loader.dataset)
 
 
+import matplotlib.pyplot as plt
+cur = 1
+# Function to plot images;
+fig = plt.figure(figsize=(20, 20))
+
+def plot(img, title, g=True):
+    global cur, fig
+    p = fig.add_subplot(10, 10, cur)
+    p.set_title(title)
+    cur += 1
+    if g:
+        plt.imshow(img, cmap='gray')
+    else:
+        plt.imshow(img)
+
+
+def visualizeTensor(t):
+    for a in t:
+        print (a.shape)
+        img = a.cpu().numpy()
+        img = np.swapaxes(img,0,2)
+        plot(img,"Temp", False)
+    plt.savefig("../TempFigure.jpg")
+
 
 
 

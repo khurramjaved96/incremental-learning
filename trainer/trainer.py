@@ -9,6 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
+import utils.utils as ut
 
 class GenericTrainer:
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
@@ -238,70 +239,63 @@ class DisguisedFoolingSampleGeneration():
         the target prediction confidence is captured
     """
 
-    def __init__(self, model, initial_image, target_class, minimum_confidence, cuda, model_fixed=None):
+    def __init__(self, model, minimum_confidence, cuda, iterator):
+        self.iterator = iterator
         self.model = model
         self.model.eval()
-        self.target_class = target_class
-        self.minimum_confidence = minimum_confidence
-        self.targetDistribution = np.zeros((1,100))
-        prob = 0.6
-        self.targetDistribution[0,0:10] = (1-prob)/10.
-        self.targetDistribution[0,target_class] = prob
-        print ("Target distribution", self.targetDistribution)
-        self.targetDistribution = torch.from_numpy(self.targetDistribution).float()
-        # Generate a random image
-        self.initial_image = initial_image.unsqueeze(0)
-        # Create the folder to export images if not exists
-        if cuda:
-            self.targetDistribution = self.targetDistribution.cuda()
-            self.initial_image = self.initial_image.cuda()
-        if not os.path.exists('../generated'):
-            os.makedirs('../generated')
         self.cuda = cuda
 
     def generate(self):
-        self.processed_image = Variable(self.initial_image, requires_grad=True)
 
-        origImg = copy.deepcopy(np.swapaxes((self.processed_image.cpu().data.numpy()[0]*255).astype(np.uint8), 0, 2))
-        outputTemp = self.model(self.processed_image, getAllFeatures=True)
-        outputTemp = outputTemp.data
-        # self.processed_image = Variable(self.initial_image*2, requires_grad=True)
-        instance = torch.from_numpy(np.random.normal(size=(3,32, 32))).float()
-        instance = instance.unsqueeze(0)
-        if self.cuda:
-            instance = instance.cuda()
-        self.processed_image = Variable(instance, requires_grad=True)
-        lRate = 0.0001
-        optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
-        for i in range(1, 10000):
-            # Process image and return variable
-            # self.processed_image = preprocess_image(self.initial_image)
-            # Define optimizer for the image
-            if i == 3000:
-                lRate/=10
-            if i == 6000:
-                lRate/=10
-            for param_group in optimizer.param_groups:
-                param_group['lr'] = lRate
-            # Forward
+        for batch_idx, (data, target) in enumerate(self.iterator):
 
-            output = self.model(self.processed_image, getAllFeatures=True)
-            # Get confidence from softmax
-            target_confidence = F.softmax(output)[0][self.target_class].cpu().data.numpy()[0]
+            if self.cuda:
+                data = data.cuda()
+                target = target.cuda()
+            outputTemp = self.model(Variable(data), getAllFeatures=True).data
+            # self.processed_images = Variable(data, requires_grad=True)
 
-            # Target specific class
-            class_loss = F.mse_loss(output, Variable(outputTemp))
+            # self.processed_image = Variable(self.initial_image*2, requires_grad=True)
+            instance = torch.mean(data,dim=0)
+            instance = instance.unsqueeze(0).repeat(100,1,1,1)
+            # print ("shape of instance", instance.shape)
+            # print ("Shape of input", self.processed_images.shape)
+            if self.cuda:
+                instance = instance.cuda()
+            self.processed_image = Variable(instance, requires_grad=True)
+            lRate = 0.0001
+            optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
 
-            # class_loss = -output[0, self.target_class]
-            print('Iteration:', str(i), 'Class Loss', class_loss)
-            # Zero grads
-            self.model.zero_grad()
-            # Backward
-            class_loss.backward()
-            # Update image
-            optimizer.step()
-            # Recreate image
-            # self.initial_image = recreate_image(self.processed_image)
-            # Save image
+            for i in range(1, 10000):
+                # Process image and return variable
+                # self.processed_image = preprocess_image(self.initial_image)
+                # Define optimizer for the image
+                if i == 3000:
+                    lRate/=10
+                if i == 6000:
+                    lRate/=10
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = lRate
+                # Forward
 
-        return np.swapaxes((self.processed_image.cpu().data.numpy()[0] * 255).astype(np.uint8), 0, 2),origImg
+                output = self.model(self.processed_image, getAllFeatures=True)
+                # Get confidence from softmax
+
+
+                # Target specific class
+                class_loss = F.mse_loss(output, Variable(outputTemp),reduce=False)
+
+                # class_loss = -output[0, self.target_class]
+                print('Iteration:', str(i), 'Class Loss', class_loss)
+                # Zero grads
+                self.model.zero_grad()
+                # Backward
+                class_loss.backward(outputTemp)
+                # Update image
+                optimizer.step()
+                # Recreate image
+                # self.initial_image = recreate_image(self.processed_image)
+                # Save image
+            ut.visualizeTensor(self.processed_image.data.cpu())
+
+            return self.processed_image.data
