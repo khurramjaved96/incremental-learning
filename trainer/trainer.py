@@ -272,7 +272,7 @@ class DisguisedFoolingSampleGeneration():
             lRate = 0.000001
             optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
 
-            for i in range(1, 30):
+            for i in range(1, 2):
                 # Process image and return variable
                 # self.processed_image = preprocess_image(self.initial_image)
                 # Define optimizer for the image
@@ -307,7 +307,7 @@ class DisguisedFoolingSampleGeneration():
                 self.processed_image.data = self.processed_image.data/torch.max(self.processed_image.data)
                 if i%100 == 1:
                     ut.visualizeTensor(self.processed_image.data.cpu(), "../path"+str(i)+".jpg")
-            data.copy(self.processed_image.data)
+            data[0:100] = self.processed_image.data[0:100]
             for batch_idx, (data, target) in enumerate(self.iterator):
                 ut.visualizeTensor(data.cpu(), "../pathDataTemp.jpg")
                 break
