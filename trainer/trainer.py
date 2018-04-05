@@ -293,7 +293,7 @@ class DisguisedFoolingSampleGeneration():
                 # class_loss = -output[0, self.target_class]
                 print('Iteration:', str(i), 'Class Loss', class_loss)
                 # Zero grads
-                self.processed_image.zero_grad()
+                self.processed_image.grad = None
                 # Backward
                 class_loss.backward(outputTemp)
                 # Update image
