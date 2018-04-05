@@ -201,37 +201,6 @@ class IncrementalLoader(td.Dataset):
 
         return img, self.indexMapper[self.labels[index]]
 
-    def sort_by_importance(self, algorithm="Kennard-Stone"):
-        if algorithm == "LDIS":
-            dataFile = "dataHandler/selectedCIFARIndicesForTrainingDataK1.txt"
-        elif algorithm == "Kennard-Stone":
-            dataFile = "dataHandler/selectedCIFARIndicesForTrainingDataKenStone.txt"
-        else:
-            print ("Unsupported sorting algorithm chosen")
-            assert False
-
-        # load sorted (training) data indices
-        lines = [line.rstrip('\n') for line in open(dataFile)]
-        sorted_data = []
-
-        # iterate for each class
-        h = 0
-        class_num = 0
-        for line in lines:
-            line = line[(line.find(":") + 1):]
-            # select instances based on priority
-            prioritizedIndices = line.split(",")
-            for index in prioritizedIndices:
-                sorted_data.append(self.data[int(index)])
-            # select remaining instances
-            for i in range(class_num * self.class_size, (class_num + 1) * self.class_size):
-                if str(i) not in prioritizedIndices:
-                    sorted_data.append(self.data[i])
-                    h += 1
-            class_num += 1
-        self.data = np.concatenate(sorted_data).reshape(self.data.shape)
-
-
 
 if __name__ == "__main__":
     # To do : Remove the hard-coded mean and just compute it once using the data

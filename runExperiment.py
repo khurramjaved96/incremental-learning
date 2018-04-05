@@ -150,7 +150,6 @@ for seed in args.seeds:
         # Loop that incrementally adds more and more classes
         for class_group in range(0, dataset.classes, args.step_size):
             print ("SEED:",seed, "MEMORY_BUDGET:", m, "CLASS_GROUP:", class_group)
-            my_trainer.setup_training()
             # Add new classes to the train, train_nmc, and test iterator
             my_trainer.increment_classes(class_group)
             my_trainer.update_frozen_model()
@@ -170,8 +169,7 @@ for seed in args.seeds:
             # Evaluate the learned classifier
             img = None
 
-            adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, 0.8, args.cuda, train_iterator)
-            img = adv.generate()
+
 
 
 
@@ -184,6 +182,8 @@ for seed in args.seeds:
             # Compute the the nmc based classification results
             tempTrain = nmc.evaluate(myModel, train_iterator)
             train_y.append(tempTrain)
+
+
 
             testY = nmc.evaluate(myModel, test_iterator)
             testY_ideal = nmc_ideal.evaluate(myModel, test_iterator)
@@ -199,6 +199,13 @@ for seed in args.seeds:
             print("Train NMC", tempTrain)
             print("Test NMC", testY)
 
+
+            # TEMP CODE
+
+            my_trainer.setup_training()
+            adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, 0.8, args.cuda, train_iterator)
+            img = adv.generate()
+
             # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
             x.append(class_group + args.step_size)
 
@@ -211,11 +218,6 @@ for seed in args.seeds:
             # Finally, plotting the results;
             my_plotter = plt.Plotter()
 
-            #
-            my_plotter.saveImage(img, my_experiment.path + "GENERATEDImg",
-                                 int(class_group / args.step_size) * args.epochs_class + epoch)
-            my_plotter.saveImage(oimg, my_experiment.path + "GENERATEDImgOrig",
-                                 int(class_group / args.step_size) * args.epochs_class + epoch)
             # Plotting the confusion matrices
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
