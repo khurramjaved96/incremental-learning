@@ -361,7 +361,7 @@ class trainer():
                     output_real = model.forward(image, True)
                     # Calculate euclidean distance
                     distance_loss = torch.mean(euclidean_dist(output_fake, output_real))
-                    total_loss = G_Loss + (self.args.join_gan_alpha * distance_loss)
+                    total_loss = G_Loss + (self.args.joint_gan_alpha * distance_loss)
                     dist_Losses_E.append(distance_loss)
 
                 total_loss.backward()
