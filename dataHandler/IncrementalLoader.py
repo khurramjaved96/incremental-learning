@@ -191,14 +191,14 @@ class IncrementalLoader(td.Dataset):
             img = img.numpy()
         img = Image.fromarray(img)
         if self.transform is not None:
-            if not self.no_transformation:
-                img = self.transform(img)
+            img = self.transform(img)
 
         if not self.labels[index] in self.active_classes:
             print("Active classes", self.active_classes)
             print("Label ", self.labels[index])
             assert (False)
-
+        if self.no_transformation:
+            return img, index
         return img, self.indexMapper[self.labels[index]]
 
 

@@ -200,7 +200,7 @@ for seed in args.seeds:
             print("Test NMC", testY)
 
 
-            # TEMP CODE
+            TEMP CODE
 
             my_trainer.setup_training()
             adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, 0.8, args.cuda, train_iterator)
