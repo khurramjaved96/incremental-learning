@@ -242,7 +242,7 @@ class DisguisedFoolingSampleGeneration():
 
     def __init__(self, model, minimum_confidence, cuda, iterator):
         self.iterator = iterator
-        self.model = model
+        self.model = copy.deepcopy(model)
         self.model.eval()
         self.cuda = cuda
 
@@ -316,5 +316,5 @@ class DisguisedFoolingSampleGeneration():
                 ut.visualizeTensor(data.cpu(), "../pathDataTemp.jpg")
                 break
 
-        self.iterator.dataset.no_transformation = True
-        return self.processed_image.data
+            self.iterator.dataset.no_transformation = True
+            return self.processed_image.data
