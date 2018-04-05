@@ -268,7 +268,7 @@ class DisguisedFoolingSampleGeneration():
             if self.cuda:
                 instance = instance.cuda()
             self.processed_image = Variable(instance, requires_grad=True)
-            lRate = 0.00001
+            lRate = 0.000001
             optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
 
             for i in range(1, 10000):
@@ -302,8 +302,8 @@ class DisguisedFoolingSampleGeneration():
                 # self.initial_image = recreate_image(self.processed_image)
                 # Save image
                 # Set min = 0 and max = 1
-                # self.processed_image = self.processed_image - torch.mean(self.processed_image)
-                # self.processed_image = self.processed_image/torch.max(self.processed_image)
+                self.processed_image = self.processed_image - torch.mean(self.processed_image)
+                self.processed_image = self.processed_image/torch.max(self.processed_image)
                 if i%100 == 1:
                     ut.visualizeTensor(self.processed_image.data.cpu(), "../path"+str(i)+".jpg")
 
