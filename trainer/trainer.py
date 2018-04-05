@@ -273,7 +273,7 @@ class DisguisedFoolingSampleGeneration():
             lRate = 0.000001
             optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
 
-            for i in range(1, 2):
+            for i in range(1, 300):
                 # Process image and return variable
                 # self.processed_image = preprocess_image(self.initial_image)
                 # Define optimizer for the image
