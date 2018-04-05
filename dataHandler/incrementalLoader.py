@@ -32,6 +32,7 @@ class incrementalLoader(td.Dataset):
         self.classIndices()
         self.transformData()
         self.over_sampling = oversampling
+        self.alt_transform = alt_transform
         self.do_alt_transform = False
 
 
