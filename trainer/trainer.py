@@ -293,7 +293,7 @@ class DisguisedFoolingSampleGeneration():
                 # class_loss = -output[0, self.target_class]
                 print('Iteration:', str(i), 'Class Loss', class_loss)
                 # Zero grads
-                self.model.zero_grad()
+                self.processed_image.zero_grad()
                 # Backward
                 class_loss.backward(outputTemp)
                 # Update image
@@ -302,8 +302,8 @@ class DisguisedFoolingSampleGeneration():
                 # self.initial_image = recreate_image(self.processed_image)
                 # Save image
                 # Set min = 0 and max = 1
-                self.processed_image = self.processed_image - torch.mean(self.processed_image)
-                self.processed_image = self.processed_image/torch.max(self.processed_image)
+                # self.processed_image = self.processed_image - torch.mean(self.processed_image)
+                # self.processed_image = self.processed_image/torch.max(self.processed_image)
                 if i%100 == 1:
                     ut.visualizeTensor(self.processed_image.data.cpu(), "../path"+str(i)+".jpg")
 
