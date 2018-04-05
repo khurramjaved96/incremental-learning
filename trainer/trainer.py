@@ -311,7 +311,7 @@ class DisguisedFoolingSampleGeneration():
                     ut.visualizeTensor(self.processed_image.data.cpu(), "../path"+str(i)+".jpg")
             # tempData  = torchvision.transforms.ToPILImage()(self.processed_image.data.cpu().numpy())
             tempData = np.swapaxes(np.swapaxes(self.processed_image.data.cpu().numpy(),1,3), 1,2)
-            self.iterator.dataset.data[target.cpu().numpy()] = tempData*255
+            self.iterator.dataset.data[target.cpu().numpy()] = (tempData*255).astype(np.uint8)
             for batch_idx, (data, target) in enumerate(self.iterator):
                 ut.visualizeTensor(data.cpu(), "../pathDataTemp.jpg")
                 break
