@@ -308,7 +308,7 @@ class DisguisedFoolingSampleGeneration():
                 self.processed_image.data = self.processed_image.data/torch.max(self.processed_image.data)
                 if i%100 == 1:
                     ut.visualizeTensor(self.processed_image.data.cpu(), "../path"+str(i)+".jpg")
-            tempData  = torchvision.transforms.ToPILImage()(self.processed_image.data.cpu())
+            tempData  = torchvision.transforms.ToPILImage()(self.processed_image.data.cpu().numpy())
             # tempData = np.swapaxes(np.swapaxes(self.processed_image.data.cpu().numpy(),1,3), 1,2)
             self.iterator.dataset.data[target.cpu().numpy()] = tempData
             for batch_idx, (data, target) in enumerate(self.iterator):
