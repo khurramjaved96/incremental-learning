@@ -59,7 +59,7 @@ class CIFAR100(Dataset):
             transforms.ToTensor(),
             transforms.Normalize(mean, std),
         ])
-        #
+        # DO NOT DO DATA NORMALIZATION; TO IMPLEMENT DATA NORMALIZATION, MAKE SURE THAT DATA NORMALIZATION IS STILL APPLIED IN GET_ITEM FUNCTION OF INCREMENTAL LOADER
         self.train_transform = transforms.Compose(
             [transforms.RandomHorizontalFlip(),
              transforms.RandomCrop(32, padding=4),

@@ -33,6 +33,7 @@ class IncrementalLoader(td.Dataset):
         self.over_sampling = oversampling
         # f(label) = new_label. We do this to ensure labels are in increasing order. For example, even if first increment chooses class 1,5,6, the training labels will be 0,1,2
         self.indexMapper = {}
+        self.no_transformation = False
 
 
     def __class_indices(self):
@@ -161,7 +162,8 @@ class IncrementalLoader(td.Dataset):
         :return: Returns starting index of classs n
         '''
         return self.indices[n][0]
-
+    def setTransformation(self, bool):
+        self.no_transformation = bool
     def __getitem__(self, index):
         '''
         Replacing this with a more efficient implemnetation selection; removing c
@@ -189,7 +191,8 @@ class IncrementalLoader(td.Dataset):
             img = img.numpy()
         img = Image.fromarray(img)
         if self.transform is not None:
-            img = self.transform(img)
+            if not self.no_transformation:
+                img = self.transform(img)
 
         if not self.labels[index] in self.active_classes:
             print("Active classes", self.active_classes)

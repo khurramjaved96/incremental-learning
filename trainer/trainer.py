@@ -263,6 +263,7 @@ class DisguisedFoolingSampleGeneration():
             if self.cuda:
                 perm = perm.cuda()
             instance = data[perm]
+            instance = data
             # print ("shape of instance", instance.shape)
             # print ("Shape of input", self.processed_images.shape)
             if self.cuda:
@@ -271,13 +272,13 @@ class DisguisedFoolingSampleGeneration():
             lRate = 0.000001
             optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
 
-            for i in range(1, 10000):
+            for i in range(1, 1000):
                 # Process image and return variable
                 # self.processed_image = preprocess_image(self.initial_image)
                 # Define optimizer for the image
-                if i == 3000:
+                if i == 300:
                     lRate/=10
-                if i == 6000:
+                if i == 600:
                     lRate/=10
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = lRate
