@@ -301,6 +301,9 @@ class DisguisedFoolingSampleGeneration():
                 # Recreate image
                 # self.initial_image = recreate_image(self.processed_image)
                 # Save image
+                # Set min = 0 and max = 1
+                self.processed_image = self.processed_image - torch.mean(self.processed_image)
+                self.processed_image = self.processed_image/torch.max(self.processed_image)
                 if i%100 == 1:
                     ut.visualizeTensor(self.processed_image.data.cpu(), "../path"+str(i)+".jpg")
 

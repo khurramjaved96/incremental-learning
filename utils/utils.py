@@ -77,7 +77,7 @@ def visualizeTensor(t, path):
 
         img = img-np.min(img)
         img = img/np.max(img)
-        plot(img,"Temp", False)
+        plot(img,str(cur), False)
     plt.savefig(path)
 
 
