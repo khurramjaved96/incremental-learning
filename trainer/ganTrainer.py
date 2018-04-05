@@ -242,6 +242,7 @@ class trainer():
             G.train()
             D_Losses_E = []
             G_Losses_E = []
+            dist_Losses_E = []
             startTime = time.time()
             self.updateLR(epoch, G_Opt, D_Opt)
 
@@ -350,8 +351,20 @@ class trainer():
                     G_Loss = -torch.mean(D_output)
                 elif self.args.process == "dcgan" or self.args.process == "cdcgan":
                     G_Loss = criterion(D_output, D_like_real)
+                total_loss = G_Loss
 
-                G_Loss.backward()
+                if self.args.joint_gan_obj:
+                    model = self.classifierTrainer.modelFixed
+                    euclidean_dist = nn.PairwiseDistance(2)
+                    # Generate features for real and fake images
+                    output_fake = model.forward(G_output, True)
+                    output_real = model.forward(image, True)
+                    # Calculate euclidean distance
+                    distance_loss = torch.mean(euclidean_dist(output_fake, output_real))
+                    total_loss = G_Loss + (self.args.join_gan_alpha * distance_loss)
+                    dist_Losses_E.append(distance_loss)
+
+                total_loss.backward()
                 G_Losses_E.append(G_Loss)
                 G_Opt.step()
 
@@ -361,6 +374,9 @@ class trainer():
             #############################
             mean_G = (sum(G_Losses_E)/len(G_Losses_E)).cpu().data.numpy()[0]
             mean_D = (sum(D_Losses_E)/len(D_Losses_E)).cpu().data.numpy()[0]
+            mean_dist = None
+            if self.args.joint_gan_obj:
+                mean_dist = (sum(dist_Losses_E)/len(dist_Losses_E)).cpu().data.numpy()[0]
             G_Losses.append(mean_G)
             D_Losses.append(mean_D)
 
@@ -377,6 +393,7 @@ class trainer():
                   "D_iters:", a,
                   "G_Loss:", mean_G,
                   "D_Loss:", mean_D,
+                  "dist_Loss:", mean_dist,
                   "Time taken:", time.time() - startTime)
 
     def generateExamples(self, G, num_examples, active_classes, name="", save=False):

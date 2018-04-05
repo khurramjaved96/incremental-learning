@@ -80,6 +80,9 @@ parser.add_argument('--ideal-nmc', default=False, action='store_true', help='Whe
 parser.add_argument('--optimize-features', default=False, action='store_true', help='Whether to minimize the distance between generated and real embeddings')
 parser.add_argument('--optimize-feat-epochs', type=int, default=20, help='How many epochs to run optimize-features for')
 parser.add_argument('--optimize-feat-lr', type=float, default=0.00001, help='lr for optimize-features')
+parser.add_argument('--joint-gan-obj', default=False, action='store_true', help='Whether to jointly train GAN and minimize the logit distance')
+parser.add_argument('--joint-gan-alpha', type=int, default=1, help='Contribution of logit distance minimizer in GAN loss')
+
 
 
 args = parser.parse_args()
