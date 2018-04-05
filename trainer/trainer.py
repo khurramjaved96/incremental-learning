@@ -316,5 +316,5 @@ class DisguisedFoolingSampleGeneration():
                 ut.visualizeTensor(data.cpu(), "../pathDataTemp.jpg")
                 break
 
-            self.iterator.dataset.no_transformation = False
-            return self.processed_image.data
+        self.iterator.dataset.no_transformation = False
+        return self.processed_image.data
