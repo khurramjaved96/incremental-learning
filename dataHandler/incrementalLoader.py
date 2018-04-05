@@ -12,8 +12,7 @@ import model.modelFactory as mF
 
 
 class incrementalLoader(td.Dataset):
-    def __init__(self, datasetName, data, labels, classSize, classes, activeClasses, transform=None, cuda=False, oversampling=True):
-
+    def __init__(self, datasetName, data, labels, classSize, classes, activeClasses, transform=None, cuda=False, oversampling=True, alt_transform=None):
         self.len = classSize * len(activeClasses)
         self.datasetName = datasetName
         sortIndex = np.argsort(labels)
@@ -33,6 +32,7 @@ class incrementalLoader(td.Dataset):
         self.classIndices()
         self.transformData()
         self.over_sampling = oversampling
+        self.do_alt_transform = False
 
 
     def transformData(self):
@@ -253,8 +253,10 @@ class incrementalLoader(td.Dataset):
         if self.datasetName == "MNIST":
             img = np.expand_dims(img, axis=2)
 
-        if self.transform is not None:
+        if !self.do_alt_transform and self.transform is not None:
             img = self.transform(img)
+        else:
+            img = self.alt_transform(img)
 
         if not self.labels[index] in self.activeClasses:
             print("Active classes", self.activeClasses)

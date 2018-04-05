@@ -205,6 +205,9 @@ class trainer():
         activeClasses = self.trainIterator.dataset.activeClasses
         print("ACTIVE CLASSES: ", activeClasses)
 
+        # Switch to alternate transformations while training GAN
+        self.trainLoader.do_alt_transform = True
+
         #TODO Change batchsize of dataIterator here to gan_batch_size
         if self.args.process == "wgan":
             if self.args.gan_lr > 5e-5 or len(self.args.gan_schedule) > 1:
@@ -395,6 +398,8 @@ class trainer():
                   "D_Loss:", mean_D,
                   "dist_Loss:", mean_dist,
                   "Time taken:", time.time() - startTime)
+        # Switch to default transformation
+        self.trainLoader.do_alt_transform = False
 
     def generateExamples(self, G, num_examples, active_classes, name="", save=False):
         '''

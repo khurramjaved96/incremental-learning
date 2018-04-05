@@ -81,7 +81,7 @@ parser.add_argument('--optimize-features', default=False, action='store_true', h
 parser.add_argument('--optimize-feat-epochs', type=int, default=20, help='How many epochs to run optimize-features for')
 parser.add_argument('--optimize-feat-lr', type=float, default=0.00001, help='lr for optimize-features')
 parser.add_argument('--joint-gan-obj', default=False, action='store_true', help='Whether to jointly train GAN and minimize the logit distance')
-parser.add_argument('--joint-gan-alpha', type=int, default=1, help='Contribution of logit distance minimizer in GAN loss')
+parser.add_argument('--joint-gan-alpha', type=float, default=1, help='Contribution of logit distance minimizer in GAN loss')
 
 
 
@@ -112,7 +112,8 @@ trainDatasetLoader = dL.incrementalLoader(args.dataset, dataset.trainData.train_
                                           dataset.trainData.train_labels,
                                           dataset.labelsPerClassTrain,
                                           dataset.classes, [], transform=dataset.trainTransform,
-                                          cuda=args.cuda, oversampling=args.no_upsampling
+                                          cuda=args.cuda, oversampling=args.no_upsampling,
+                                          alt_transform=dataset.altTransform
                                           )
 
 testDatasetLoader = dL.incrementalLoader(args.dataset, dataset.testData.test_data,
