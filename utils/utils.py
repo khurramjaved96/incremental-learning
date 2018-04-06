@@ -79,6 +79,8 @@ def visualizeTensor(t, path):
         # img = img/np.max(img)
         plot(img,str(cur), False)
     plt.savefig(path)
+    plt.gcf().clear()
+    plt.close()
 
 
 
