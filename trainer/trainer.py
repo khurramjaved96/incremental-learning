@@ -333,7 +333,7 @@ class DisguisedFoolingSampleGeneration():
         return self.processed_image.data
 
     def gaussian(self, ins,mean,stddev, cuda):
-        noise = ins.data.new(ins.size()).normal_(mean, stddev)
+        noise = ins.new(ins.size()).normal_(mean, stddev)
         if cuda:
             noise = noise.cuda()
         # print (noise)
