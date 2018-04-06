@@ -51,7 +51,7 @@ def save_confusion_matrix(epoch, path, model, args, dataset, test_loader):
 import matplotlib.pyplot as plt
 cur = 1
     # Function to plot images;
-fig = plt.figure(figsize=(20, 20))
+
 
 
 def plot(img, title, g=True):

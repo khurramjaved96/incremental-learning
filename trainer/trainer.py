@@ -242,7 +242,7 @@ class DisguisedFoolingSampleGeneration():
 
     def __init__(self, model, minimum_confidence, cuda, iterator):
         self.iterator = iterator
-        self.model = copy.deepcopy(model)
+        self.model = model
         self.model.eval()
         self.cuda = cuda
 
@@ -272,7 +272,7 @@ class DisguisedFoolingSampleGeneration():
             self.processed_image = Variable(instance, requires_grad=True)
             lRate = 0.000001
             optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
-
+            self.processed_image.data = self.gaussian(self.processed_image.data,0.5, 0.5)
             for i in range(1, 300):
                 # Process image and return variable
                 # self.processed_image = preprocess_image(self.initial_image)
@@ -305,8 +305,19 @@ class DisguisedFoolingSampleGeneration():
                 # Save image
                 # Set min = 0 and max = 1
                 # self.processed_image.data = self.processed_image.data - torch.mean(self.processed_image.data)
-                self.processed_image.data = self.processed_image.data - torch.min(self.processed_image.data) + 0.2
-                self.processed_image.data = self.processed_image.data/torch.max(self.processed_image.data)
+                min = torch.min(self.processed_image.data, dim=1, keepdim=True)
+                # print ("min Shape", min)
+                min = torch.min(min[0], dim=2, keepdim=True)
+                # print("min Shape", min.shape)
+                min = torch.min(min[0], dim=3, keepdim=True)[0]
+
+                max = torch.min(self.processed_image.data, dim=1, keepdim=True)
+                # print ("min Shape", min)
+                max = torch.min(max[0], dim=2, keepdim=True)
+                # print("min Shape", min.shape)
+                max = torch.min(max[0], dim=3, keepdim=True)[0]
+                self.processed_image.data = self.processed_image.data - min
+                self.processed_image.data = self.processed_image.data/max
                 if i%100 == 1:
                     ut.visualizeTensor(self.processed_image.data.cpu(), "../path"+str(i)+".jpg")
             # tempData  = torchvision.transforms.ToPILImage()(self.processed_image.data.cpu().numpy())
@@ -318,3 +329,7 @@ class DisguisedFoolingSampleGeneration():
 
         self.iterator.dataset.no_transformation = False
         return self.processed_image.data
+
+    def gaussian(self, ins,mean,stddev):
+        noise = ins.data.new(ins.size()).normal_(mean, stddev)
+        return ins + noise

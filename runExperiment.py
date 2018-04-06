@@ -171,34 +171,34 @@ for seed in args.seeds:
 
 
 
-
-
-            y1.append(t_classifier.evaluate(myModel, test_iterator))
-
-            # Update means using the train iterator; this is iCaRL case
-            nmc.update_means(myModel, train_iterator, dataset.classes)
-            # Update mean using all the data. This is equivalent to memory_budget = infinity
-            nmc_ideal.update_means(myModel, train_iterator_nmc, dataset.classes)
-            # Compute the the nmc based classification results
-            tempTrain = nmc.evaluate(myModel, train_iterator)
-            train_y.append(tempTrain)
-
-
-
-            testY = nmc.evaluate(myModel, test_iterator)
-            testY_ideal = nmc_ideal.evaluate(myModel, test_iterator)
-            y.append(testY)
-            nmc_ideal_cum.append(testY_ideal)
-
-            # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
-            tcMatrix = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes)
-            nmcMatrix = nmc.get_confusion_matrix(myModel, test_iterator, dataset.classes)
-            nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(myModel, test_iterator, dataset.classes)
-
-            # Printing results
-            print("Train NMC", tempTrain)
-            print("Test NMC", testY)
-
+            #
+            #
+            # y1.append(t_classifier.evaluate(myModel, test_iterator))
+            #
+            # # Update means using the train iterator; this is iCaRL case
+            # nmc.update_means(myModel, train_iterator, dataset.classes)
+            # # Update mean using all the data. This is equivalent to memory_budget = infinity
+            # nmc_ideal.update_means(myModel, train_iterator_nmc, dataset.classes)
+            # # Compute the the nmc based classification results
+            # tempTrain = nmc.evaluate(myModel, train_iterator)
+            # train_y.append(tempTrain)
+            #
+            #
+            #
+            # testY = nmc.evaluate(myModel, test_iterator)
+            # testY_ideal = nmc_ideal.evaluate(myModel, test_iterator)
+            # y.append(testY)
+            # nmc_ideal_cum.append(testY_ideal)
+            #
+            # # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
+            # tcMatrix = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes)
+            # nmcMatrix = nmc.get_confusion_matrix(myModel, test_iterator, dataset.classes)
+            # nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(myModel, test_iterator, dataset.classes)
+            #
+            # # Printing results
+            # print("Train NMC", tempTrain)
+            # print("Test NMC", testY)
+            #
 
             # TEMP CODE
 
