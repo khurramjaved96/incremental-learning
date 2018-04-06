@@ -318,8 +318,8 @@ class DisguisedFoolingSampleGeneration():
                 max = torch.min(max[0], dim=2, keepdim=True)
                 # print("min Shape", min.shape)
                 max = torch.min(max[0], dim=3, keepdim=True)[0]
-                self.processed_image.data = self.processed_image.data - min
-                self.processed_image.data = self.processed_image.data/max
+                self.processed_image.data = self.processed_image.data - torch.min(self.processed_image.data)
+                self.processed_image.data = self.processed_image.data/torch.max(self.processed_image.data)
                 if i%100 == 1:
                     ut.visualizeTensor(self.processed_image.data.cpu(), "../path"+str(i)+".jpg")
             # tempData  = torchvision.transforms.ToPILImage()(self.processed_image.data.cpu().numpy())
