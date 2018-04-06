@@ -204,7 +204,7 @@ for seed in args.seeds:
 
             my_trainer.setup_training()
             adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, 0.8, args.cuda, train_iterator)
-            img = adv.generate()
+
 
             # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
             x.append(class_group + args.step_size)
@@ -234,3 +234,5 @@ for seed in args.seeds:
 
             # Saving the line plot
             my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
+
+            img = adv.generate()
