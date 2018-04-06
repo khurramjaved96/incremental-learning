@@ -334,4 +334,5 @@ class DisguisedFoolingSampleGeneration():
         noise = ins.data.new(ins.size()).normal_(mean, stddev)
         if cuda:
             noise = noise.cuda()
+        print (noise)
         return ins + noise
