@@ -267,12 +267,13 @@ class DisguisedFoolingSampleGeneration():
             instance = data
             # print ("shape of instance", instance.shape)
             # print ("Shape of input", self.processed_images.shape)
+            instance = self.gaussian(instance, 0.5, 0.5, self.cuda)
             if self.cuda:
                 instance = instance.cuda()
             self.processed_image = Variable(instance, requires_grad=True)
             lRate = 0.000001
             optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
-            self.processed_image = self.gaussian(self.processed_image,0.5, 0.5,self.cuda)
+
             for i in range(1, 300):
                 # Process image and return variable
                 # self.processed_image = preprocess_image(self.initial_image)
@@ -334,5 +335,5 @@ class DisguisedFoolingSampleGeneration():
         noise = ins.data.new(ins.size()).normal_(mean, stddev)
         if cuda:
             noise = noise.cuda()
-        print (noise)
+        # print (noise)
         return ins + noise
