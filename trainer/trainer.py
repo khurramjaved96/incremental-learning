@@ -186,8 +186,10 @@ class Trainer(GenericTrainer):
                         data[old] = self.convert_to_adversarial_instance(self.dataset.get_random_instance(), target[old])
 
             y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
+            mult = Variable(torch.FloatTensor([self.args.alpha]))
             if self.args.cuda:
                 y_onehot = y_onehot.cuda()
+                mult = mult.cuda()
 
             y_onehot.zero_()
             target.unsqueeze_(1)
@@ -195,7 +197,7 @@ class Trainer(GenericTrainer):
 
             output = self.model(Variable(data))
             # loss = F.binary_cross_entropy(output, Variable(y_onehot))
-            mult = Variable(torch.FloatTensor([self.args.alpha]))
+
             loss = F.kl_div(output, Variable(y_onehot))*mult
 
             myT = self.args.T
@@ -220,6 +222,8 @@ class Trainer(GenericTrainer):
                 output2 = self.model(Variable(data), T=myT)
                 # Compute second loss
                 mult = Variable(torch.FloatTensor([1-self.args.alpha]))
+                if self.args.cuda:
+                    mult = mult.cuda()
                 loss2 = F.kl_div(output2, Variable(pred2.data))*mult
                 # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
