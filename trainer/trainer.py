@@ -195,7 +195,8 @@ class Trainer(GenericTrainer):
 
             output = self.model(Variable(data))
             # loss = F.binary_cross_entropy(output, Variable(y_onehot))
-            loss = F.kl_div(output, Variable(y_onehot)).grad*(self.args.alpha)
+            mult = Variable(torch.FloatTensor([self.args.alpha]))
+            loss = F.kl_div(output, Variable(y_onehot))*mult
 
             myT = self.args.T
             if self.args.no_distill:
@@ -218,7 +219,8 @@ class Trainer(GenericTrainer):
                 # Softened output of the model
                 output2 = self.model(Variable(data), T=myT)
                 # Compute second loss
-                loss2 = F.kl_div(output2, Variable(pred2.data)).grad*(1-self.args.alpha)
+                mult = Variable(torch.FloatTensor([1-self.args.alpha]))
+                loss2 = F.kl_div(output2, Variable(pred2.data))*mult
                 # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
                 # Scale the stored gradients by a factor of my
