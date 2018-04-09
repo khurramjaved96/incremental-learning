@@ -81,6 +81,7 @@ class Trainer(GenericTrainer):
         super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
 
     def convert_to_adversarial_instance(self, instance, target_class, required_confidence = 0.90, alpha = 1, iters = 100):
+        0/0
         instance.unsqueeze_(0)
         instance = Variable(instance, requires_grad=True)
 
@@ -177,7 +178,7 @@ class Trainer(GenericTrainer):
             new_classes_indices = torch.squeeze(torch.nonzero((weight_vector == 0)).long())
 
             self.optimizer.zero_grad()
-
+            losses = []
             if self.args.rand or self.args.adversarial:
                 for old in old_classes_indices:
                     if self.args.rand:
@@ -198,8 +199,8 @@ class Trainer(GenericTrainer):
             output = self.model(Variable(data))
             # loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
-            loss = F.kl_div(output, Variable(y_onehot))*mult
-
+            loss = F.kl_div(output, Variable(y_onehot))
+            losses.append(loss)
             myT = self.args.T
             if self.args.no_distill:
                 pass
@@ -224,13 +225,14 @@ class Trainer(GenericTrainer):
                 mult = Variable(torch.FloatTensor([1-self.args.alpha]))
                 if self.args.cuda:
                     mult = mult.cuda()
-                loss2 = F.kl_div(output2, Variable(pred2.data))*mult
+                loss2 = F.kl_div(output2, Variable(pred2.data))
+                losses.append(loss2)
                 # Store the gradients in the gradient buffers
-                loss2.backward(retain_graph=True)
+                # loss2.backward(retain_graph=True)
                 # Scale the stored gradients by a factor of my
-                # for param in self.model.parameters():
-                    # param.grad=param.grad*(myT*myT)*(1-self.args.alpha)
-            # loss.backward()
+                for param in self.model.parameters():
+                    param.grad=param.grad*(myT*myT)*10
+            sum(losses).backward()
             self.optimizer.step()
 
 import os
