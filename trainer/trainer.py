@@ -228,11 +228,12 @@ class Trainer(GenericTrainer):
                 loss2 = F.kl_div(output2, Variable(pred2.data))
                 losses.append(loss2)
                 # Store the gradients in the gradient buffers
-                # loss2.backward(retain_graph=True)
+                loss2.backward(retain_graph=True)
                 # Scale the stored gradients by a factor of my
                 for param in self.model.parameters():
                     param.grad=param.grad*(myT*myT)*10
-            sum(losses).backward()
+            # sum(losses).backward()
+            loss.backward()
             self.optimizer.step()
 
 import os
