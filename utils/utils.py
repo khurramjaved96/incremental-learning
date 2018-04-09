@@ -69,7 +69,7 @@ def visualizeTensor(t, path):
     global cur, fig
     cur = 1
     # Function to plot images;
-    fig = plt.figure(figsize=(20, 20))
+    fig = plt.figure(figsize=(10, 10))
     for a in t:
         img = a.cpu().numpy()
         img = np.swapaxes(img,0,2)

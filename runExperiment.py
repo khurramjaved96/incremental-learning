@@ -45,6 +45,8 @@ parser.add_argument('--outputDir', default="../",
                          'in the specified directory to save the results.')
 parser.add_argument('--no-upsampling', action='store_true', default=True,
                     help='Do not do upsampling.')
+parser.add_argument('--pp', action='store_true', default=False,
+                    help='Privacy perserving')
 parser.add_argument('--alpha', type=float, default=0.2, help='Weight given to new classes vs old classes in loss')
 parser.add_argument('--decay', type=float, default=0.00004, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
@@ -234,5 +236,5 @@ for seed in args.seeds:
 
             # Saving the line plot
             my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
-
-            img = adv.generate()
+            if args.pp:
+                img = adv.generate()
