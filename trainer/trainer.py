@@ -235,7 +235,7 @@ class Trainer(GenericTrainer):
             # sum(losses).backward()
             loss.backward()
             self.optimizer.step()
-            print ("Alpha value", (len(self.older_classes) / self.args.step_size))
+        print ("Alpha value", (len(self.older_classes) / self.args.step_size))
 
 import os
 import cv2
