@@ -230,7 +230,7 @@ class Trainer(GenericTrainer):
                 # Scale the stored gradients by a factor of my
                 # for param in self.model.parameters():
                     # param.grad=param.grad*(myT*myT)*(1-self.args.alpha)
-            loss.backward()
+            # loss.backward()
             self.optimizer.step()
 
 import os
