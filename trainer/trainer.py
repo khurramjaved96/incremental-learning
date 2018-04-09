@@ -134,8 +134,6 @@ class Trainer(GenericTrainer):
             # print("Train Classes", self.train_data_iterator.dataset.active_classes)
             self.left_over.append(pop_val)
 
-    def update_leftover(self, k):
-        self.older_classes.append(k)
 
     def limit_class(self, n, k, herding=True):
         if not herding:
@@ -143,7 +141,8 @@ class Trainer(GenericTrainer):
         else:
             # print("Sorting by herding")
             self.train_loader.limit_class_and_sort(n, k, self.model_fixed)
-        self.older_classes.append(n)
+        if n not in self.older_classes:
+            self.older_classes.append(n)
 
     def setup_training(self):
         for param_group in self.optimizer.param_groups:
