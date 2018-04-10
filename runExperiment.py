@@ -182,7 +182,7 @@ for seed in args.seeds:
             # Update mean using all the data. This is equivalent to memory_budget = infinity
             nmc_ideal.update_means(myModel, train_iterator_nmc, dataset.classes)
             # Compute the the nmc based classification results
-            tempTrain = nmc.evaluate(myModel, train_iterator)
+            tempTrain = t_classifier.evaluate(myModel, train_iterator)
             train_y.append(tempTrain)
 
 
