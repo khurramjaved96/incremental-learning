@@ -243,7 +243,7 @@ class Trainer(GenericTrainer):
 import os
 
 from torch.optim import SGD
-
+import cv2
 from model.misc_functions import preprocess_image, recreate_image, get_params
 
 class DisguisedFoolingSampleGeneration():
