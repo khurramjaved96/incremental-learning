@@ -240,7 +240,6 @@ class Trainer(GenericTrainer):
         print ("Alpha value", (len(self.older_classes) / self.args.step_size))
 
 import os
-import cv2
 
 from torch.optim import SGD
 
