@@ -233,8 +233,9 @@ class Trainer(GenericTrainer):
                     param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)
             # sum(losses).backward()
             regParam = 0.000001
-            l1Reg = self.model(Variable(data),getAllFeatures =True).norm(1)*self.args.l1
-            l1Reg.backward()
+            if self.args.l1 > 0:
+                l1Reg = self.model(Variable(data),getAllFeatures =True).norm(1)*self.args.l1
+                l1Reg.backward()
             loss.backward()
             self.optimizer.step()
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
