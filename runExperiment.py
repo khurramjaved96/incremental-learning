@@ -32,7 +32,7 @@ parser.add_argument('--no-random', action='store_true', default=False,
                     help='Disable random shuffling of classes')
 parser.add_argument('--no-herding', action='store_true', default=False,
                     help='Disable herding for NMC')
-parser.add_argument('--seeds', type=int, nargs='+', default=[200],
+parser.add_argument('--seeds', type=int, nargs='+', default=[23423],
                     help='Seeds values to be used')
 parser.add_argument('--log-interval', type=int, default=5, metavar='N',
                     help='how many batches to wait before logging training status')
