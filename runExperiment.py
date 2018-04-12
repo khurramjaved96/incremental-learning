@@ -144,6 +144,7 @@ for seed in args.seeds:
         y1 = []
         train_y = []
 
+        y_scaled = []
         nmc_ideal_cum = []
 
         nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
@@ -177,9 +178,7 @@ for seed in args.seeds:
             print("Test Classifier Final:", t_classifier.evaluate(myModel, test_iterator))
             print("Test Classifier Final Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
 
-
-
-
+            y_scaled.append(t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
             y1.append(t_classifier.evaluate(myModel, test_iterator))
 
             # Update means using the train iterator; this is iCaRL case
@@ -218,6 +217,7 @@ for seed in args.seeds:
 
             my_experiment.results["NMC"] = [x, y]
             my_experiment.results["Trained Classifier"] = [x, y1]
+            my_experiment.results["Trained Classifier Scaled"] = [x, y_scaled]
             my_experiment.results["Train Error Classifier"] = [x, train_y]
             my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
             my_experiment.store_json()
@@ -235,6 +235,7 @@ for seed in args.seeds:
 
             # Plotting the line diagrams of all the possible cases
             my_plotter.plot(x, y, title=args.name, legend="NMC")
+            my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
             my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
             my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
             my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
