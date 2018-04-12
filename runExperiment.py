@@ -169,6 +169,7 @@ for seed in args.seeds:
                     print ("Current Epoch:", epoch)
                     print("Train Classifier:", tError)
                     print("Test Classifier:", t_classifier.evaluate(myModel, test_iterator))
+                    print("Test Classifier:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
 
             # Evaluate the learned classifier
             img = None
