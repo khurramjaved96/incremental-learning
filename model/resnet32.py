@@ -100,7 +100,7 @@ class CifarResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x, feature=False, T=1, labels=False, getAllFeatures = False):
+    def forward(self, x, feature=False, T=1, labels=False, getAllFeatures = False, scale=None):
         # print ("X shape", x.shape)
         if getAllFeatures:
             x1 = self.conv_1_3x3(x)
@@ -125,6 +125,9 @@ class CifarResNet(nn.Module):
                 return x7 / torch.norm(x7, 2, 1).unsqueeze(1)
             if labels:
                 return F.softmax(self.fc(x7) / T)
+            if scale is not None:
+                temp = F.log_softmax(self.fc(x7) / T)
+                return temp/scale
             return F.log_softmax(self.fc(x7) / T)
         x = self.conv_1_3x3(x)
         x = F.relu(self.bn_1(x), inplace=True)

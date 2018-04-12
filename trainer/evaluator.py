@@ -111,15 +111,21 @@ class softmax_evaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def evaluate(self, model, loader):
+    def evaluate(self, model, loader, scale=None):
         model.eval()
         correct = 0
-
+        if scale is not None:
+            scale = torch.from_numpy(scale).unsquueze(0)
+            if self.cuda:
+                scale = scale.cuda()
         for data, target in loader:
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
-            output = model(data)
+            if scale is not None:
+                output = model(data, scale)
+            else:
+                output = model(data)
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
