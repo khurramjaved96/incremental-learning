@@ -147,6 +147,7 @@ class Trainer(GenericTrainer):
             self.older_classes.append(n)
 
     def setup_training(self):
+        print(self.threshold / np.max(self.threshold))
         self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
             print("Setting LR to", self.args.lr)
@@ -248,7 +249,7 @@ class Trainer(GenericTrainer):
                 l1Reg.backward()
             loss.backward()
             self.optimizer.step()
-        print (self.threshold/np.max(self.threshold))
+
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
 
 import os
