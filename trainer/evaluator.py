@@ -139,7 +139,7 @@ class softmax_evaluator():
             test_loss += F.nll_loss(output, target, size_average=False).data[0]  # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-            cMatrix.add(pred, target.data.view_as(pred))
+            cMatrix.add(pred.squeeze(), target.data.view_as(pred).squeeze())
 
         test_loss /= len(loader.dataset)
         img = cMatrix.value()

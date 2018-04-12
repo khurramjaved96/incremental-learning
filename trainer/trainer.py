@@ -241,10 +241,9 @@ class Trainer(GenericTrainer):
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
 
 import os
-import cv2
 
 from torch.optim import SGD
-
+import cv2
 from model.misc_functions import preprocess_image, recreate_image, get_params
 
 class DisguisedFoolingSampleGeneration():

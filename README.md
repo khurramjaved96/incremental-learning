@@ -27,7 +27,7 @@ runExperiment.py [-h] [--batch-size N] [--test-batch-size N]
 ## Install Instructions 
 1. Install Anaconda with Python 3
 2. Install pytorch and torchnet 
-3. Install OpenCV from conda repository
+3. Install progress bar (pip install progressbar2)
 Done. 
 
 ## Branches
