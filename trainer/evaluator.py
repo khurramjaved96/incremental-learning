@@ -115,7 +115,7 @@ class softmax_evaluator():
         model.eval()
         correct = 0
         if scale is not None:
-            scale = torch.from_numpy(scale).unsquueze(0)
+            scale = torch.from_numpy(scale).unsqueeze(0)
             if self.cuda:
                 scale = scale.cuda()
         for data, target in loader:
