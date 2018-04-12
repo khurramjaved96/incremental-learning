@@ -94,14 +94,14 @@ for seed in args.seeds:
         train_dataset_loader = dataHandler.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
                                                              dataset.labels_per_class_train,
                                                              dataset.classes, [], transform=dataset.train_transform,
-                                                             cuda=args.cuda, oversampling=not args.no_upsampling,
+                                                             cuda=args.cuda, oversampling=not args.upsampling,
                                                              )
         # Special loader use to compute ideal NMC; i.e, NMC that using all the data points to compute the mean embedding
         train_dataset_loader_nmc = dataHandler.IncrementalLoader(dataset.train_data.train_data,
                                                              dataset.train_data.train_labels,
                                                              dataset.labels_per_class_train,
                                                              dataset.classes, [], transform=dataset.train_transform,
-                                                             cuda=args.cuda, oversampling=not args.no_upsampling,
+                                                             cuda=args.cuda, oversampling=not args.upsampling,
                                                              )
         # Loader for test data.
         test_dataset_loader = dataHandler.IncrementalLoader(dataset.test_data.test_data, dataset.test_data.test_labels,
