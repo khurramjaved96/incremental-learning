@@ -233,8 +233,8 @@ class Trainer(GenericTrainer):
                 if self.args.cuda:
                     mult = mult.cuda()
 
-                self.threshold += np.sum(pred2.data, 0)
-                loss2 = F.kl_div(output2, Variable(pred2.data.cpu().numpy()))
+                self.threshold += np.sum(pred2.data.cpu().numpy(), 0)
+                loss2 = F.kl_div(output2, Variable(pred2.data))
                 losses.append(loss2)
                 # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
