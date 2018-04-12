@@ -43,7 +43,7 @@ parser.add_argument('--name', default="noname",
 parser.add_argument('--outputDir', default="../",
                     help='Directory to store the results; the new folder will be created '
                          'in the specified directory to save the results.')
-parser.add_argument('--no-upsampling', action='store_true', default=True,
+parser.add_argument('--upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
 parser.add_argument('--pp', action='store_true', default=False,
                     help='Privacy perserving')

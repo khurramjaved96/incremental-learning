@@ -12,7 +12,7 @@ from torchvision import datasets, transforms
 class IncrementalLoader(td.Dataset):
     def __init__(self, data, labels, class_size, classes, active_classes, transform=None, cuda=False,
                  oversampling=True):
-
+        oversampling = not oversampling
         self.len = class_size * len(active_classes)
         sort_index = np.argsort(labels)
         self.class_size = class_size
