@@ -145,6 +145,7 @@ class Trainer(GenericTrainer):
             self.older_classes.append(n)
 
     def setup_training(self):
+        self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
             print("Setting LR to", self.args.lr)
             param_group['lr'] = self.args.lr
@@ -229,6 +230,7 @@ class Trainer(GenericTrainer):
                 # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
                 # Scale the stored gradients by a factor of my
+
                 for param in self.model.parameters():
                     param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
             # sum(losses).backward()
