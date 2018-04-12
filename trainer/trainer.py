@@ -252,7 +252,7 @@ class Trainer(GenericTrainer):
                 l1Reg.backward()
             loss.backward()
             self.optimizer.step()
-        self.threshold[len(self.older_classes):len(self.threshold)] *= np.max(self.threshold)
+        self.threshold[len(self.older_classes):len(self.threshold)] = np.max(self.threshold)
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
 
 import os
