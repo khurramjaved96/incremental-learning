@@ -122,7 +122,7 @@ class CifarResNet(nn.Module):
             # 0/0
             return finalFeature
 
-           
+
         x = self.conv_1_3x3(x)
         x = F.relu(self.bn_1(x), inplace=True)
         x = self.stage_1(x)
@@ -136,7 +136,7 @@ class CifarResNet(nn.Module):
             return F.softmax(self.fc(x)/T)
         if scale is not None:
             temp = F.log_softmax(self.fc(x) / T)
-            print("Gets here; scaled output")
+            # print("Gets here; scaled output")
             return temp / scale
         return F.log_softmax(self.fc(x)/T)
 
