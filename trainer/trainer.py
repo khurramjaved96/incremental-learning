@@ -149,6 +149,7 @@ class Trainer(GenericTrainer):
     def setup_training(self):
         print(self.threshold / np.max(self.threshold))
         self.threshold = np.ones(100, dtype=np.float64)
+        self.threshold[len(self.older_classes):len(self.threshold)]*=1000000000
         self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
             print("Setting LR to", self.args.lr)
