@@ -126,7 +126,7 @@ class softmax_evaluator():
             data, target = Variable(data, volatile=True), Variable(target)
             if scale is not None:
                 print("Gets here, getting outputs")
-                output = model(data, scale = scale)
+                output = model(data, scale = Variable(scale))
             else:
                 output = model(data)
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
