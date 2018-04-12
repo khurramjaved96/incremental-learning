@@ -118,7 +118,7 @@ class softmax_evaluator():
             scale = scale/np.max(scale)
             # print ("Gets here")
             scale = 1 / scale
-            scale = np.log(scale)
+            # scale = np.log(scale)
             scale = torch.from_numpy(scale).unsqueeze(0)
             if self.cuda:
                 scale = scale.cuda()
