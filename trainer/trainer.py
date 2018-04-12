@@ -201,7 +201,7 @@ class Trainer(GenericTrainer):
             output = self.model(Variable(data))
             # loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
-            self.threshold += np.sum(y_onehot.cpu().data, 0)
+            self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
             # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
 
             loss = F.kl_div(output, Variable(y_onehot))
@@ -233,7 +233,7 @@ class Trainer(GenericTrainer):
                     mult = mult.cuda()
 
                 self.threshold += np.sum(pred2.data, 0)
-                loss2 = F.kl_div(output2, Variable(pred2.data))
+                loss2 = F.kl_div(output2, Variable(pred2.data.cpu().numpy()))
                 losses.append(loss2)
                 # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
