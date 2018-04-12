@@ -149,7 +149,7 @@ class Trainer(GenericTrainer):
     def setup_training(self):
         print(self.threshold / np.max(self.threshold))
         self.threshold = np.ones(100, dtype=np.float64)
-        # self.threshold[len(self.older_classes):len(self.threshold)]*=1000000000
+
         self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
             print("Setting LR to", self.args.lr)
@@ -157,6 +157,7 @@ class Trainer(GenericTrainer):
             self.current_lr = self.args.lr
         for val in self.left_over:
             self.limit_class(val, int(self.args.memory_budget / len(self.left_over)), not self.args.no_herding)
+
 
     def update_frozen_model(self):
         self.model.eval()
@@ -251,7 +252,7 @@ class Trainer(GenericTrainer):
                 l1Reg.backward()
             loss.backward()
             self.optimizer.step()
-
+        self.threshold[len(self.older_classes):len(self.threshold)] *= np.max(self.threshold)
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
 
 import os
