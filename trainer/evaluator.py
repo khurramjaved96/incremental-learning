@@ -116,7 +116,7 @@ class softmax_evaluator():
         correct = 0
         if scale is not None:
             scale = scale/np.max(scale)
-            print (scale)
+            print ("Gets here")
             scale = torch.from_numpy(scale).unsqueeze(0)
             if self.cuda:
                 scale = scale.cuda()
@@ -125,6 +125,7 @@ class softmax_evaluator():
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
             if scale is not None:
+                print("Gets here, getting outputs")
                 output = model(data, scale = scale)
             else:
                 output = model(data)
