@@ -58,7 +58,6 @@ class CifarResNet(nn.Module):
         super(CifarResNet, self).__init__()
 
         self.featureSize = 64
-
         # Model type specifies number of layers for CIFAR-10 and CIFAR-100 model
         assert (depth - 2) % 6 == 0, 'depth should be one of 20, 32, 44, 56, 110'
         layer_blocks = (depth - 2) // 6

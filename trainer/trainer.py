@@ -79,6 +79,8 @@ class AutoEncoderTrainer(GenericTrainer):
 class Trainer(GenericTrainer):
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
         super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
+        self.threshold = np.ones(100, dtype=np.float64)
+
 
     def convert_to_adversarial_instance(self, instance, target_class, required_confidence = 0.90, alpha = 1, iters = 100):
         0/0
@@ -199,6 +201,9 @@ class Trainer(GenericTrainer):
             output = self.model(Variable(data))
             # loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
+            self.threshold += np.sum(y_onehot.cpu().data, 0)
+            # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
+
             loss = F.kl_div(output, Variable(y_onehot))
             losses.append(loss)
             myT = self.args.T
@@ -221,10 +226,13 @@ class Trainer(GenericTrainer):
                 pred2 = self.model_fixed(Variable(data), T=myT, labels=True)
                 # Softened output of the model
                 output2 = self.model(Variable(data), T=myT)
+
                 # Compute second loss
                 mult = Variable(torch.FloatTensor([1-self.args.alpha]))
                 if self.args.cuda:
                     mult = mult.cuda()
+
+                self.threshold += np.sum(pred2.data, 0)
                 loss2 = F.kl_div(output2, Variable(pred2.data))
                 losses.append(loss2)
                 # Store the gradients in the gradient buffers
@@ -240,6 +248,7 @@ class Trainer(GenericTrainer):
                 l1Reg.backward()
             loss.backward()
             self.optimizer.step()
+        print (self.threshold/np.max(self.threshold))
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
 
 import os
