@@ -121,15 +121,8 @@ class CifarResNet(nn.Module):
             # print (finalFeature.shape)
             # 0/0
             return finalFeature
-            if feature:
-                return x7 / torch.norm(x7, 2, 1).unsqueeze(1)
-            if labels:
-                return F.softmax(self.fc(x7) / T)
-            if scale is not None:
-                temp = F.log_softmax(self.fc(x7) / T)
-                print ("Gets here; scaled output")
-                return temp/scale
-            return F.log_softmax(self.fc(x7) / T)
+
+           
         x = self.conv_1_3x3(x)
         x = F.relu(self.bn_1(x), inplace=True)
         x = self.stage_1(x)
@@ -141,6 +134,10 @@ class CifarResNet(nn.Module):
             return x / torch.norm(x, 2, 1).unsqueeze(1)
         if labels:
             return F.softmax(self.fc(x)/T)
+        if scale is not None:
+            temp = F.log_softmax(self.fc(x) / T)
+            print("Gets here; scaled output")
+            return temp / scale
         return F.log_softmax(self.fc(x)/T)
 
     def forwardFeature(self, x):
