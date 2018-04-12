@@ -230,7 +230,7 @@ class Trainer(GenericTrainer):
                 loss2.backward(retain_graph=True)
                 # Scale the stored gradients by a factor of my
                 for param in self.model.parameters():
-                    param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)
+                    param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
             # sum(losses).backward()
             regParam = 0.000001
             if self.args.l1 > 0:
