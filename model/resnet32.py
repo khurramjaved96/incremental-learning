@@ -141,7 +141,7 @@ class CifarResNet(nn.Module):
             # print("Gets here; scaled output")
             # print (scale)
 
-            scale = F.log_softmax(scale)
+            # scale = F.log(scale)
             # print (scale)
             # 0/0
             return temp+scale

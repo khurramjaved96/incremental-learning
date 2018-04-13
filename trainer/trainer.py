@@ -216,7 +216,7 @@ class Trainer(GenericTrainer):
                 weight_vec = Variable(weight_vec.cuda().squeeze(0).float())
                 # if batch_idx == 0:
                 #     print ("Weight Vec", weight_vec)
-            loss = F.kl_div(output*weight_vec, Variable(y_onehot))
+            loss = F.kl_div(output, Variable(y_onehot))
             losses.append(loss)
             myT = self.args.T
             if self.args.no_distill:
@@ -245,7 +245,7 @@ class Trainer(GenericTrainer):
                     mult = mult.cuda()
 
                 self.threshold += np.sum(pred2.data.cpu().numpy(), 0)
-                loss2 = F.kl_div(output2*weight_vec, Variable(pred2.data))
+                loss2 = F.kl_div(output2, Variable(pred2.data))
                 losses.append(loss2)
                 # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)

@@ -12,11 +12,11 @@ import plotter as plt
 import trainer
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
-parser.add_argument('--batch-size', type=int, default=35, metavar='N',
+parser.add_argument('--batch-size', type=int, default=200, metavar='N',
                     help='input batch size for training (default: 35)')
 parser.add_argument('--lr', type=float, default=2.0, metavar='LR',
                     help='learning rate (default: 0.1)')
-parser.add_argument('--schedule', type=int, nargs='+', default=[23, 30, 34],
+parser.add_argument('--schedule', type=int, nargs='+', default=[45, 60, 68],
                     help='Decrease learning rate at these epochs.')
 parser.add_argument('--gammas', type=float, nargs='+', default=[0.2, 0.2, 0.2],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
