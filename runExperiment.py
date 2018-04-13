@@ -165,6 +165,7 @@ for seed in args.seeds:
             for epoch in range(0, args.epochs_class):
                 my_trainer.update_lr(epoch)
                 my_trainer.train(epoch)
+                print(my_trainer.threshold)
                 if epoch % args.log_interval == (args.log_interval-1):
                     tError = t_classifier.evaluate(myModel, train_iterator)
                     print ("Current Epoch:", epoch)

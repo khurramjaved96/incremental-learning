@@ -261,11 +261,8 @@ class Trainer(GenericTrainer):
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
 
-import os
 
 from torch.optim import SGD
-import cv2
-from model.misc_functions import preprocess_image, recreate_image, get_params
 
 class DisguisedFoolingSampleGeneration():
     """
