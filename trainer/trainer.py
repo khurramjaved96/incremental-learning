@@ -219,9 +219,10 @@ class Trainer(GenericTrainer):
                 # if batch_idx == 0:
                 #     print ("Weight Vec", weight_vec)
             loss = F.kl_div(output, Variable(y_onehot),reduce=False)*weight_vec
-            loss = loss.sum(dim=1)
-            loss = loss.sum()/len(loss)
-    
+            temptemp = loss.data
+            # loss = loss.sum(dim=1)
+            # loss = loss.sum()/len(loss)
+
             losses.append(loss)
             myT = self.args.T
             if self.args.no_distill:
@@ -251,11 +252,11 @@ class Trainer(GenericTrainer):
 
                 self.threshold += np.sum(pred2.data.cpu().numpy(), 0)
                 loss2 = F.kl_div(output2, Variable(pred2.data), reduce=False)*weight_vec
-                loss2 = loss2.sum(dim=1)
-                loss2 = loss2.sum() / len(loss)
+                # loss2 = loss2.sum(dim=1)
+                # loss2 = loss2.sum() / len(loss)
                 losses.append(loss2)
                 # Store the gradients in the gradient buffers
-                loss2.backward(retain_graph=True)
+                loss2.backward(temptemp,retain_graph=True)
                 # Scale the stored gradients by a factor of my
 
                 for param in self.model.parameters():
@@ -265,7 +266,7 @@ class Trainer(GenericTrainer):
             if self.args.l1 > 0:
                 l1Reg = self.model(Variable(data),getAllFeatures =True).norm(1)*self.args.l1
                 l1Reg.backward()
-            loss.backward()
+            loss.backward(temptemp)
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
