@@ -178,7 +178,7 @@ for seed in args.seeds:
             print("Test Classifier Final:", t_classifier.evaluate(myModel, test_iterator))
             print("Test Classifier Final Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, my_trainer.older_classes))
 
-            y_scaled.append(t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
+            y_scaled.append(t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, my_trainer.older_classes))
             y1.append(t_classifier.evaluate(myModel, test_iterator))
 
             # Update means using the train iterator; this is iCaRL case
