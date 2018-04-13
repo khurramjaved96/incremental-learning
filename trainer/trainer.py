@@ -209,7 +209,9 @@ class Trainer(GenericTrainer):
             # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
             temp = self.threshold/np.max(self.threshold)
             temp = 1/temp
-            weight_vec = torch.from_numpy(temp).norm(1)
+            weight_vec = torch.from_numpy(temp)
+            weight_vec = weight_vec/weight_vec.norm(1)
+            print (weight_vec)
             if self.args.cuda:
                 weight_vec = weight_vec.cuda()
             loss = F.kl_div(output, Variable(y_onehot), weight_vector= weight_vec)
