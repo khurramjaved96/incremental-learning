@@ -214,6 +214,8 @@ class Trainer(GenericTrainer):
             # print (weight_vec)
             if self.args.cuda:
                 weight_vec = Variable(weight_vec.cuda().squeeze(0).float())
+                if batch_idx == 0:
+                    print ("Weight Vec", weight_vec)
             loss = F.kl_div(output*weight_vec, Variable(y_onehot))
             losses.append(loss)
             myT = self.args.T
