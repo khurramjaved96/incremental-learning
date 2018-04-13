@@ -170,15 +170,15 @@ for seed in args.seeds:
                     print ("Current Epoch:", epoch)
                     print("Train Classifier:", tError)
                     print("Test Classifier:", t_classifier.evaluate(myModel, test_iterator))
-                    print("Test Classifier Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, my_trainer.older_classes))
+                    print("Test Classifier Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, my_trainer.older_classes, args.step_size))
 
             # Evaluate the learned classifier
             img = None
 
             print("Test Classifier Final:", t_classifier.evaluate(myModel, test_iterator))
-            print("Test Classifier Final Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, my_trainer.older_classes))
+            print("Test Classifier Final Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, my_trainer.older_classes, args.step_size))
 
-            y_scaled.append(t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, my_trainer.older_classes))
+            y_scaled.append(t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, my_trainer.older_classes, args.step_size))
             y1.append(t_classifier.evaluate(myModel, test_iterator))
 
             # Update means using the train iterator; this is iCaRL case
