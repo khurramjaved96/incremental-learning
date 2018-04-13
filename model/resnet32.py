@@ -139,6 +139,7 @@ class CifarResNet(nn.Module):
             x = x
             temp = F.log_softmax(x / T)
             # print("Gets here; scaled output")
+            scale = F.log_softmax(scale)
             return temp+scale
             return temp / scale
         return F.log_softmax(self.fc(x)/T)

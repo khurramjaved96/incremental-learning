@@ -111,15 +111,16 @@ class softmax_evaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def evaluate(self, model, loader, scale=None):
+    def evaluate(self, model, loader, scale=None, older_classes=None):
         model.eval()
         correct = 0
         if scale is not None:
             scale = scale/np.max(scale)
             # print ("Gets here")
             scale = 1 / scale
-            scale = np.log(scale)
-            print (scale)
+            scale[len(older_classes):len(scale)] = 0
+            # scale = np.log(scale)
+            # print (scale)
             scale = torch.from_numpy(scale).unsqueeze(0)
             if self.cuda:
                 scale = scale.cuda()
