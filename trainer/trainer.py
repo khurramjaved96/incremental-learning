@@ -150,7 +150,7 @@ class Trainer(GenericTrainer):
         print(self.threshold / np.max(self.threshold))
         self.threshold = np.ones(100, dtype=np.float64)
 
-        self.args.alpha += self.args.alpha_increment
+        # self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
             print("Setting LR to", self.args.lr)
             param_group['lr'] = self.args.lr
@@ -244,7 +244,7 @@ class Trainer(GenericTrainer):
                 # Scale the stored gradients by a factor of my
 
                 for param in self.model.parameters():
-                    param.grad=param.grad*(myT*myT)*self.args.alpha
+                    param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
             # sum(losses).backward()
             regParam = 0.000001
             if self.args.l1 > 0:
