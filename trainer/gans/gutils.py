@@ -10,6 +10,11 @@ from torch.autograd import Variable
 def save_results(args, images, name, is_tensor=False, axis_size=10, experiment=None):
     '''
     Saves the images in a grid of axis_size * axis_size
+    args: args
+    images: Dict of images to save
+    is_tensor: Whether the images are a torch tensor
+    axis_size: Number of images on each axis
+    experiment: Experiment object (needed to get destination path)
     '''
     axis_size = int(axis_size)
     _, sub = plt.subplots(axis_size, axis_size, figsize=(5, 5))
@@ -46,6 +51,14 @@ def generate_examples(
     In case of Non-Conditional GAN, the samples in the dict are random, they do
     not correspond to the keys in the dict
     Just passing in random noise to the generator and storing the results in dict
+    args: args
+    num_examples: Total number of examples to generate
+    active_classes: List of all classes trained on till now
+    total_classes: Total number of classes in the dataset
+    fixed_noise: A noise vector of size [100,100,1,1] to generate examples
+    experiment: Experiment object
+    save: If True, also save samples of generated images to disk
+    is_cond: If True, use the label information too (Only use with supported GANs)
     '''
     G.eval()
     examples = {}
@@ -73,8 +86,9 @@ def generate_examples(
 
 
 def save_gan_losses(g_loss, d_loss, epochs, increment, experiment, name='GAN_LOSS'):
-    print(g_loss)
-    print(d_loss)
+    '''
+    Plots the GAN loss curves for both G and D
+    '''
     x = range(len(g_loss))
     plt.plot(x, g_loss, label='G_loss')
     plt.plot(x, d_loss, label='D_loss')
@@ -93,7 +107,7 @@ def save_gan_losses(g_loss, d_loss, epochs, increment, experiment, name='GAN_LOS
 
 def save_checkpoint(epoch, increment, experiment, G):
     '''
-    Saves Generator
+    Saves the Generator ckpt to disk
     '''
     if epoch == 0:
         return
@@ -106,7 +120,9 @@ def save_checkpoint(epoch, increment, experiment, G):
 def load_checkpoint(g_ckpt_path, increment, G):
     '''
     Loads the latest generator for given increment
-    g_ckpt_path = self.args.load_g_ckpt
+    g_ckpt_path: path to checkpoints folder
+    increment: current increment number
+    G: Generator
     '''
     max_e = -1
     filename = None
@@ -127,6 +143,9 @@ def load_checkpoint(g_ckpt_path, increment, G):
 
 
 def update_lr(epoch, g_opt, d_opt, gan_schedule, gan_gammas):
+    '''
+    Update the lr for both optimizers
+    '''
     for temp in range(0, len(gan_schedule)):
         if gan_schedule[temp] == epoch:
             #Update Generator LR

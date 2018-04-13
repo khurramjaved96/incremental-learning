@@ -43,7 +43,6 @@ class Trainer():
         self.increment = 0
         self.fixed_noise = torch.randn(100,100,1,1)
         self.is_cond = args.process == "cdcgan"
-
         if args.ideal_nmc:
             self.train_iterator_ideal = train_iterator_ideal
             self.train_loader_ideal = train_loader_ideal
@@ -63,11 +62,13 @@ class Trainer():
         y_nmc = []
         y_nmc_ideal = []
 
+        #Get NMC and NMC ideal (if required)
         test_factory = tF.ClassifierFactory()
         nmc = test_factory.get_tester("nmc", self.args.cuda)
         if self.args.ideal_nmc:
             ideal_nmc = test_factory.get_tester("nmc", self.args.cuda)
 
+        #Get the appropriate GAN trainer
         gan_trainer = GANFactory.get_trainer(self.args.process,
                                              self.args,
                                              self.num_classes,
@@ -76,8 +77,10 @@ class Trainer():
                                              self.experiment)
 
         for class_group in range(0, self.dataset.classes, self.args.step_size):
+            #Setup training and increment classes
             self.classifier_trainer.setup_training()
             self.classifier_trainer.increment_classes(class_group)
+            #If not first increment, then generate examples and replace data
             if class_group > 0:
                 self.increment = self.increment + 1
                 self.old_classes = self.classifier_trainer.older_classes
@@ -112,7 +115,7 @@ class Trainer():
 
             self.classifier_trainer.update_frozen_model()
 
-            # Using NMC classifier
+            #-------------Using NMC Classifier-----------#
             nmc.update_means(self.model, self.train_iterator, self.args.cuda,
                             self.dataset.classes, self.old_classes, self.is_cond)
             nmc_train = nmc.classify(self.model, self.train_iterator,
@@ -134,6 +137,7 @@ class Trainer():
                 print("Test NMC (Ideal)", nmc_test_ideal)
 
             #-------------Train GAN-----------#
+            #Get new G and D only if it doesn't exist and persist_gan is off
             if self.G == None or not self.args.persist_gan:
                 self.G, self.D = self.model_factory.get_model(self.args.process,
                                                               self.args.dataset,
@@ -158,6 +162,7 @@ class Trainer():
                                   self.increment)
                 self.train_loader.do_alt_transform = False
 
+            #Optimize features, default off
             if self.args.optimize_features:
                 self.optimize_features()
             self.update_frozen_generator()
@@ -167,14 +172,15 @@ class Trainer():
                 gutils.save_checkpoint(self.args.gan_epochs[self.increment],
                                        self.increment, self.experiment, self.G)
 
-            # Saving confusion matrix
+            #-------------Save and Plot data-----------#
+            #Saving confusion matrix
             ut.saveConfusionMatrix(int(class_group / self.args.step_size) *
                                    self.args.epochs_class + epoch,
                                    self.experiment.path + "CONFUSION",
                                    self.model, self.args, self.dataset,
                                    self.test_iterator)
 
-            # Plot
+            #Plot
             y.append(self.classifier_trainer.evaluate(self.test_iterator))
             x.append(class_group + self.args.step_size)
             results = [("Trained Classifier",y), ("NMC Classifier", y_nmc)]
@@ -187,6 +193,16 @@ class Trainer():
                             results,
                             self.dataset.classes + 1, self.args.name)
 
+    def update_frozen_generator(self):
+        self.G.eval()
+        self.fixed_g = copy.deepcopy(self.G)
+        for param in self.fixed_g.parameters():
+            param.requires_grad = False
+
+    def unfreeze_frozen_generator(self):
+        self.G.train()
+        for param in self.G.parameters():
+            param.requires_grad = True
 
     def optimize_features(self):
         '''
@@ -232,216 +248,3 @@ class Trainer():
                   "Time taken:", time.time() - start_time)
         self.update_frozen_generator()
 
-
-    def train_gan(self, G, D, is_cond, K):
-        g_losses = []
-        d_losses = []
-        active_classes = self.train_iterator.dataset.active_classes
-        print("ACTIVE CLASSES: ", active_classes)
-
-        # Switch to alternate transformations while training GAN
-        self.train_loader.do_alt_transform = True
-
-        #TODO Change batchsize of dataIterator here to gan_batch_size
-        if self.args.process == "wgan":
-            if self.args.gan_lr > 5e-5 or len(self.args.gan_schedule) > 1:
-                print(">>> NOTICE: Did you mean to set GAN lr/schedule to this value?")
-            g_opt = optim.RMSprop(G.parameters(), lr=self.args.gan_lr)
-            d_opt = optim.RMSprop(D.parameters(), lr=self.args.gan_lr)
-        elif self.args.process == "dcgan" or self.args.process == "cdcgan":
-            criterion = nn.BCELoss()
-            g_opt = optim.Adam(G.parameters(), lr=self.args.gan_lr, betas=(0.5, 0.999))
-            d_opt = optim.Adam(D.parameters(), lr=self.args.gan_lr, betas=(0.5, 0.999))
-
-        #Matrix of shape [K,K,1,1] with 1s at positions
-        #where shape[0]==shape[1]
-        if is_cond:
-            tensor = []
-            g_vec = torch.zeros(K, K)
-            for i in range(K):
-                tensor.append(i)
-            g_vec = g_vec.scatter_(1, torch.LongTensor(tensor).view(K,1),
-                                 1).view(K, K, 1, 1)
-            #Matrix of shape [K,K,32,32] with 32x32 matrix of 1s
-            #where shape[0]==shape[1]
-            d_vec = torch.zeros([K, K, 32, 32])
-            for i in range(K):
-                d_vec[i, i, :, :] = 1
-
-        one_sample_saved = False
-        a = 0
-        b = 0
-        print("Starting GAN Training")
-        for epoch in range(int(self.args.gan_epochs[self.increment])):
-            #######################
-            #Start Epoch
-            #######################
-            G.train()
-            d_losses_e = []
-            g_losses_e = []
-            dist_losses_e = []
-            start_time = time.time()
-            self.update_lr(epoch, g_opt, d_opt)
-
-            #Iterate over examples that the classifier Trainer just iterated on
-            for batch_idx, (image, label) in enumerate(self.train_iterator):
-                batch_size = image.shape[0]
-                if not one_sample_saved:
-                    self.save_results(image, "sample_E" + str(epoch), True, np.sqrt(self.args.batch_size))
-                    one_sample_saved = True
-
-                #Make vectors of ones and zeros of same shape as output by
-                #Discriminator so that it can be used in BCELoss
-                if self.args.process == "dcgan" or self.args.process == "cdcgan":
-                    smoothing_val = 0
-                    if self.args.label_smoothing:
-                        smoothing_val = 0.1
-                    d_like_real = torch.ones(batch_size) - smoothing_val
-                    d_like_fake = torch.zeros(batch_size)
-                    if self.args.cuda:
-                        d_like_real = Variable(d_like_real.cuda())
-                        d_like_fake = Variable(d_like_fake.cuda())
-                ##################################
-                #Train Discriminator
-                ##################################
-                #Train with real image and labels
-                D.zero_grad()
-                a = a + 1
-
-                #Shape [batch_size, 10, 32, 32]. Each entry at d_labels[0]
-                #contains 32x32 matrix of 1s inside d_labels[label] index
-                #and 32x32 matrix of 0s otherwise
-                d_labels = d_vec[label] if is_cond else None
-                if self.args.cuda:
-                    image    = Variable(image.cuda())
-                    d_labels = Variable(d_labels.cuda()) if is_cond else None
-
-                #Discriminator output for real image and labels
-                d_output_real = D(image, d_labels).squeeze() if is_cond else D(image).squeeze()
-
-                #Train with fake image and labels
-                g_random_noise = torch.randn((batch_size, 100))
-                g_random_noise = g_random_noise.view(-1, 100, 1, 1)
-
-                if is_cond:
-                    #Generating random batch_size of labels from amongst
-                    #labels present in activeClass
-                    random_labels = torch.from_numpy(np.random.choice(active_classes,
-                                                                      batch_size))
-                    #Convert labels to appropriate shapes
-                    g_random_labels = g_vec[random_labels]
-                    d_random_labels = d_vec[random_labels]
-
-                if self.args.cuda:
-                    g_random_noise  = Variable(g_random_noise.cuda())
-                    g_random_labels = Variable(g_random_labels.cuda()) if is_cond else None
-                    d_random_labels = Variable(d_random_labels.cuda()) if is_cond else None
-
-                g_output = G(g_random_noise, g_random_labels) if is_cond else G(g_random_noise)
-                g_output = g_output.detach()
-                d_output_fake = D(g_output, d_random_labels).squeeze() if is_cond else D(g_output).squeeze()
-
-                if self.args.process == "wgan":
-                    d_loss = -(torch.mean(d_output_real) - torch.mean(d_output_fake))
-
-                elif self.args.process == "dcgan" or self.args.process == "cdcgan":
-                    d_real_loss = criterion(d_output_real, d_like_real)
-                    d_fake_loss = criterion(d_output_fake, d_like_fake)
-                    d_loss = d_real_loss + d_fake_loss
-
-                d_losses_e.append(d_loss)
-                d_loss.backward()
-                d_opt.step()
-
-                if self.args.process == "wgan":
-                    for p in D.parameters():
-                        p.data.clamp_(-0.01, 0.01)
-
-                #################################
-                #Train Generator
-                #################################
-                #Train discriminator more in case of WGAN because the
-                #critic needs to be trained to optimality
-                if batch_idx % self.args.d_iter != 0:
-                    continue
-
-                b = b + 1
-                G.zero_grad()
-                g_random_noise = torch.randn((batch_size, 100))
-                g_random_noise = g_random_noise.view(-1, 100, 1, 1)
-
-                if is_cond:
-                    random_labels = torch.from_numpy(np.random.choice(active_classes,
-                                                                      batch_size))
-                    g_random_labels = g_vec[random_labels]
-                    d_random_labels = d_vec[random_labels]
-
-                if self.args.cuda:
-                    g_random_noise  = Variable(g_random_noise.cuda())
-                    g_random_labels = Variable(g_random_labels.cuda()) if is_cond else None
-                    d_random_labels = Variable(d_random_labels.cuda()) if is_cond else None
-
-                g_output = G(g_random_noise, g_random_labels) if is_cond else G(g_random_noise)
-                d_output = D(g_output, d_random_labels).squeeze() if is_cond else D(g_output).squeeze()
-
-                if self.args.process == "wgan":
-                    g_loss = -torch.mean(d_output)
-                elif self.args.process == "dcgan" or self.args.process == "cdcgan":
-                    g_loss = criterion(d_output, d_like_real)
-                total_loss = g_loss
-
-                if self.args.joint_gan_obj:
-                    model = self.classifier_trainer.model_fixed
-                    euclidean_dist = nn.PairwiseDistance(2)
-                    # Generate features for real and fake images
-                    output_fake = model.forward(g_output, True)
-                    output_real = model.forward(image, True)
-                    # Calculate euclidean distance
-                    distance_loss = torch.mean(euclidean_dist(output_fake, output_real))
-                    total_loss = g_loss + (self.args.joint_gan_alpha * distance_loss)
-                    dist_losses_e.append(distance_loss)
-
-                total_loss.backward()
-                g_losses_e.append(g_loss)
-                g_opt.step()
-
-            #############################
-            #End epoch
-            #Print Stats and save results
-            #############################
-            mean_g = (sum(g_losses_e)/len(g_losses_e)).cpu().data.numpy()[0]
-            mean_d = (sum(d_losses_e)/len(d_losses_e)).cpu().data.numpy()[0]
-            mean_dist = None
-            if self.args.joint_gan_obj:
-                mean_dist = (sum(dist_losses_e)/len(dist_losses_e)).cpu().data.numpy()[0]
-            g_losses.append(mean_g)
-            d_losses.append(mean_d)
-
-            if epoch % self.args.gan_img_save_interval == 0:
-                self.generate_examples(G, 100, active_classes,
-                                      "Inc"+str(self.increment) +
-                                      "_E" + str(epoch), True)
-                self.save_gan_losses(g_losses, d_losses)
-
-            if self.args.save_g_ckpt and epoch % self.args.ckpt_interval == 0:
-                self.save_checkpoint(epoch)
-            print("[GAN] Epoch:", epoch,
-                  "G_iters:", b,
-                  "D_iters:", a,
-                  "g_loss:", mean_g,
-                  "d_loss:", mean_d,
-                  "dist_Loss:", mean_dist,
-                  "Time taken:", time.time() - start_time)
-        # Switch to default transformation
-        self.train_loader.do_alt_transform = False
-
-    def update_frozen_generator(self):
-        self.G.eval()
-        self.fixed_g = copy.deepcopy(self.G)
-        for param in self.fixed_g.parameters():
-            param.requires_grad = False
-
-    def unfreeze_frozen_generator(self):
-        self.G.train()
-        for param in self.G.parameters():
-            param.requires_grad = True

@@ -10,9 +10,9 @@ from trainer.gans.gan import GAN
 from torch.autograd import Variable
 import trainer.gans.gutils as gutils
 
-class DCGAN(GAN):
+class WGAN(GAN):
     '''
-    DCGAN Trainer
+    WGAN Trainer
     __init__ in the base class
     '''
 
@@ -27,9 +27,11 @@ class DCGAN(GAN):
         d_losses = []
         print("ACTIVE CLASSES: ", active_classes)
 
-        criterion = nn.BCELoss()
-        g_opt = optim.Adam(G.parameters(), lr=self.args.gan_lr, betas=(0.5, 0.999))
-        d_opt = optim.Adam(D.parameters(), lr=self.args.gan_lr, betas=(0.5, 0.999))
+        #Author of WGAN used RMSprop
+        if self.args.gan_lr > 5e-5 or len(self.args.gan_schedule) > 1:
+            print(">>> NOTICE: Did you mean to set GAN lr/schedule to this value?")
+        g_opt = optim.RMSprop(G.parameters(), lr=self.args.gan_lr)
+        d_opt = optim.RMSprop(D.parameters(), lr=self.args.gan_lr)
 
         one_sample_saved = False
         # Count G and D iters
@@ -56,16 +58,6 @@ class DCGAN(GAN):
                                         self.experiment)
                     one_sample_saved = True
 
-                #Make vectors of ones and zeros of same shape as output by
-                #Discriminator so that it can be used in BCELoss
-                smoothing_val = 0
-                if self.args.label_smoothing:
-                    smoothing_val = 0.1
-                d_like_real = torch.ones(batch_size) - smoothing_val
-                d_like_fake = torch.zeros(batch_size)
-                if self.args.cuda:
-                    d_like_real = Variable(d_like_real.cuda())
-                    d_like_fake = Variable(d_like_fake.cuda())
                 #-------------Train Discriminator-----------#
                 ##Train using real images
                 D.zero_grad()
@@ -88,30 +80,37 @@ class DCGAN(GAN):
                 g_output = g_output.detach()
                 d_output_fake = D(g_output).squeeze()
 
-                #Calculate BCE loss
-                d_real_loss = criterion(d_output_real, d_like_real)
-                d_fake_loss = criterion(d_output_fake, d_like_fake)
-                d_loss = d_real_loss + d_fake_loss
+                #Calculate WGAN Loss (no BCE here)
+                d_loss = -(torch.mean(d_output_real) - torch.mean(d_output_fake))
+
 
                 #Perform a backward step
                 d_losses_e.append(d_loss)
                 d_loss.backward()
                 d_opt.step()
 
+                #Clamp the parameters (part of WGAN)
+                for p in D.parameters():
+                    p.data.clamp_(-0.01, 0.01)
+
                 #-------------Train Generator-----------#
-                #TODO Disabled regenerating of noise, check if it still works
+                #Train critic (discriminator) more in case of WGAN because the
+                #critic needs to be trained to optimality
+                if batch_idx % self.args.d_iter != 0:
+                    continue
+
                 b = b + 1
                 G.zero_grad()
                 g_output = G(g_random_noise)
                 d_output = D(g_output).squeeze()
 
-                #Calculate BCE loss
-                g_loss = criterion(d_output, d_like_real)
+                #Calculate WGAN Generator loss
+                g_loss = -torch.mean(d_output)
                 total_loss = g_loss
 
                 #Jointly optimizes the GAN Generator loss and lowers
                 #the euclidean distance between features of generated
-                #and real images
+                #and real images (default: off)
                 if self.args.joint_gan_obj:
                     model = self.fixed_classifier
                     euclidean_dist = nn.PairwiseDistance(2)
