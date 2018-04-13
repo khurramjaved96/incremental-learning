@@ -22,8 +22,6 @@ class GAN():
         self.fixed_classifier = fixed_classifier
         # Noise for generating examples
         self.fixed_noise = torch.randn(100,100,1,1)
-        if args.cuda:
-            self.fixed_noise  = Variable(self.fixed_noise.cuda(), volatile=True)
 
     @abstractmethod
     def train(self, G, D, active_classes, increment):

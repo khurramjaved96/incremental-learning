@@ -45,7 +45,7 @@ def save_results(args, images, name, is_tensor=False, axis_size=10, experiment=N
 
 def generate_examples(
         args, G, num_examples, active_classes, total_classes,
-        fixed_noise, experiment, name="", save=False, is_cond=False):
+        noise, experiment, name="", save=False, is_cond=False):
     '''
     Returns a dict[class] of generated samples.
     In case of Non-Conditional GAN, the samples in the dict are random, they do
@@ -55,23 +55,27 @@ def generate_examples(
     num_examples: Total number of examples to generate
     active_classes: List of all classes trained on till now
     total_classes: Total number of classes in the dataset
-    fixed_noise: A noise vector of size [100,100,1,1] to generate examples
+    noise: A noise vector of size [100,100,1,1] to generate examples
     experiment: Experiment object
     save: If True, also save samples of generated images to disk
     is_cond: If True, use the label information too (Only use with supported GANs)
     '''
+    print("Note: Ignoring the fixed noise")
     G.eval()
     examples = {}
     for idx, klass in enumerate(active_classes):
         # Generator outputs 100 images at a time
         for _ in range(num_examples//100):
+            print("FSDF")
+            noise = torch.randn(100,100,1,1)
             #TODO refactor these conditionals
             if is_cond:
                 targets = torch.zeros(100, total_classes, 1, 1)
                 targets[:, klass] = 1
             if args.cuda:
+                noise = Variable(noise.cuda(), volatile=True)
                 targets = Variable(targets.cuda(), volatile=True) if is_cond else None
-            images = G(fixed_noise, targets) if is_cond else G(fixed_noise)
+            images = G(noise, targets) if is_cond else G(noise)
             if not klass in examples.keys():
                 examples[klass] = images
             else:

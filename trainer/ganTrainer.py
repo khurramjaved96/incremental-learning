@@ -41,7 +41,6 @@ class Trainer():
         self.fixed_g = None
         self.examples = {}
         self.increment = 0
-        self.fixed_noise = torch.randn(100,100,1,1)
         self.is_cond = args.process == "cdcgan"
         if args.ideal_nmc:
             self.train_iterator_ideal = train_iterator_ideal
@@ -50,11 +49,6 @@ class Trainer():
             self.num_classes = 10
         else:
             self.num_classes = 100
-        # Do not use this for training, it is volatile
-        if args.cuda:
-            self.fixed_noise  = Variable(self.fixed_noise.cuda(), volatile=True)
-
-
 
     def train(self):
         x = []
@@ -89,7 +83,7 @@ class Trainer():
                                                          self.args.gan_num_examples,
                                                          self.old_classes,
                                                          self.num_classes,
-                                                         self.fixed_noise,
+                                                         None,
                                                          self.experiment,
                                                          "Final-Inc"+str(self.increment-1),
                                                          True, self.is_cond)
