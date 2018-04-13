@@ -211,9 +211,9 @@ class Trainer(GenericTrainer):
             temp = 1/temp
             weight_vec = torch.from_numpy(temp)
             weight_vec = weight_vec/weight_vec.norm(1)
-            print (weight_vec)
+            # print (weight_vec)
             if self.args.cuda:
-                weight_vec = Variable(weight_vec.cuda().squeeze(0))
+                weight_vec = Variable(weight_vec.cuda().squeeze(0).float())
             loss = F.kl_div(output*weight_vec, Variable(y_onehot))
             losses.append(loss)
             myT = self.args.T
