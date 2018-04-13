@@ -118,7 +118,7 @@ class softmax_evaluator():
             scale = scale/np.max(scale)
             # print ("Gets here")
             scale = 1 / scale
-            scale[len(older_classes)+step_size:len(scale)] = 1
+            # scale[len(older_classes)+step_size:len(scale)] = 1
             # scale = np.log(scale)
             # print (scale)
             scale = scale-1
