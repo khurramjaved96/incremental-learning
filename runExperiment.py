@@ -55,7 +55,7 @@ parser.add_argument('--step-size', type=int, default=10, help='How many classes 
 parser.add_argument('--T', type=int, default=3, help='Tempreture used for softening the targets')
 parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[2000],
                     help='How many images can we store at max. 0 will result in fine-tuning')
-parser.add_argument('--epochs-class', type=int, default=35, help='Number of epochs for each increment')
+parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; example CIFAR, MNIST')
 parser.add_argument('--lwf', action='store_true', default=False,
                     help='Use learning without forgetting. Ignores memory-budget '
