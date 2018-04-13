@@ -5,18 +5,18 @@ import model.cDCGAN as cdcgan
 import model.DCGAN as dcgan
 import model.WGAN as wgan
 
-class modelFactory():
+class ModelFactory():
     def __init__(self):
         pass
-    def getModel(self, modelType, dataset="CIFAR100", use_mbd=False, d=64):
-        if modelType=="densenet":
+    def get_model(self, model_type, dataset="CIFAR100", use_mbd=False, d=64):
+        if model_type=="densenet":
             if dataset=="MNIST":
                 print ("MNIST dataset not supported in this model. Try resnet20 or 32")
                 assert(False)
-            return dn.DenseNet(growthRate=12, depth=40, reduction=0.5,
-                        bottleneck=True, nClasses=100)
+            return dn.DenseNet(growth_rate=12, depth=40, reduction=0.5,
+                        bottleneck=True, n_classes=100)
 
-        elif modelType=="resnet32":
+        elif model_type=="resnet32":
             if dataset=="MNIST":
                 return res.resnet32mnist(10)
             elif dataset=="CIFAR10":
@@ -24,26 +24,26 @@ class modelFactory():
             return res.resnet32(100)
 
 
-        elif modelType=="resnet20":
+        elif model_type=="resnet20":
             if dataset=="MNIST":
                 return res.resnet20mnist(10)
             return res.resnet20(100)
 
 
-        elif modelType=="resnet44":
+        elif model_type=="resnet44":
             if dataset == "MNIST":
                 print("MNIST dataset not supported in this model. Try resnet20 or 32")
                 assert (False)
             return res.resnet44(100)
 
 
-        elif modelType=="test":
+        elif model_type=="test":
             if dataset=="MNIST":
                 print ("MNIST dataset not supported in this model. Try resnet20 or 32")
                 assert(False)
             return tm.Net(100)
 
-        elif modelType=="cdcgan":
+        elif model_type=="cdcgan":
             if dataset=="CIFAR100":
                 G = cdcgan.Generator(d, 3, 100)
                 D = cdcgan.Discriminator(d, 3, 100, use_mbd)
@@ -57,7 +57,7 @@ class modelFactory():
             D.init_weights(mean=0.0, std=0.02)
             return G, D
 
-        elif modelType=="dcgan":
+        elif model_type=="dcgan":
             if dataset=="CIFAR100" or dataset=="CIFAR10":
                 G = dcgan.Generator(d, 3)
                 D = dcgan.Discriminator(d, 3)
@@ -68,7 +68,7 @@ class modelFactory():
             D.init_weights(mean=0.0, std=0.02)
             return G, D
 
-        elif modelType=="wgan":
+        elif model_type=="wgan":
             if dataset=="CIFAR100" or dataset=="CIFAR10":
                 G = wgan.Generator(d, 3)
                 D = wgan.Discriminator(d, 3)
@@ -80,5 +80,5 @@ class modelFactory():
             return G, D
 
         else:
-            print ("Unsupported model; either implement the model in model/modelFactory or choose a different model")
+            print ("Unsupported model; either implement the model in model/ModelFactory or choose a different model")
             assert(False)

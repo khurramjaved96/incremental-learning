@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch
 
 class Net(nn.Module):
-    def __init__(self, noClasses):
+    def __init__(self, no_classes):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, 10, kernel_size=5,padding=(2,2))
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5,padding=(2,2))
@@ -15,7 +15,7 @@ class Net(nn.Module):
         self.conv2_bn3 = nn.BatchNorm2d(40)
         self.conv2_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(640, 100)
-        self.fc2 = nn.Linear(100, noClasses)
+        self.fc2 = nn.Linear(100, no_classes)
 
     def forward(self, x, feature=False):
         x = F.relu(F.max_pool2d(self.conv1(x), 2))

@@ -116,7 +116,7 @@ class CifarResNet(nn.Module):
         return F.sigmoid(self.classifier(x))
         # return F.softmax(self.classifier(x))
 
-    def forwardFeature(self, x):
+    def forward_feature(self, x):
         pass
 
 

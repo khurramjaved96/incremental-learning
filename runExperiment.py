@@ -101,71 +101,71 @@ print("Remember: Set decay 10x smaller on MNIST, was performing better")
 
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
-dataset = dF.datasetFactory.getDataset(args.dataset)
+dataset = dF.DatasetFactory.get_dataset(args.dataset)
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
     torch.backends.cudnn.deterministic = True
 
 
-trainDatasetLoader = dL.incrementalLoader(args.dataset, dataset.trainData.train_data,
-                                          dataset.trainData.train_labels,
-                                          dataset.labelsPerClassTrain,
-                                          dataset.classes, [], transform=dataset.trainTransform,
+train_dataset_loader = dL.IncrementalLoader(args.dataset, dataset.train_data.train_data,
+                                          dataset.train_data.train_labels,
+                                          dataset.labels_per_class_train,
+                                          dataset.classes, [], transform=dataset.train_transform,
                                           cuda=args.cuda, oversampling=args.no_upsampling,
-                                          alt_transform=dataset.altTransform
+                                          alt_transform=dataset.alt_transform
                                           )
 
-testDatasetLoader = dL.incrementalLoader(args.dataset, dataset.testData.test_data,
-                                         dataset.testData.test_labels,
-                                         dataset.labelsPerClassTest, dataset.classes,
-                                         [], transform=dataset.testTransform, cuda=args.cuda,
+test_dataset_loader = dL.IncrementalLoader(args.dataset, dataset.test_data.test_data,
+                                         dataset.test_data.test_labels,
+                                         dataset.labels_per_class_test, dataset.classes,
+                                         [], transform=dataset.test_transform, cuda=args.cuda,
                                          oversampling=args.no_upsampling
                                          )
 
-trainDatasetLoaderIdeal = None
+train_dataset_loader_ideal = None
 if args.ideal_nmc:
-    trainDatasetLoaderIdeal = dL.incrementalLoader(args.dataset, dataset.trainData.train_data,
-                                                   dataset.trainData.train_labels,
-                                                   dataset.labelsPerClassTrain,
-                                                   dataset.classes, [], transform=dataset.trainTransform,
+    train_dataset_loader_ideal = dL.IncrementalLoader(args.dataset, dataset.train_data.train_data,
+                                                   dataset.train_data.train_labels,
+                                                   dataset.labels_per_class_train,
+                                                   dataset.classes, [], transform=dataset.train_transform,
                                                    cuda=args.cuda, oversampling=args.no_upsampling
                                                    )
 
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-trainIterator = torch.utils.data.DataLoader(trainDatasetLoader,
+train_iterator = torch.utils.data.DataLoader(train_dataset_loader,
                                             batch_size=args.batch_size, shuffle=True, **kwargs)
-testIterator = torch.utils.data.DataLoader(testDatasetLoader,
+test_iterator = torch.utils.data.DataLoader(test_dataset_loader,
                                            batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
-trainIteratorIdeal = None
+train_iterator_ideal = None
 if args.ideal_nmc:
-    trainIteratorIdeal = torch.utils.data.DataLoader(trainDatasetLoaderIdeal,
+    train_iterator_ideal = torch.utils.data.DataLoader(train_dataset_loader_ideal,
                                                      batch_size=args.batch_size, shuffle=True, **kwargs)
 
-myFactory = mF.modelFactory()
-model = myFactory.getModel(args.model_type, args.dataset)
+my_factory = mF.ModelFactory()
+model = my_factory.get_model(args.model_type, args.dataset)
 if args.cuda:
     model.cuda()
 
-myExperiment = ex.experiment(args.name, args)
+my_experiment = ex.Experiment(args.name, args)
 
 optimizer = optim.SGD(model.parameters(), args.lr, momentum=args.momentum,
                       weight_decay=args.decay, nesterov=True)
 
-classifierTrainer = t.trainer(trainIterator, testIterator, dataset, model,
-                              args, optimizer, trainIteratorIdeal)
+classifier_trainer = t.Trainer(train_iterator, test_iterator, dataset, model,
+                              args, optimizer, train_iterator_ideal)
 
 if args.process == "nmc":
-    trainer = nt.trainer(args, dataset, classifierTrainer, model,
-                         trainIterator, testIterator, trainDatasetLoader,
-                         myExperiment)
+    trainer = nt.Trainer(args, dataset, classifier_trainer, model,
+                         train_iterator, test_iterator, train_dataset_loader,
+                         my_experiment)
 
 else:
-    trainer = gt.trainer(args, dataset, classifierTrainer, model,
-                         trainIterator, testIterator, trainDatasetLoader,
-                         myFactory, myExperiment, trainIteratorIdeal, trainDatasetLoaderIdeal)
+    trainer = gt.Trainer(args, dataset, classifier_trainer, model,
+                         train_iterator, test_iterator, train_dataset_loader,
+                         my_factory, my_experiment, train_iterator_ideal, train_dataset_loader_ideal)
 
 trainer.train()

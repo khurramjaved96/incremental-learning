@@ -3,7 +3,7 @@ import torch.nn as nn
 
 class DownsampleA(nn.Module):
 
-  def __init__(self, nIn, nOut, stride):
+  def __init__(self, n_in, n_out, stride):
     super(DownsampleA, self).__init__()
     assert stride == 2
     self.avg = nn.AvgPool2d(kernel_size=1, stride=stride)
@@ -14,10 +14,10 @@ class DownsampleA(nn.Module):
 
 class DownsampleC(nn.Module):
 
-  def __init__(self, nIn, nOut, stride):
+  def __init__(self, n_in, n_out, stride):
     super(DownsampleC, self).__init__()
-    assert stride != 1 or nIn != nOut
-    self.conv = nn.Conv2d(nIn, nOut, kernel_size=1, stride=stride, padding=0, bias=False)
+    assert stride != 1 or n_in != n_out
+    self.conv = nn.Conv2d(n_in, n_out, kernel_size=1, stride=stride, padding=0, bias=False)
 
   def forward(self, x):
     x = self.conv(x)
@@ -25,11 +25,11 @@ class DownsampleC(nn.Module):
 
 class DownsampleD(nn.Module):
 
-  def __init__(self, nIn, nOut, stride):
+  def __init__(self, n_in, n_out, stride):
     super(DownsampleD, self).__init__()
     assert stride == 2
-    self.conv = nn.Conv2d(nIn, nOut, kernel_size=2, stride=stride, padding=0, bias=False)
-    self.bn   = nn.BatchNorm2d(nOut)
+    self.conv = nn.Conv2d(n_in, n_out, kernel_size=2, stride=stride, padding=0, bias=False)
+    self.bn   = nn.BatchNorm2d(n_out)
 
   def forward(self, x):
     x = self.conv(x)

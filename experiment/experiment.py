@@ -1,9 +1,9 @@
 import json
 import os
 
-class experiment:
+class Experiment:
     '''
-    Class to store results of any experiment 
+    Class to store results of any Experiment 
     '''
     def __init__(self, name, args, output_dir="../"):
         if not args is None:
@@ -33,5 +33,5 @@ import argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='iCarl2.0')
     args = parser.parse_args()
-    e = experiment("TestExperiment", args)
+    e = Experiment("TestExperiment", args)
     e.store_json()

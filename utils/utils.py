@@ -78,7 +78,7 @@ def constructExperimentName(args):
 
 # y should be of type [("Value Name", y_values), ....]
 def plotAccuracy(experiment, x, y, num_classes, plot_name):
-    myPlotter = pl.plotter()
+    myPlotter = pl.Plotter()
 
     if not isinstance(y, list):
         print("y must be a list of tuples!")
@@ -88,7 +88,7 @@ def plotAccuracy(experiment, x, y, num_classes, plot_name):
         experiment.results[y[i][0]] = [x, y[i][1]]
         myPlotter.plot(x, y[i][1], title=plot_name, legend=y[i][0])
 
-    myPlotter.saveFig(experiment.path + "Overall" + ".jpg", num_classes)
+    myPlotter.save_fig(experiment.path + "Overall" + ".jpg", num_classes)
     experiment.store_json()
 
 def plotEmbeddings(experiment, embedding_name_pairs, plot_name="", range_val=(-.20,.20)):
@@ -103,5 +103,5 @@ def plotEmbeddings(experiment, embedding_name_pairs, plot_name="", range_val=(-.
         embeddings.append(np.mean(i[1].squeeze().cpu().numpy(), 0))
         labels.append(i[0])
 
-    myPlotter = pl.plotter()
-    myPlotter.plotEmbeddings(embeddings, labels, range_val, experiment, plot_name)
+    myPlotter = pl.Plotter()
+    myPlotter.plot_embeddings(embeddings, labels, range_val, experiment, plot_name)

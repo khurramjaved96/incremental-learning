@@ -11,37 +11,37 @@ from skimage.transform import resize
 import model.modelFactory as mF
 
 
-class incrementalLoader(td.Dataset):
-    def __init__(self, datasetName, data, labels, classSize, classes, activeClasses, transform=None, cuda=False, oversampling=True, alt_transform=None):
-        self.len = classSize * len(activeClasses)
-        self.datasetName = datasetName
-        sortIndex = np.argsort(labels)
-        self.classSize = classSize
+class IncrementalLoader(td.Dataset):
+    def __init__(self, dataset_name, data, labels, class_size, classes, active_classes, transform=None, cuda=False, oversampling=True, alt_transform=None):
+        self.len = class_size * len(active_classes)
+        self.dataset_name = dataset_name
+        sort_index = np.argsort(labels)
+        self.class_size = class_size
         if "torch" in str(type(data)):
             data = data.numpy()
-        self.data = data[sortIndex]
+        self.data = data[sort_index]
         labels = np.array(labels)
-        self.labels = labels[sortIndex]
+        self.labels = labels[sort_index]
         self.transform = transform
-        self.activeClasses = activeClasses
-        self.limitedClasses = {}
-        self.totalClasses = classes
+        self.active_classes = active_classes
+        self.limited_classes = {}
+        self.total_classes = classes
         self.means = {}
         self.cuda = cuda
-        self.weights = np.zeros(self.totalClasses * self.classSize)
-        self.classIndices()
-        self.transformData()
+        self.weights = np.zeros(self.total_classes * self.class_size)
+        self.class_indices()
+        self.transform_data()
         self.over_sampling = oversampling
         self.alt_transform = alt_transform
         self.do_alt_transform = False
 
 
-    def transformData(self):
+    def transform_data(self):
         '''
         Rescale the dataset to 32x32
         TODO: Complete all the transformations here instead of in __getItem__
         '''
-        if not self.datasetName == "MNIST":
+        if not self.dataset_name == "MNIST":
             return
         temp_data = np.ndarray([self.data.shape[0], 32, 32])
         self.data = np.expand_dims(self.data, axis=3)
@@ -50,22 +50,22 @@ class incrementalLoader(td.Dataset):
         self.data = temp_data
 
 
-    def classIndices(self):
+    def class_indices(self):
         self.indices = {}
         cur = 0
-        for temp in range(0, self.totalClasses):
-            curLen = len(np.nonzero(np.uint8(self.labels == temp))[0])
-            self.indices[temp] = (cur, cur + curLen)
-            cur += curLen
+        for temp in range(0, self.total_classes):
+            cur_len = len(np.nonzero(np.uint8(self.labels == temp))[0])
+            self.indices[temp] = (cur, cur + cur_len)
+            cur += cur_len
 
-    def addClasses(self, n):
-        if n in self.activeClasses:
+    def add_classes(self, n):
+        if n in self.active_classes:
             return
-        self.activeClasses.append(n)
-        self.len = self.classSize * len(self.activeClasses)
-        self.updateLen()
+        self.active_classes.append(n)
+        self.len = self.class_size * len(self.active_classes)
+        self.update_len()
 
-    def replaceData(self, data, k):
+    def replace_data(self, data, k):
         '''
         Code to replace images with GAN generated images
         data: Generated images with values in range [-1,1] and of
@@ -80,74 +80,74 @@ class incrementalLoader(td.Dataset):
             #Converting from [-1,1] range to [0,255] because that is what
             #toTensor transform expects
             nump = (((nump/2) + 0.5) * 255).astype(np.uint8)
-            if self.datasetName == "CIFAR100" or self.datasetName == "CIFAR10":
+            if self.dataset_name == "CIFAR100" or self.dataset_name == "CIFAR10":
                 #TODO I think .transpose or .permute does this in one line?
                 nump = np.swapaxes(nump, 1, 3)
                 nump = np.swapaxes(nump, 1, 2)
             self.data[self.indices[a][0]:self.indices[a][0]+k] = nump
 
-            if a not in self.activeClasses:
-                self.activeClasses.append(a)
-            self.limitClass(a, k)
+            if a not in self.active_classes:
+                self.active_classes.append(a)
+            self.limit_class(a, k)
 
 
-    def updateLen(self):
+    def update_len(self):
         '''
         Function to compute length of the active elements of the data. 
         :return: 
         '''
         # Computing len if no oversampling
-        # for a in self.activeClasses:
-        #     if a in self.limitedClasses:
-        #         self.weights[lenVar:lenVar + min(self.classSize, self.limitedClasses[a])] = 1.0 / float(
-        #             self.limitedClasses[a])
-        #         if self.classSize > self.limitedClasses[a]:
-        #             self.weights[lenVar + self.limitedClasses[a]:lenVar + self.classSize] = 0
-        #         lenVar += min(self.classSize, self.limitedClasses[a])
+        # for a in self.active_classes:
+        #     if a in self.limited_classes:
+        #         self.weights[len_var:len_var + min(self.class_size, self.limited_classes[a])] = 1.0 / float(
+        #             self.limited_classes[a])
+        #         if self.class_size > self.limited_classes[a]:
+        #             self.weights[len_var + self.limited_classes[a]:len_var + self.class_size] = 0
+        #         len_var += min(self.class_size, self.limited_classes[a])
         #
         #     else:
-        #         self.weights[lenVar:lenVar + self.classSize] = 1.0 / float(self.classSize)
-        #         lenVar += self.classSize
+        #         self.weights[len_var:len_var + self.class_size] = 1.0 / float(self.class_size)
+        #         len_var += self.class_size
         #
-        # self.len = lenVar
+        # self.len = len_var
         # Computing len if oversampling is turned on.
 
-        lenVar = 0
-        for a in self.activeClasses:
-            lenVar += self.indices[a][1] - self.indices[a][0]
-        self.len = lenVar
+        len_var = 0
+        for a in self.active_classes:
+            len_var += self.indices[a][1] - self.indices[a][0]
+        self.len = len_var
 
         return
 
-    def limitClass(self, n, k):
+    def limit_class(self, n, k):
         if k == 0:
             self.remove_class(n)
             print("Removed class", n)
-            print("Current classes", self.activeClasses)
+            print("Current classes", self.active_classes)
             return False
-        if k > self.classSize:
-            k = self.classSize
-        if n in self.limitedClasses:
-            self.limitedClasses[n] = k
+        if k > self.class_size:
+            k = self.class_size
+        if n in self.limited_classes:
+            self.limited_classes[n] = k
             # Remove this line; this turns off oversampling
             if not self.over_sampling:
                 self.indices[n] = (self.indices[n][0], self.indices[n][0] + k)
-            self.updateLen()
+            self.update_len()
             return False
         else:
             if not self.over_sampling:
                 self.indices[n] = (self.indices[n][0], self.indices[n][0] + k)
-            self.limitedClasses[n] = k
-            self.updateLen()
+            self.limited_classes[n] = k
+            self.update_len()
             return True
 
     def remove_class(self, n):
-        while n in self.activeClasses:
-            self.activeClasses.remove(n)
-        self.updateLen()
+        while n in self.active_classes:
+            self.active_classes.remove(n)
+        self.update_len()
 
 
-    def limitClassAndSort(self, n, k, model):
+    def limit_class_and_sort(self, n, k, model):
         ''' This function should only be called the first time a class is limited. To change the limitation, 
         call the limiClass(self, n, k) function 
         
@@ -157,7 +157,7 @@ class incrementalLoader(td.Dataset):
         :return: 
         '''
 
-        if self.limitClass(n, k):
+        if self.limit_class(n, k):
             start = self.indices[n][0]
             end = self.indices[n][1]
             buff = np.zeros(self.data[start:end].shape)
@@ -172,51 +172,46 @@ class incrementalLoader(td.Dataset):
                 if self.transform is not None:
                     img = self.transform(img)
                 images.append(img)
-            dataTensor = torch.stack(images)
+            data_tensor = torch.stack(images)
             if self.cuda:
-                dataTensor = dataTensor.cuda()
+                data_tensor = data_tensor.cuda()
 
             # Get features
-            features = model.forward(Variable(dataTensor), True)
-            featuresCopy = copy.deepcopy(features.data)
+            features = model.forward(Variable(data_tensor), True)
+            features_copy = copy.deepcopy(features.data)
             mean = torch.mean(features, 0, True)
-            listOfSelected = []
+            list_of_selected = []
 
             # Select exemplars
-            for exmp_no in range(0, min(k, self.classSize)):
+            for exmp_no in range(0, min(k, self.class_size)):
                 if exmp_no > 0:
-                    toAdd = torch.sum(featuresCopy[0:exmp_no], dim=0).unsqueeze(0)
+                    to_add = torch.sum(features_copy[0:exmp_no], dim=0).unsqueeze(0)
                     if self.cuda:
-                        toAdd = toAdd.cuda()
-                    featuresTemp = (features + Variable(toAdd)) / (exmp_no + 1) - mean
+                        to_add = to_add.cuda()
+                    features_temp = (features + Variable(to_add)) / (exmp_no + 1) - mean
                 else:
-                    featuresTemp = features - mean
-                featuresNorm = torch.norm(featuresTemp.data, 2, dim=1)
-                # featuresNorm = featuresTemp.norm(dim=1)
+                    features_temp = features - mean
+                features_norm = torch.norm(features_temp.data, 2, dim=1)
+                # features_norm = features_temp.norm(dim=1)
                 if self.cuda:
-                    featuresNorm = featuresNorm.cpu()
-                argMin = np.argmin(featuresNorm.numpy())
-                if argMin in listOfSelected:
+                    features_norm = features_norm.cpu()
+                arg_min = np.argmin(features_norm.numpy())
+                if arg_min in list_of_selected:
                     assert (False)
-                listOfSelected.append(argMin)
-                buff[exmp_no] = self.data[start + argMin]
-                featuresCopy[exmp_no] = features.data[argMin]
-                # print (featuresCopy[exmp_no])
-                features[argMin] = features[argMin] + 1000
-            print("Exmp shape", buff[0:min(k, self.classSize)].shape)
-            self.data[start:start + min(k, self.classSize)] = buff[0:min(k, self.classSize)]
+                list_of_selected.append(arg_min)
+                buff[exmp_no] = self.data[start + arg_min]
+                features_copy[exmp_no] = features.data[arg_min]
+                # print (features_copy[exmp_no])
+                features[arg_min] = features[arg_min] + 1000
+            print("Exmp shape", buff[0:min(k, self.class_size)].shape)
+            self.data[start:start + min(k, self.class_size)] = buff[0:min(k, self.class_size)]
 
-        self.updateLen()
-
-    def removeClass(self, n):
-        while n in self.activeClasses:
-            self.activeClasses.remove(n)
-        self.updateLen()
+        self.update_len()
 
     def __len__(self):
         return self.len
 
-    def getStartIndex(self, n):
+    def get_start_index(self, n):
         '''
         :param n: 
         :return: Returns starting index of classs n
@@ -229,21 +224,21 @@ class incrementalLoader(td.Dataset):
         :param index: 
         :return: 
         '''
-        assert (index < self.classSize * self.totalClasses)
+        assert (index < self.class_size * self.total_classes)
 
         len = 0
-        tempA = 0
-        oldLen = 0
-        for a in self.activeClasses:
-            tempA = a
-            oldLen = len
+        temp_a = 0
+        old_len = 0
+        for a in self.active_classes:
+            temp_a = a
+            old_len = len
             len += self.indices[a][1] - self.indices[a][0]
             if len > index:
                 break
-        base = self.indices[tempA][0]
-        incre = index - oldLen
-        if tempA in self.limitedClasses:
-            incre = incre % self.limitedClasses[tempA]
+        base = self.indices[temp_a][0]
+        incre = index - old_len
+        if temp_a in self.limited_classes:
+            incre = incre % self.limited_classes[temp_a]
         index = base + incre
         img = self.data[index]
         if "torch" in str(type(img)):
@@ -251,7 +246,7 @@ class incrementalLoader(td.Dataset):
         img = Image.fromarray(img)
 
         #if self.data.shape[0] == 60000:
-        if self.datasetName == "MNIST":
+        if self.dataset_name == "MNIST":
             img = np.expand_dims(img, axis=2)
 
         if (not self.do_alt_transform) and self.transform is not None:
@@ -259,41 +254,41 @@ class incrementalLoader(td.Dataset):
         else:
             img = self.alt_transform(img)
 
-        if not self.labels[index] in self.activeClasses:
-            print("Active classes", self.activeClasses)
+        if not self.labels[index] in self.active_classes:
+            print("Active classes", self.active_classes)
             print("Label ", self.labels[index])
             assert (False)
 
         return img, self.labels[index]
 
-    def sortByImportance(self, algorithm="Kennard-Stone"):
+    def sort_by_importance(self, algorithm="Kennard-Stone"):
         if algorithm == "LDIS":
-            dataFile = "dataHandler/selectedCIFARIndicesForTrainingDataK1.txt"
+            data_file = "dataHandler/selectedCIFARIndicesForTrainingDataK1.txt"
         elif algorithm == "Kennard-Stone":
-            dataFile = "dataHandler/selectedCIFARIndicesForTrainingDataKenStone.txt"
+            data_file = "dataHandler/selectedCIFARIndicesForTrainingDataKenStone.txt"
 
         # load sorted (training) data indices
-        lines = [line.rstrip('\n') for line in open(dataFile)]
-        sortedData = []
+        lines = [line.rstrip('\n') for line in open(data_file)]
+        sorted_data = []
 
         # iterate for each class
         h = 0
-        classNum = 0
+        class_num = 0
         for line in lines:
             line = line[(line.find(":") + 1):]
             # select instances based on priority
-            prioritizedIndices = line.split(",")
-            for index in prioritizedIndices:
-                sortedData.append(self.data[int(index)])
+            prioritized_indices = line.split(",")
+            for index in prioritized_indices:
+                sorted_data.append(self.data[int(index)])
             # select remaining instances
-            for i in range(classNum * self.classSize, (classNum + 1) * self.classSize):
-                if str(i) not in prioritizedIndices:
-                    sortedData.append(self.data[i])
+            for i in range(class_num * self.class_size, (class_num + 1) * self.class_size):
+                if str(i) not in prioritized_indices:
+                    sorted_data.append(self.data[i])
                     h += 1
-            classNum += 1
-        self.data = np.concatenate(sortedData).reshape(self.data.shape)
+            class_num += 1
+        self.data = np.concatenate(sorted_data).reshape(self.data.shape)
 
-    def getBottlenecks(self):
+    def get_bottlenecks(self):
         pass
 
 
@@ -308,13 +303,13 @@ if __name__ == "__main__":
          transforms.Normalize(mean, std)])
 
     train_data = datasets.CIFAR100("data", train=True, transform=train_transform, download=True)
-    trainDatasetFull = incrementalLoader(train_data.train_data, train_data.train_labels, 500, 100, [],
+    train_dataset_full = IncrementalLoader(train_data.train_data, train_data.train_labels, 500, 100, [],
                                          transform=train_transform)
 
-    train_loader_full = torch.utils.data.DataLoader(trainDatasetFull,
+    train_loader_full = torch.utils.data.DataLoader(train_dataset_full,
                                                     batch_size=10, shuffle=True)
-    myFactory = mF.modelFactory()
-    model = myFactory.getModel("test", 100)
+    my_factory = mF.ModelFactory()
+    model = my_factory.get_model("test", 100)
 
-    trainDatasetFull.addClasses(2)
-    trainDatasetFull.limitClassAndSort(2, 60, model)
+    train_dataset_full.add_classes(2)
+    train_dataset_full.limit_class_and_sort(2, 60, model)

@@ -8,88 +8,88 @@ import torch.utils.data as td
 from torch.autograd import Variable
 import random
 
-class trainer():
-    def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, trainDataIteratorIdeal=None):
-        self.trainDataIterator = trainDataIterator
-        self.testDataIerator = testDataIterator
-        self.trainDataIteratorIdeal = trainDataIteratorIdeal
+class Trainer():
+    def __init__(self, train_data_iterator, test_data_iterator, dataset, model, args, optimizer, train_data_iterator_ideal=None):
+        self.train_data_iterator = train_data_iterator
+        self.test_data_ierator = test_data_iterator
+        self.train_data_iterator_ideal = train_data_iterator_ideal
         self.model = model
         self.args = args
         self.dataset = dataset
-        self.trainLoader = self.trainDataIterator.dataset
-        self.olderClasses = []
+        self.train_loader = self.train_data_iterator.dataset
+        self.older_classes = []
         self.optimizer = optimizer
-        self.modelFixed = copy.deepcopy(self.model)
-        self.activeClasses = []
-        for param in self.modelFixed.parameters():
+        self.model_fixed = copy.deepcopy(self.model)
+        self.active_classes = []
+        for param in self.model_fixed.parameters():
             param.requires_grad = False
 
-        self.currentLr = args.lr
-        self.allClasses = list(range(dataset.classes))
-        self.allClasses.sort(reverse=True)
-        self.leftOver = []
+        self.current_lr = args.lr
+        self.all_classes = list(range(dataset.classes))
+        self.all_classes.sort(reverse=True)
+        self.left_over = []
         if args.ideal_nmc:
-            self.trainLoaderIdeal = self.trainDataIteratorIdeal.dataset
+            self.train_loader_ideal = self.train_data_iterator_ideal.dataset
         if not args.no_random:
             print("Randomly shuffling classes")
             random.seed(args.seed)
-            random.shuffle(self.allClasses)
+            random.shuffle(self.all_classes)
 
-    def updateIterator(self, trainIterator):
-        self.trainDataIterator = trainIterator
-        self.trainLoader = trainIterator.dataset
+    def update_iterator(self, train_iterator):
+        self.train_data_iterator = train_iterator
+        self.train_loader = train_iterator.dataset
 
-    def updateLR(self, epoch):
+    def update_lr(self, epoch):
         for temp in range(0, len(self.args.schedule)):
             if self.args.schedule[temp] == epoch:
                 for param_group in self.optimizer.param_groups:
-                    self.currentLr = param_group['lr']
-                    param_group['lr'] = self.currentLr * self.args.gammas[temp]
-                    print("Changing learning rate from", self.currentLr, "to", self.currentLr * self.args.gammas[temp])
-                    self.currentLr *= self.args.gammas[temp]
+                    self.current_lr = param_group['lr']
+                    param_group['lr'] = self.current_lr * self.args.gammas[temp]
+                    print("Changing learning rate from", self.current_lr, "to", self.current_lr * self.args.gammas[temp])
+                    self.current_lr *= self.args.gammas[temp]
 
-    def incrementClasses(self, classGroup):
-        for temp in range(classGroup, classGroup + self.args.step_size):
-            popVal = self.allClasses.pop()
-            self.trainDataIterator.dataset.addClasses(popVal)
-            self.testDataIerator.dataset.addClasses(popVal)
+    def increment_classes(self, class_group):
+        for temp in range(class_group, class_group + self.args.step_size):
+            pop_val = self.all_classes.pop()
+            self.train_data_iterator.dataset.add_classes(pop_val)
+            self.test_data_ierator.dataset.add_classes(pop_val)
             if self.args.ideal_nmc:
-                self.trainDataIteratorIdeal.dataset.addClasses(popVal)
-            print("Train Classes", self.trainDataIterator.dataset.activeClasses)
-            self.leftOver.append(popVal)
+                self.train_data_iterator_ideal.dataset.add_classes(pop_val)
+            print("Train Classes", self.train_data_iterator.dataset.active_classes)
+            self.left_over.append(pop_val)
 
-    def updateLeftover(self, k):
-        self.olderClasses.append(k)
+    def update_leftover(self, k):
+        self.older_classes.append(k)
 
-    def limitClass(self, n, k, herding=True):
+    def limit_class(self, n, k, herding=True):
         if not herding:
-            self.trainLoader.limitClass(n, k)
+            self.train_loader.limit_class(n, k)
         else:
             print("Sorting by herding")
-            self.trainLoader.limitClassAndSort(n, k, self.modelFixed)
-        if n not in self.olderClasses:
-            self.olderClasses.append(n)
+            self.train_loader.limit_class_and_sort(n, k, self.model_fixed)
+        if n not in self.older_classes:
+            self.older_classes.append(n)
 
-    def setupTraining(self):
+    def setup_training(self):
         for param_group in self.optimizer.param_groups:
             print("Setting LR to", self.args.lr)
             param_group['lr'] = self.args.lr
-            self.currentLr = self.args.lr
+            self.current_lr = self.args.lr
 
         k = 0
-        if self.args.process == "nmc" and self.leftOver != []:
-            k = int(self.args.memory_budget / len(self.leftOver))
-        for val in self.leftOver:
-            self.limitClass(val, k, not self.args.no_herding)
+        if self.args.process == "nmc" and self.left_over != []:
+            k = int(self.args.memory_budget / len(self.left_over))
+        for val in self.left_over:
+            self.limit_class(val, k, not self.args.no_herding)
 
 
-    def updateFrozenModel(self):
+    def update_frozen_model(self):
         self.model.eval()
-        self.modelFixed = copy.deepcopy(self.model)
-        for param in self.modelFixed.parameters():
+        self.model_fixed = copy.deepcopy(self.model)
+        for param in self.model_fixed.parameters():
             param.requires_grad = False
 
-    def insert_generated_images(self, data, target, gan_images, gan_labels, batch_size, is_C=False):
+    def insert_generated_images(self, data, target, gan_images, gan_labels, batch_size, is_cond=False):
         '''
         data: Images from data iterator
         target: Labels from data iterator
@@ -100,7 +100,7 @@ class trainer():
         '''
         if self.args.process == 'gan' or self.args.process == 'cgan':
             if not len(gan_images) == 0:
-                if is_C:
+                if is_cond:
                     per_k_batch = (self.args.batch_size - batch_size) // len(gan_labels)
                     for k in gan_labels:
                         random_indices = torch.randperm(gan_images[k].shape[0])[0:per_k_batch]
@@ -118,16 +118,16 @@ class trainer():
     def train(self, gan_images=None, gan_labels=None, batch_size=None):
         self.model.train()
 
-        for batch_idx, (data, target) in enumerate(self.trainDataIterator):
+        for batch_idx, (data, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
-            weightVector = (target * 0).int()
-            for elem in self.olderClasses:
-                weightVector = weightVector + (target == elem).int()
+            weight_vector = (target * 0).int()
+            for elem in self.older_classes:
+                weight_vector = weight_vector + (target == elem).int()
 
-            oldClassesIndices = torch.squeeze(torch.nonzero((weightVector > 0)).long())
-            newClassesIndices = torch.squeeze(torch.nonzero((weightVector == 0)).long())
+            old_classes_indices = torch.squeeze(torch.nonzero((weight_vector > 0)).long())
+            new_classes_indices = torch.squeeze(torch.nonzero((weight_vector == 0)).long())
             self.optimizer.zero_grad()
 
             y_onehot = torch.FloatTensor(len(data), self.dataset.classes)
@@ -140,9 +140,9 @@ class trainer():
 
             output = self.model(Variable(data))
             if not self.args.no_distill:
-                if len(self.olderClasses) > 0:
-                    pred2 = self.modelFixed(Variable(data))
-                    y_onehot[:, self.olderClasses] = pred2.data[:, self.olderClasses]
+                if len(self.older_classes) > 0:
+                    pred2 = self.model_fixed(Variable(data))
+                    y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
 
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
