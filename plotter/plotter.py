@@ -16,8 +16,7 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 # matplotlib.rc('font', **font)
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
-# plt.style.use('default')
-print(plt.style.available)
+
 
 class Plotter():
     def  __init__(self):

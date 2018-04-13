@@ -213,8 +213,8 @@ class Trainer(GenericTrainer):
             weight_vec = weight_vec/weight_vec.norm(1)
             print (weight_vec)
             if self.args.cuda:
-                weight_vec = weight_vec.cuda()
-            loss = F.kl_div(output, Variable(y_onehot), weight_vector= weight_vec)
+                weight_vec = Variable(weight_vec.cuda().squeeze(0))
+            loss = F.kl_div(output*weight_vec, Variable(y_onehot))
             losses.append(loss)
             myT = self.args.T
             if self.args.no_distill:
@@ -243,7 +243,7 @@ class Trainer(GenericTrainer):
                     mult = mult.cuda()
 
                 self.threshold += np.sum(pred2.data.cpu().numpy(), 0)
-                loss2 = F.kl_div(output2, Variable(pred2.data),weight_vector= weight_vec)
+                loss2 = F.kl_div(output2*weight_vec, Variable(pred2.data))
                 losses.append(loss2)
                 # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
