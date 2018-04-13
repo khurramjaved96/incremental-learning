@@ -207,8 +207,12 @@ class Trainer(GenericTrainer):
 
             self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
             # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
-
-            loss = F.kl_div(output, Variable(y_onehot))
+            temp = self.threshold/np.max
+            temp = 1/temp
+            weight_vec = torch.from_numpy(temp).norm(1)
+            if self.args.cuda:
+                weight_vec = weight_vec.cuda()
+            loss = F.kl_div(output, Variable(y_onehot), weight_vector= weight_vec)
             losses.append(loss)
             myT = self.args.T
             if self.args.no_distill:
@@ -237,7 +241,7 @@ class Trainer(GenericTrainer):
                     mult = mult.cuda()
 
                 self.threshold += np.sum(pred2.data.cpu().numpy(), 0)
-                loss2 = F.kl_div(output2, Variable(pred2.data))
+                loss2 = F.kl_div(output2, Variable(pred2.data),weight_vector= weight_vec)
                 losses.append(loss2)
                 # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
