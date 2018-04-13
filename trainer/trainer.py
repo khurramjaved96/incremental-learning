@@ -207,7 +207,7 @@ class Trainer(GenericTrainer):
 
             self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
             # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
-            temp = self.threshold/np.max
+            temp = self.threshold/np.max(self.threshold)
             temp = 1/temp
             weight_vec = torch.from_numpy(temp).norm(1)
             if self.args.cuda:
