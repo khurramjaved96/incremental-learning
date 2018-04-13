@@ -1,21 +1,30 @@
 import os
 import copy
 import time
-import torch
 import itertools
+
+import torch
 import numpy as np
 import torch.nn as nn
 import utils.utils as ut
 import torch.optim as optim
 import torch.utils.data as td
 import matplotlib.pyplot as plt
-import trainer.classifierTrainer as t
-import trainer.classifierFactory as tF
 from torch.autograd import Variable
 
+import trainer.classifierTrainer as t
+import trainer.classifierFactory as tF
+import trainer.gans.gutils as gutils
+from trainer.gans.ganFactory import GANFactory
+
 class Trainer():
-    def __init__(self, args, dataset, classifier_trainer, model, train_iterator,
-                 test_iterator, train_loader, model_factory, experiment, train_iterator_ideal, train_loader_ideal):
+    def __init__(
+            self, args, dataset, classifier_trainer, model, train_iterator,
+            test_iterator, train_loader, model_factory, experiment,
+            train_iterator_ideal, train_loader_ideal):
+        '''
+        ideal params are for ideal nmc calculation
+        '''
         self.args = args
         self.batch_size = args.batch_size
         self.dataset = dataset
@@ -59,18 +68,28 @@ class Trainer():
         if self.args.ideal_nmc:
             ideal_nmc = test_factory.get_tester("nmc", self.args.cuda)
 
+        gan_trainer = GANFactory.get_trainer(self.args.process,
+                                             self.args,
+                                             self.num_classes,
+                                             self.train_iterator,
+                                             self.classifier_trainer.model_fixed,
+                                             self.experiment)
+
         for class_group in range(0, self.dataset.classes, self.args.step_size):
             self.classifier_trainer.setup_training()
             self.classifier_trainer.increment_classes(class_group)
-            #Get new iterator with reduced batch_size
             if class_group > 0:
                 self.increment = self.increment + 1
                 self.old_classes = self.classifier_trainer.older_classes
-                self.examples = self.generate_examples(self.fixed_g,
-                                                      self.args.gan_num_examples,
-                                                      self.old_classes,
-                                                      "Final-Inc"+str(self.increment-1),
-                                                      True)
+                self.examples = gutils.generate_examples(self.args,
+                                                         self.fixed_g,
+                                                         self.args.gan_num_examples,
+                                                         self.old_classes,
+                                                         self.num_classes,
+                                                         self.fixed_noise,
+                                                         self.experiment,
+                                                         "Final-Inc"+str(self.increment-1),
+                                                         True, self.is_cond)
                 #TODO put trainLoader
                 self.train_iterator.dataset.replace_data(self.examples,
                                                          self.args.gan_num_examples)
@@ -79,9 +98,7 @@ class Trainer():
                     for k in self.examples:
                         self.examples[k] = self.examples[k].data.cpu()
 
-            ######################
-            # Train Classifier
-            ######################
+            #-------------Train Classifier-----------#
             epoch = 0
             for epoch in range(0, self.args.epochs_class):
                 self.classifier_trainer.update_lr(epoch)
@@ -116,27 +133,39 @@ class Trainer():
             if self.args.ideal_nmc:
                 print("Test NMC (Ideal)", nmc_test_ideal)
 
-            #####################
-            # Train GAN
-            ####################
+            #-------------Train GAN-----------#
             if self.G == None or not self.args.persist_gan:
                 self.G, self.D = self.model_factory.get_model(self.args.process,
-                                                            self.args.dataset,
-                                                            self.args.minibatch_discrimination,
-                                                            self.args.gan_d)
+                                                              self.args.dataset,
+                                                              self.args.minibatch_discrimination,
+                                                              self.args.gan_d)
                 if self.args.cuda:
                     self.G = self.G.cuda()
                     self.D = self.D.cuda()
+
+            #Load if we should be loading from ckpt, otherwise train
             is_loaded = False
             if self.args.load_g_ckpt != '':
-                is_loaded = self.load_checkpoint(self.increment)
+                is_loaded = gutils.load_checkpoint(self.args.load_g_ckpt,
+                                                   self.increment,
+                                                   self.G)
+            #Train the GAN, use alternative transform
             if not is_loaded:
-                self.train_gan(self.G, self.D, self.is_cond, self.num_classes)
+                self.train_loader.do_alt_transform = True
+                gan_trainer.train(self.G,
+                                  self.D,
+                                  self.train_iterator.dataset.active_classes,
+                                  self.increment)
+                self.train_loader.do_alt_transform = False
+
             if self.args.optimize_features:
                 self.optimize_features()
             self.update_frozen_generator()
+
+            #Save ckpt if required
             if self.args.save_g_ckpt:
-                self.save_checkpoint(self.args.gan_epochs[self.increment])
+                gutils.save_checkpoint(self.args.gan_epochs[self.increment],
+                                       self.increment, self.experiment, self.G)
 
             # Saving confusion matrix
             ut.saveConfusionMatrix(int(class_group / self.args.step_size) *
@@ -158,7 +187,12 @@ class Trainer():
                             results,
                             self.dataset.classes + 1, self.args.name)
 
+
     def optimize_features(self):
+        '''
+        Attempts to reduce the Euclidean distance between
+        the batches of features of generated and real images
+        '''
         self.unfreeze_frozen_generator()
         model = self.classifier_trainer.model_fixed
         optimizer = optim.Adam(self.G.parameters(), lr=self.args.optimize_feat_lr, betas=(0.5, 0.999))
@@ -401,36 +435,6 @@ class Trainer():
         # Switch to default transformation
         self.train_loader.do_alt_transform = False
 
-    def generate_examples(self, G, num_examples, active_classes, name="", save=False):
-        '''
-        Returns a dict[class] of generated samples.
-        In case of Non-Conditional GAN, the samples in the dict are random, they do
-        not correspond to the keys in the dict
-        Just passing in random noise to the generator and storing the results in dict
-        '''
-        G.eval()
-        examples = {}
-        for idx, klass in enumerate(active_classes):
-            # Generator outputs 100 images at a time
-            for _ in range(num_examples//100):
-                #TODO refactor these conditionals
-                # Check for memory leak after refactoring
-                if self.is_cond:
-                    targets = torch.zeros(100,self.num_classes,1,1)
-                    targets[:, klass] = 1
-                if self.args.cuda:
-                    targets = Variable(targets.cuda(), volatile=True) if self.is_cond else None
-                images = G(self.fixed_noise, targets) if self.is_cond else G(self.fixed_noise)
-                if not klass in examples.keys():
-                    examples[klass] = images
-                else:
-                    examples[klass] = torch.cat((examples[klass],images), dim=0)
-
-            # Dont save more than the required number of classes
-            if save and idx <= self.args.gan_save_classes:
-                self.save_results(examples[klass][0:100], name + "_C" + str(klass), False)
-        return examples
-
     def update_frozen_generator(self):
         self.G.eval()
         self.fixed_g = copy.deepcopy(self.G)
@@ -441,97 +445,3 @@ class Trainer():
         self.G.train()
         for param in self.G.parameters():
             param.requires_grad = True
-
-    def save_results(self, images, name, is_tensor=False, axis_size=10):
-        '''
-        Saves the images in a grid of axis_size * axis_size
-        '''
-        axis_size = int(axis_size)
-        _, sub = plt.subplots(axis_size, axis_size, figsize=(5, 5))
-        for i, j in itertools.product(range(axis_size), range(axis_size)):
-            sub[i, j].get_xaxis().set_visible(False)
-            sub[i, j].get_yaxis().set_visible(False)
-
-        for k in range(axis_size * axis_size):
-            i = k // axis_size
-            j = k % axis_size
-            sub[i, j].cla()
-            if self.args.dataset == "CIFAR100" or self.args.dataset == "CIFAR10":
-                if is_tensor:
-                    sub[i, j].imshow((images[k].cpu().numpy().transpose(1, 2, 0) + 1)/2)
-                else:
-                    sub[i, j].imshow((images[k].cpu().data.numpy().transpose(1, 2, 0) + 1)/2)
-            elif self.args.dataset == "MNIST":
-                if is_tensor:
-                    sub[i, j].imshow(images[k, 0].cpu().numpy(), cmap='gray')
-                else:
-                    sub[i, j].imshow(images[k, 0].cpu().data.numpy(), cmap='gray')
-
-        plt.savefig(self.experiment.path + "results/" + name + ".png")
-        plt.cla()
-        plt.clf()
-        plt.close()
-
-    def save_gan_losses(self, g_loss, d_loss, name='GAN_LOSS'):
-        x = range(len(g_loss))
-        plt.plot(x, g_loss, label='G_loss')
-        plt.plot(x, d_loss, label='D_loss')
-
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.legend(loc=4)
-        plt.grid(True)
-        plt.xlim((0, self.args.gan_epochs[self.increment]))
-
-        plt.savefig(self.experiment.path + name + "_" + str(self.increment) + ".png")
-        plt.cla()
-        plt.clf()
-        plt.close()
-
-    def save_checkpoint(self, epoch):
-        '''
-        Saves Generator
-        '''
-        if epoch == 0:
-            return
-        print("[*] Saving Generator checkpoint")
-        path = self.experiment.path + "checkpoints/"
-        torch.save(self.G.state_dict(),
-                   '{0}G_inc_{1}_e_{2}.pth'.format(path, self.increment, epoch))
-
-    def load_checkpoint(self, increment):
-        '''
-        Loads the latest generator for given increment
-        '''
-        max_e = -1
-        filename = None
-        for f in os.listdir(self.args.load_g_ckpt):
-            vals = f.split('_')
-            incr = int(vals[2])
-            epoch = int(vals[4].split('.')[0])
-            if incr == increment and epoch > max_e:
-                max_e = epoch
-                filename = f
-        if max_e == -1:
-            print('[*] Failed to load checkpoint')
-            return False
-        path = os.path.join(self.args.load_g_ckpt, filename)
-        self.G.load_state_dict(torch.load(path))
-        print('[*] Loaded Generator from %s' % path)
-        return True
-
-    def update_lr(self, epoch, g_opt, d_opt):
-        for temp in range(0, len(self.args.gan_schedule)):
-            if self.args.gan_schedule[temp] == epoch:
-                #Update Generator LR
-                for param_group in g_opt.param_groups:
-                    current_lr_g = param_group['lr']
-                    param_group['lr'] = current_lr_g * self.args.gan_gammas[temp]
-                    print("Changing GAN Generator learning rate from",
-                          current_lr_g, "to", current_lr_g * self.args.gan_gammas[temp])
-                #Update Discriminator LR
-                for param_group in d_opt.param_groups:
-                    current_lr_d = param_group['lr']
-                    param_group['lr'] = current_lr_d * self.args.gan_gammas[temp]
-                    print("Changing GAN Discriminator learning rate from",
-                          current_lr_d, "to", current_lr_d * self.args.gan_gammas[temp])
