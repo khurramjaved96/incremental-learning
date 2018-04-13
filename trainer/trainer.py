@@ -218,7 +218,7 @@ class Trainer(GenericTrainer):
                 weight_vec = Variable(weight_vec.squeeze(0).float())
                 # if batch_idx == 0:
                 #     print ("Weight Vec", weight_vec)
-            loss = F.kl_div(output, Variable(y_onehot),reduce=False)
+            loss = F.kl_div(output, Variable(y_onehot),reduce=False)*weight_vec
             temptemp = loss.data
             # loss = loss.sum(dim=1)
             # loss = loss.sum()/len(loss)
