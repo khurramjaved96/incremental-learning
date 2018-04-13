@@ -12,11 +12,11 @@ import plotter as plt
 import trainer
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
-parser.add_argument('--batch-size', type=int, default=100, metavar='N',
+parser.add_argument('--batch-size', type=int, default=50, metavar='N',
                     help='input batch size for training (default: 100)')
 parser.add_argument('--lr', type=float, default=2.0, metavar='LR',
                     help='learning rate (default: 0.1)')
-parser.add_argument('--schedule', type=int, nargs='+', default=[45, 60, 68],
+parser.add_argument('--schedule', type=int, nargs='+', default=[23, 30, 34],
                     help='Decrease learning rate at these epochs.')
 parser.add_argument('--gammas', type=float, nargs='+', default=[0.2, 0.2, 0.2],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
@@ -55,7 +55,7 @@ parser.add_argument('--step-size', type=int, default=10, help='How many classes 
 parser.add_argument('--T', type=int, default=3, help='Tempreture used for softening the targets')
 parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[2000],
                     help='How many images can we store at max. 0 will result in fine-tuning')
-parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
+parser.add_argument('--epochs-class', type=int, default=35, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; example CIFAR, MNIST')
 parser.add_argument('--lwf', action='store_true', default=False,
                     help='Use learning without forgetting. Ignores memory-budget '
