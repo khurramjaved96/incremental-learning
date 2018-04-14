@@ -66,7 +66,6 @@ def generate_examples(
     for idx, klass in enumerate(active_classes):
         # Generator outputs 100 images at a time
         for _ in range(num_examples//100):
-            print("FSDF")
             noise = torch.randn(100,100,1,1)
             #TODO refactor these conditionals
             if is_cond:
