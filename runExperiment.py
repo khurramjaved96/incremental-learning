@@ -12,7 +12,7 @@ import plotter as plt
 import trainer
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
-parser.add_argument('--batch-size', type=int, default=200, metavar='N',
+parser.add_argument('--batch-size', type=int, default=100, metavar='N',
                     help='input batch size for training (default: 35)')
 parser.add_argument('--lr', type=float, default=2.0, metavar='LR',
                     help='learning rate (default: 0.1)')
@@ -199,6 +199,7 @@ for seed in args.seeds:
 
             # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
             tcMatrix = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes)
+            tcMatrix_scaled = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes, my_trainer.threshold)
             nmcMatrix = nmc.get_confusion_matrix(myModel, test_iterator, dataset.classes)
             nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(myModel, test_iterator, dataset.classes)
 
@@ -228,6 +229,8 @@ for seed in args.seeds:
 
             # Plotting the confusion matrices
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
+            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+                                  my_experiment.path + "tcMatrix_scaled", tcMatrix_scaled)
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
                                   nmcMatrix)
             my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,

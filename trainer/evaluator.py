@@ -111,7 +111,7 @@ class softmax_evaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def evaluate(self, model, loader, scale=None, older_classes=None, step_size=None):
+    def evaluate(self, model, loader, scale=None):
         model.eval()
         correct = 0
         if scale is not None:
@@ -139,17 +139,33 @@ class softmax_evaluator():
 
         return 100. * correct / len(loader.dataset)
 
-    def get_confusion_matrix(self, model, loader, size):
+    def get_confusion_matrix(self, model, loader, size, scale=None):
         model.eval()
         test_loss = 0
         correct = 0
         cMatrix = confusionmeter.ConfusionMeter(size, True)
 
+        if scale is not None:
+            scale = scale/np.max(scale)
+            # print ("Gets here")
+            scale = 1 / scale
+            # scale[len(older_classes)+step_size:len(scale)] = 1
+            # scale = np.log(scale)
+            # print (scale)
+            # scale = scale-1
+            scale = torch.from_numpy(scale).unsqueeze(0)
+            if self.cuda:
+                scale = scale.cuda()
+
         for data, target in loader:
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
-            output = model(data)
+            if scale is not None:
+                # print("Gets here, getting outputs")
+                output = model(data, scale = Variable(scale.float()))
+            else:
+                output = model(data)
             test_loss += F.nll_loss(output, target, size_average=False).data[0]  # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
