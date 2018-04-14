@@ -218,7 +218,7 @@ class Trainer(GenericTrainer):
                 weight_vec = Variable(weight_vec.squeeze(0).float())
                 # if batch_idx == 0:
                 #     print ("Weight Vec", weight_vec)
-            loss = F.kl_div(output, Variable(y_onehot),reduce=False)
+            loss = F.kl_div(output, Variable(y_onehot))
             temptemp = loss.data
             # loss = loss.sum(dim=1)
             # loss = loss.sum()/len(loss)
@@ -251,7 +251,7 @@ class Trainer(GenericTrainer):
                     mult = mult.cuda()
 
                 self.threshold += np.sum(pred2.data.cpu().numpy(), 0)
-                loss2 = F.kl_div(output2, Variable(pred2.data), reduce=False)
+                loss2 = F.kl_div(output2, Variable(pred2.data))
                 # loss2 = loss2.sum(dim=1)
                 # loss2 = loss2.sum() / len(loss)
                 losses.append(loss2)
