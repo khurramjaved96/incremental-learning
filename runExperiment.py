@@ -47,7 +47,7 @@ parser.add_argument('--upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
 parser.add_argument('--pp', action='store_true', default=False,
                     help='Privacy perserving')
-parser.add_argument('--alpha', type=float, default=1.0, help='Weight given to new classes vs old classes in loss')
+parser.add_argument('--alphas', type=float, nargs='+', default=[1.0], help='Weight given to new classes vs old classes in loss')
 parser.add_argument('--decay', type=float, default=0.00004, help='Weight decay (L2 penalty).')
 parser.add_argument('--alpha-increment', type=float, default=1.0, help='Weight decay (L2 penalty).')
 parser.add_argument('--l1', type=float, default=0.0, help='Weight decay (L1 penalty).')
@@ -78,173 +78,175 @@ if args.step_size<2:
     assert False
 
 for seed in args.seeds:
-    for m in args.memory_budgets:
-        args.memory_budget = m
+    for at in args.alphas:
+        args.alpha = at
+        for m in args.memory_budgets:
+            args.memory_budget = m
 
-        if args.lwf:
-            args.memory_budget = 0
-
-
-        args.seed = seed
-        torch.manual_seed(seed)
-        if args.cuda:
-            torch.cuda.manual_seed(seed)
-
-        # Loader used for training data
-        train_dataset_loader = dataHandler.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
-                                                             dataset.labels_per_class_train,
-                                                             dataset.classes, [], transform=dataset.train_transform,
-                                                             cuda=args.cuda, oversampling=not args.upsampling,
-                                                             )
-        # Special loader use to compute ideal NMC; i.e, NMC that using all the data points to compute the mean embedding
-        train_dataset_loader_nmc = dataHandler.IncrementalLoader(dataset.train_data.train_data,
-                                                             dataset.train_data.train_labels,
-                                                             dataset.labels_per_class_train,
-                                                             dataset.classes, [], transform=dataset.train_transform,
-                                                             cuda=args.cuda, oversampling=not args.upsampling,
-                                                             )
-        # Loader for test data.
-        test_dataset_loader = dataHandler.IncrementalLoader(dataset.test_data.test_data, dataset.test_data.test_labels,
-                                                            dataset.labels_per_class_test, dataset.classes,
-                                                            [], transform=dataset.test_transform, cuda=args.cuda,
-                                                            )
-
-        kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-
-        # Iterator to iterate over training data.
-        train_iterator = torch.utils.data.DataLoader(train_dataset_loader,
-                                                     batch_size=args.batch_size, shuffle=True, **kwargs)
-        # Iterator to iterate over all training data (Equivalent to memory-budget = infitie
-        train_iterator_nmc = torch.utils.data.DataLoader(train_dataset_loader_nmc,
-                                                     batch_size=args.batch_size, shuffle=True, **kwargs)
-        # Iterator to iterate over test data
-        test_iterator = torch.utils.data.DataLoader(
-            test_dataset_loader,
-            batch_size=args.batch_size, shuffle=True, **kwargs)
-
-        # Get the required model
-        myModel = model.ModelFactory.get_model(args.model_type, args.dataset)
-        if args.cuda:
-            myModel.cuda()
-
-        # Define an experiment.
-        my_experiment = ex.experiment(args.name, args)
-
-        # Define the optimizer used in the experiment
-        optimizer = torch.optim.SGD(myModel.parameters(), args.lr, momentum=args.momentum,
-                                    weight_decay=args.decay, nesterov=True)
-
-        # Trainer object used for training
-        my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, myModel, args, optimizer, train_iterator_nmc)
+            if args.lwf:
+                args.memory_budget = 0
 
 
-        # Remove this parameters somehow.
-        x = []
-        y = []
-        y1 = []
-        train_y = []
+            args.seed = seed
+            torch.manual_seed(seed)
+            if args.cuda:
+                torch.cuda.manual_seed(seed)
 
-        y_scaled = []
-        nmc_ideal_cum = []
+            # Loader used for training data
+            train_dataset_loader = dataHandler.IncrementalLoader(dataset.train_data.train_data, dataset.train_data.train_labels,
+                                                                 dataset.labels_per_class_train,
+                                                                 dataset.classes, [], transform=dataset.train_transform,
+                                                                 cuda=args.cuda, oversampling=not args.upsampling,
+                                                                 )
+            # Special loader use to compute ideal NMC; i.e, NMC that using all the data points to compute the mean embedding
+            train_dataset_loader_nmc = dataHandler.IncrementalLoader(dataset.train_data.train_data,
+                                                                 dataset.train_data.train_labels,
+                                                                 dataset.labels_per_class_train,
+                                                                 dataset.classes, [], transform=dataset.train_transform,
+                                                                 cuda=args.cuda, oversampling=not args.upsampling,
+                                                                 )
+            # Loader for test data.
+            test_dataset_loader = dataHandler.IncrementalLoader(dataset.test_data.test_data, dataset.test_data.test_labels,
+                                                                dataset.labels_per_class_test, dataset.classes,
+                                                                [], transform=dataset.test_transform, cuda=args.cuda,
+                                                                )
 
-        nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
-        nmc_ideal = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
+            kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-        t_classifier = trainer.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
+            # Iterator to iterate over training data.
+            train_iterator = torch.utils.data.DataLoader(train_dataset_loader,
+                                                         batch_size=args.batch_size, shuffle=True, **kwargs)
+            # Iterator to iterate over all training data (Equivalent to memory-budget = infitie
+            train_iterator_nmc = torch.utils.data.DataLoader(train_dataset_loader_nmc,
+                                                         batch_size=args.batch_size, shuffle=True, **kwargs)
+            # Iterator to iterate over test data
+            test_iterator = torch.utils.data.DataLoader(
+                test_dataset_loader,
+                batch_size=args.batch_size, shuffle=True, **kwargs)
 
-        # Loop that incrementally adds more and more classes
-        for class_group in range(0, dataset.classes, args.step_size):
-            print ("SEED:",seed, "MEMORY_BUDGET:", m, "CLASS_GROUP:", class_group)
-            # Add new classes to the train, train_nmc, and test iterator
-            my_trainer.increment_classes(class_group)
-            my_trainer.update_frozen_model()
-            epoch = 0
-            import progressbar
+            # Get the required model
+            myModel = model.ModelFactory.get_model(args.model_type, args.dataset)
+            if args.cuda:
+                myModel.cuda()
 
-            # Running epochs_class epochs
-            for epoch in range(0, args.epochs_class):
-                my_trainer.update_lr(epoch)
-                my_trainer.train(epoch)
-                # print(my_trainer.threshold)
-                if epoch % args.log_interval == (args.log_interval-1):
-                    tError = t_classifier.evaluate(myModel, train_iterator)
-                    print ("Current Epoch:", epoch)
-                    print("Train Classifier:", tError)
-                    print("Test Classifier:", t_classifier.evaluate(myModel, test_iterator))
-                    print("Test Classifier Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
+            # Define an experiment.
+            my_experiment = ex.experiment(args.name, args)
 
-            # Evaluate the learned classifier
-            img = None
+            # Define the optimizer used in the experiment
+            optimizer = torch.optim.SGD(myModel.parameters(), args.lr, momentum=args.momentum,
+                                        weight_decay=args.decay, nesterov=True)
 
-            print("Test Classifier Final:", t_classifier.evaluate(myModel, test_iterator))
-            print("Test Classifier Final Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
-
-            y_scaled.append(t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
-            y1.append(t_classifier.evaluate(myModel, test_iterator))
-
-            # Update means using the train iterator; this is iCaRL case
-            nmc.update_means(myModel, train_iterator, dataset.classes)
-            # Update mean using all the data. This is equivalent to memory_budget = infinity
-            nmc_ideal.update_means(myModel, train_iterator_nmc, dataset.classes)
-            # Compute the the nmc based classification results
-            tempTrain = t_classifier.evaluate(myModel, train_iterator)
-            train_y.append(tempTrain)
-
-
-
-            testY = nmc.evaluate(myModel, test_iterator)
-            testY_ideal = nmc_ideal.evaluate(myModel, test_iterator)
-            y.append(testY)
-            nmc_ideal_cum.append(testY_ideal)
-
-            # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
-            tcMatrix = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes)
-            tcMatrix_scaled = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes, my_trainer.threshold)
-            nmcMatrix = nmc.get_confusion_matrix(myModel, test_iterator, dataset.classes)
-            nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(myModel, test_iterator, dataset.classes)
-
-            # Printing results
-            print("Train NMC", tempTrain)
-            print("Test NMC", testY)
+            # Trainer object used for training
+            my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, myModel, args, optimizer, train_iterator_nmc)
 
 
-            # TEMP CODE
+            # Remove this parameters somehow.
+            x = []
+            y = []
+            y1 = []
+            train_y = []
 
-            my_trainer.setup_training()
-            adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, 0.8, args.cuda, train_iterator)
+            y_scaled = []
+            nmc_ideal_cum = []
+
+            nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
+            nmc_ideal = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
+
+            t_classifier = trainer.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
+
+            # Loop that incrementally adds more and more classes
+            for class_group in range(0, dataset.classes, args.step_size):
+                print ("SEED:",seed, "MEMORY_BUDGET:", m, "CLASS_GROUP:", class_group)
+                # Add new classes to the train, train_nmc, and test iterator
+                my_trainer.increment_classes(class_group)
+                my_trainer.update_frozen_model()
+                epoch = 0
+                import progressbar
+
+                # Running epochs_class epochs
+                for epoch in range(0, args.epochs_class):
+                    my_trainer.update_lr(epoch)
+                    my_trainer.train(epoch)
+                    # print(my_trainer.threshold)
+                    if epoch % args.log_interval == (args.log_interval-1):
+                        tError = t_classifier.evaluate(myModel, train_iterator)
+                        print ("Current Epoch:", epoch)
+                        print("Train Classifier:", tError)
+                        print("Test Classifier:", t_classifier.evaluate(myModel, test_iterator))
+                        print("Test Classifier Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
+
+                # Evaluate the learned classifier
+                img = None
+
+                print("Test Classifier Final:", t_classifier.evaluate(myModel, test_iterator))
+                print("Test Classifier Final Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
+
+                y_scaled.append(t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
+                y1.append(t_classifier.evaluate(myModel, test_iterator))
+
+                # Update means using the train iterator; this is iCaRL case
+                nmc.update_means(myModel, train_iterator, dataset.classes)
+                # Update mean using all the data. This is equivalent to memory_budget = infinity
+                nmc_ideal.update_means(myModel, train_iterator_nmc, dataset.classes)
+                # Compute the the nmc based classification results
+                tempTrain = t_classifier.evaluate(myModel, train_iterator)
+                train_y.append(tempTrain)
 
 
-            # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
-            x.append(class_group + args.step_size)
 
-            my_experiment.results["NMC"] = [x, y]
-            my_experiment.results["Trained Classifier"] = [x, y1]
-            my_experiment.results["Trained Classifier Scaled"] = [x, y_scaled]
-            my_experiment.results["Train Error Classifier"] = [x, train_y]
-            my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
-            my_experiment.store_json()
+                testY = nmc.evaluate(myModel, test_iterator)
+                testY_ideal = nmc_ideal.evaluate(myModel, test_iterator)
+                y.append(testY)
+                nmc_ideal_cum.append(testY_ideal)
 
-            # Finally, plotting the results;
-            my_plotter = plt.Plotter()
+                # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
+                tcMatrix = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes)
+                tcMatrix_scaled = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes, my_trainer.threshold)
+                nmcMatrix = nmc.get_confusion_matrix(myModel, test_iterator, dataset.classes)
+                nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(myModel, test_iterator, dataset.classes)
 
-            # Plotting the confusion matrices
-            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
-            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-                                  my_experiment.path + "tcMatrix_scaled", tcMatrix_scaled)
-            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
-                                  nmcMatrix)
-            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-                                  my_experiment.path + "nmcMatrixIdeal",
-                                  nmcMatrixIdeal)
+                # Printing results
+                print("Train NMC", tempTrain)
+                print("Test NMC", testY)
 
-            # Plotting the line diagrams of all the possible cases
-            my_plotter.plot(x, y, title=args.name, legend="NMC")
-            my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
-            my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
-            my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
-            my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
 
-            # Saving the line plot
-            my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
-            if args.pp:
-                img = adv.generate()
+                # TEMP CODE
+
+                my_trainer.setup_training()
+                adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, 0.8, args.cuda, train_iterator)
+
+
+                # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
+                x.append(class_group + args.step_size)
+
+                my_experiment.results["NMC"] = [x, y]
+                my_experiment.results["Trained Classifier"] = [x, y1]
+                my_experiment.results["Trained Classifier Scaled"] = [x, y_scaled]
+                my_experiment.results["Train Error Classifier"] = [x, train_y]
+                my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
+                my_experiment.store_json()
+
+                # Finally, plotting the results;
+                my_plotter = plt.Plotter()
+
+                # Plotting the confusion matrices
+                my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
+                my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+                                      my_experiment.path + "tcMatrix_scaled", tcMatrix_scaled)
+                my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
+                                      nmcMatrix)
+                my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+                                      my_experiment.path + "nmcMatrixIdeal",
+                                      nmcMatrixIdeal)
+
+                # Plotting the line diagrams of all the possible cases
+                my_plotter.plot(x, y, title=args.name, legend="NMC")
+                my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
+                my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
+                my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
+                my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
+
+                # Saving the line plot
+                my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
+                if args.pp:
+                    img = adv.generate()

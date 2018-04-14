@@ -111,7 +111,7 @@ class softmax_evaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def evaluate(self, model, loader, scale=None):
+    def evaluate(self, model, loader, scale=None, thres=False):
         model.eval()
         correct = 0
         if scale is not None:
@@ -129,7 +129,10 @@ class softmax_evaluator():
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
-            if scale is not None:
+            if thres:
+                output = model(data)
+
+            elif scale is not None:
                 # print("Gets here, getting outputs")
                 output = model(data, scale = Variable(scale.float()))
             else:
