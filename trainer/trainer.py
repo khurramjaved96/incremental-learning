@@ -250,7 +250,7 @@ class Trainer(GenericTrainer):
                 if self.args.cuda:
                     mult = mult.cuda()
 
-                self.threshold += np.sum(pred2.data.cpu().numpy(), 0)
+                self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
                 # loss2 = loss2.sum(dim=1)
                 # loss2 = loss2.sum() / len(loss)
