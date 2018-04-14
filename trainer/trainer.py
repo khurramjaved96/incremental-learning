@@ -250,7 +250,7 @@ class Trainer(GenericTrainer):
                 if self.args.cuda:
                     mult = mult.cuda()
 
-                self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*self.args.alpha
+                self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
                 # loss2 = loss2.sum(dim=1)
                 # loss2 = loss2.sum() / len(loss)
@@ -260,8 +260,8 @@ class Trainer(GenericTrainer):
                 # Scale the stored gradients by a factor of my
 
                 for param in self.model.parameters():
-                    # param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
-                    param.grad = param.grad * (myT * myT) * self.args.alpha
+                    param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
+                    # param.grad = param.grad * (myT * myT) * self.args.alpha
             # sum(losses).backward()
             regParam = 0.000001
             if self.args.l1 > 0:
