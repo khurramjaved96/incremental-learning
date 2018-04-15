@@ -172,6 +172,7 @@ class Trainer(GenericTrainer):
         self.model = myModel
         self.optimizer = torch.optim.SGD(self.model.parameters(), self.args.lr, momentum=self.args.momentum,
                                     weight_decay=self.args.decay, nesterov=True)
+        self.model.eval()
 
     def train(self, epoch):
 
@@ -226,9 +227,7 @@ class Trainer(GenericTrainer):
                 # if batch_idx == 0:
                 #     print ("Weight Vec", weight_vec)
             loss = F.kl_div(output, Variable(y_onehot))
-            temptemp = loss.data
-            # loss = loss.sum(dim=1)
-            # loss = loss.sum()/len(loss)
+
 
             losses.append(loss)
             myT = self.args.T
