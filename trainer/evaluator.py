@@ -172,6 +172,7 @@ class softmax_evaluator():
             scale = torch.from_numpy(scale).unsqueeze(0)
             if self.cuda:
                 scale = scale.cuda()
+            scale[len(older_classes) + step_size:len(scale)] = 1
 
         for data, target in loader:
             if self.cuda:
