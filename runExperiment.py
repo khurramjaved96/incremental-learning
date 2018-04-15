@@ -43,22 +43,17 @@ parser.add_argument('--name', default="noname",
 parser.add_argument('--outputDir', default="../",
                     help='Directory to store the results; the new folder will be created '
                          'in the specified directory to save the results.')
-parser.add_argument('--no-upsampling', action='store_true', default=True,
+parser.add_argument('--no-upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
-parser.add_argument('--alpha', type=float, default=0.2, help='Weight given to new classes vs old classes in loss')
 parser.add_argument('--decay', type=float, default=0.00004, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
-parser.add_argument('--T', type=int, default=3, help='Tempreture used for softening the targets')
-parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[2000],
+parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[500],
                     help='How many images can we store at max. 0 will result in fine-tuning')
 parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; example CIFAR, MNIST')
-parser.add_argument('--lwf', action='store_true', default=False,
-                    help='Use learning without forgetting. Ignores memory-budget '
-                         '("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')
 parser.add_argument('--rand', action='store_true', default=False,
                     help='Replace exemplars with random instances')
-parser.add_argument('--adversarial', action='store_true', default=False,
+parser.add_argument('--adversarial', action='store_true', default=True,
                     help='Replace exemplars with adversarial instances')
 
 args = parser.parse_args()
@@ -71,6 +66,9 @@ dataset = dataHandler.DatasetFactory.get_dataset(args.dataset)
 # Checks to make sure parameters are sane
 if args.step_size<2:
     print("Step size of 1 will result in no learning;")
+    assert False
+if args.adversarial and args.model_type.find("resnet") == -1:
+    print("Adversarial instance training only supported with resnet models;")
     assert False
 
 for seed in args.seeds:

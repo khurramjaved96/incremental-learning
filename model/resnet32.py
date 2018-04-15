@@ -101,24 +101,28 @@ class CifarResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x, feature=False, T=1, labels=False):
+    def forward(self, x, feature=False, T=1, labels=True, featureWithLabels = False, allStages = False, allStagesWithLabels = False):
         # print ("X shape", x.shape)
         x = self.conv_1_3x3(x)
         x = F.relu(self.bn_1(x), inplace=True)
         x = self.stage_1(x)
+        s1 = x
         x = self.stage_2(x)
+        s2 = x
         x = self.stage_3(x)
+        s3 = x
         x = self.avgpool(x)
+        if allStages:
+            return s1, s2, s3
         x = x.view(x.size(0), -1)
-        if feature:
-            # print("Shape of norm vector", torch.norm(x, 2, 1).unsqueeze(1).data.cpu().numpy().shape)
-            # print("Shaoe of feature vector", x.data.cpu().numpy().shape)
+        if allStagesWithLabels:
+            return s1, s2, s3, F.sigmoid(self.fc(x)/T)
+        elif feature:
             return x / torch.norm(x, 2, 1).unsqueeze(1)
-        # return F.sigmoid(self.fc(x))
-        # print ("Before Division", self.fc(x))
-        # print ("After Divixion", self.fc(x)/T)
-        if labels:
-            return F.softmax(self.fc(x)/T)
+        elif featureWithLabels:
+            return x / torch.norm(x, 2, 1).unsqueeze(1), F.sigmoid(self.fc(x)/T)
+        elif labels:
+            return F.sigmoid(self.fc(x)/T)
         return F.log_softmax(self.fc(x)/T)
 
     def forwardFeature(self, x):

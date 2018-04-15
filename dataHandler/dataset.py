@@ -31,19 +31,17 @@ class MNIST(Dataset):
         self.train_transform = transforms.Compose(
             [torchvision.transforms.ColorJitter(0.1, 0.1, 0.1, 0.1),
              transforms.RandomCrop(32, padding=4),transforms.Scale(32),
-             transforms.ToTensor(),
-             transforms.Normalize((0.1307,), (0.3081,))])
+             transforms.ToTensor()])
 
         self.test_transform = transforms.Compose(
-            [transforms.Scale(32), transforms.ToTensor(),
-             transforms.Normalize((0.1307,), (0.3081,))])
+            [transforms.Scale(32), transforms.ToTensor()])
 
         self.train_data = datasets.MNIST("data", train=True, transform=self.train_transform, download=True)
 
         self.test_data = datasets.MNIST("data", train=False, transform=self.test_transform, download=True)
 
     def get_random_instance(self):
-        instance = torch.from_numpy(numpy.random.uniform(low=-1, high=1, size=(32, 32))).float()
+        instance = torch.from_numpy(numpy.random.uniform(low=0, high=1, size=(32, 32))).float()
         instance.unsqueeze_(0)
         return instance
 
@@ -51,16 +49,6 @@ class CIFAR100(Dataset):
     def __init__(self):
         super().__init__(100, "CIFAR100", 500, 100)
 
-        mean = [0.5071, 0.4867, 0.4408]
-        std = [0.2675, 0.2565, 0.2761]
-
-        self.train_transform = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(mean, std),
-        ])
-        #
         self.train_transform = transforms.Compose(
             [transforms.RandomHorizontalFlip(),
              transforms.RandomCrop(32, padding=4),
@@ -73,6 +61,10 @@ class CIFAR100(Dataset):
 
         self.test_data = datasets.CIFAR100("data", train=False, transform=self.test_transform, download=True)
 
+    def get_random_instance(self):
+        instance = torch.from_numpy(numpy.random.uniform(low=0, high=1, size=(3, 32, 32))).float()
+        return instance
+
 class CIFAR10(Dataset):
     def __init__(self):
         super().__init__(10, "CIFAR10", 5000, 1000)
@@ -80,8 +72,7 @@ class CIFAR10(Dataset):
         self.train_transform = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+            transforms.ToTensor(),])
 
         self.train_transform = transforms.Compose(
             [transforms.RandomHorizontalFlip(),
@@ -94,3 +85,7 @@ class CIFAR10(Dataset):
         self.train_data = datasets.CIFAR10("data", train=True, transform=self.train_transform, download=True)
 
         self.test_data = datasets.CIFAR10("data", train=False, transform=self.test_transform, download=True)
+
+    def get_random_instance(self):
+        instance = torch.from_numpy(numpy.random.uniform(low=0, high=1, size=(3, 32, 32))).float()
+        return instance

@@ -31,6 +31,9 @@ class GenericTrainer:
         self.left_over = []
         self.ideal_iterator = ideal_iterator
 
+        self.old_models = {}
+        self.cached_adversarial_instances = {}
+
         random.seed(args.seed)
         random.shuffle(self.all_classes)
 
@@ -78,44 +81,87 @@ class Trainer(GenericTrainer):
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
         super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
 
-    def convert_to_adversarial_instance(self, instance, target_class, required_confidence = 0.90, alpha = 1, iters = 100):
+    def convert_to_adversarial_instance(self, instance, target_class, target_instance, alpha = 0.25, iters = 25):
+        # generate adversarial instances only through the least updated model for any class
+        if target_class not in self.old_models:
+            self.old_models[target_class] = copy.deepcopy(self.model_fixed)
+            self.old_models[target_class].eval()
+
+        # retrieve from cache if possible
+        if target_class in self.cached_adversarial_instances and len(self.cached_adversarial_instances[target_class]) > 200:
+            return random.choice(self.cached_adversarial_instances[target_class])
+
         instance.unsqueeze_(0)
-        if self.args.cuda:
-            instance = instance.cuda()
-        instance = Variable(instance, requires_grad=True)
+        target_instance.unsqueeze_(0)
 
         ce_loss = nn.CrossEntropyLoss()
         im_label_as_var = torch.from_numpy(np.asarray([target_class]))
-        if self.args.cuda:
-            im_label_as_var = im_label_as_var.cuda()
         im_label_as_var = Variable(im_label_as_var)
 
-        #self.model_fixed.eval()
+        if self.args.cuda:
+            instance = instance.cuda()
+            target_instance = target_instance.cuda()
+            im_label_as_var = im_label_as_var.cuda()
+        instance = Variable(instance, requires_grad=True)
+        target_instance = Variable(target_instance, requires_grad=False)
+
+        # Store for later use
+        outputFeatureTarget, target_confidence = self.old_models[target_class](target_instance, featureWithLabels=True, T=1)
+        target_confidence = (target_confidence)[0][target_class].data.cpu().numpy()[0]
+        outputFeatureTarget = Variable(outputFeatureTarget.data, requires_grad=False)
+
+        stage1Target, stage2Target, stage3Target = self.old_models[target_class](target_instance, allStages=True)
+        stage1Target = Variable(stage1Target.data, requires_grad=False)
+        stage2Target = Variable(stage2Target.data, requires_grad=False)
+        stage3Target = Variable(stage3Target.data, requires_grad=False)
+
+        self.old_models[target_class].zero_grad()
+        prevLoss = 100000
         for i in range(1, iters):
             instance.grad = None
 
-            # Forward
-            output = self.model_fixed(instance, T=1, labels=True)
+            # Calculate loss through features in different layers
+            stage1Current, stage2Current, stage3Current, current_confidence = self.old_models[target_class](instance, allStagesWithLabels=True)
+            stage1Loss = torch.sum(torch.abs(stage1Current - stage1Target))
+            stage2Loss = torch.sum(torch.abs(stage2Current - stage2Target))
+            stage3Loss = torch.sum(torch.abs(stage3Current - stage3Target))
 
-            # Get confidence
-            target_confidence = (output)[0][target_class].data.cpu().numpy()[0]
-            #print('Iteration:', str(i), 'Target Confidence', "{0:.4f}".format(target_confidence))
-            if target_confidence > required_confidence:
+            featureLossScalar = 0
+
+            stage1LossScalar = stage1Loss.data.cpu().numpy().tolist()[0]
+            stage2LossScalar = stage2Loss.data.cpu().numpy().tolist()[0]
+            stage3LossScalar = stage3Loss.data.cpu().numpy().tolist()[0]
+
+            # Get confidences
+            current_confidence = (current_confidence)[0][target_class].data.cpu().numpy()[0]
+
+            if abs(prevLoss - featureLossScalar - stage1LossScalar - stage2LossScalar - stage3LossScalar) < 50:
                 break
+            prevLoss = featureLossScalar + stage1LossScalar + stage2LossScalar + stage3LossScalar
 
             # Zero grads
-            self.model_fixed.zero_grad()
+            self.old_models[target_class].zero_grad()
 
             # Backward
-            pred_loss = ce_loss(output, im_label_as_var)
-            pred_loss.backward()
+            stage1Loss.backward(retain_graph=True)
+            stage2Loss.backward(retain_graph=True)
+            stage3Loss.backward()
 
             # Update instance with adversarial noise
             adv_noise = alpha * torch.sign(instance.grad.data)
             instance.data = instance.data - adv_noise
-        #self.model_fixed.train()
 
-        return torch.from_numpy(instance.data.cpu().numpy().squeeze(0)).float()
+        print('Iteration:', str(i), 'Target Confidence', "{0:.2f}".format(target_confidence),
+              'Current Confidence', "{0:.2f}".format(current_confidence), 'Target ' + str(target_class),
+              'Loss ' + str(featureLossScalar + stage1LossScalar + stage2LossScalar + stage3LossScalar))
+
+        # put in cache before returning the generated instance
+        result = torch.from_numpy(instance.data.cpu().numpy().squeeze(0)).float()
+        if target_class not in self.cached_adversarial_instances:
+            self.cached_adversarial_instances[target_class] = []
+        self.cached_adversarial_instances[target_class].append(result)
+
+        return result
 
     def update_lr(self, epoch):
         for temp in range(0, len(self.args.schedule)):
@@ -187,7 +233,7 @@ class Trainer(GenericTrainer):
                     if self.args.rand:
                         data[old] = self.dataset.get_random_instance()
                     elif self.args.adversarial:
-                        data[old] = self.convert_to_adversarial_instance(self.dataset.get_random_instance(), target[old])
+                        data[old] = self.convert_to_adversarial_instance(self.dataset.get_random_instance(), target[old], data[old])
 
             y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
             if self.args.cuda:
@@ -197,36 +243,15 @@ class Trainer(GenericTrainer):
             target.unsqueeze_(1)
             y_onehot.scatter_(1, target, 1)
 
-            output = self.model(Variable(data))
-            # loss = F.binary_cross_entropy(output, Variable(y_onehot))
-            loss = F.kl_div(output, Variable(y_onehot))
+            output = self.model(Variable(data), labels=True)
+            if not self.args.no_distill:
+                older_classes2 = []
+                for elem in self.older_classes:
+                    older_classes2.append(self.train_loader.indexMapper[elem])
+                if len(older_classes2) > 0:
+                    pred2 = self.model_fixed(Variable(data), labels=True)
+                    y_onehot[:, older_classes2] = pred2.data[:, older_classes2]
 
-            myT = self.args.T
-            if self.args.no_distill:
-                pass
-
-            elif len(self.older_classes) > 0:
-                if self.args.lwf:
-                    # This is for warm up period; i.e, for the first four epochs, only train the fc layers.
-                    if epoch == 0 and batch_idx == 0:
-                        for param in self.model.named_parameters():
-                            if "fc" in param[0]:
-                                param[1].requies_grad = True
-                            else:
-                                param[1].requires_grad = False
-                    if epoch == 4 and batch_idx == 0:
-                        for param in self.model.parameters():
-                            param.requires_grad = True
-                # Get softened targets generated from previous model;
-                pred2 = self.model_fixed(Variable(data), T=myT, labels=True)
-                # Softened output of the model
-                output2 = self.model(Variable(data), T=myT)
-                # Compute second loss
-                loss2 = F.kl_div(output2, Variable(pred2.data))
-                # Store the gradients in the gradient buffers
-                loss2.backward(retain_graph=True)
-                # Scale the stored gradients by a factor of my
-                for param in self.model.parameters():
-                    param.grad=param.grad*(myT*myT)*self.args.alpha
+            loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
             self.optimizer.step()
