@@ -148,7 +148,7 @@ class Trainer(GenericTrainer):
 
     def setup_training(self):
         print(self.threshold / np.max(self.threshold))
-        self.threshold = np.ones(100, dtype=np.float64)
+        # self.threshold = np.ones(100, dtype=np.float64)
 
         # self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
@@ -269,7 +269,7 @@ class Trainer(GenericTrainer):
                 l1Reg.backward()
             loss.backward()
             self.optimizer.step()
-        self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
+        # self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
 
 
