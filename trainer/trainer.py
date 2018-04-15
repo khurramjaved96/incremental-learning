@@ -269,9 +269,8 @@ class Trainer(GenericTrainer):
                     if param.grad is not None:
                         param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
                 for param in self.model.named_parameters():
-                    if "fc" in param[0]:
-                        print (param[0])
-                        print (np.sum(param[1].grad.cpu().numpy(),1))
+                    if "fc.weight" in param[0]:
+                        print (np.sum(param[1].grad.data.cpu().numpy(),1))
                     # param.grad = param.grad * (myT * myT) * self.args.alpha
             # sum(losses).backward()
             regParam = 0.000001
