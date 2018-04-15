@@ -270,7 +270,7 @@ class Trainer(GenericTrainer):
                         param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
                 for param in self.model.named_parameters():
                     if "fc" in param[0]:
-                        print (param[1].shape)
+                        print (param[1].grad)
                     # param.grad = param.grad * (myT * myT) * self.args.alpha
             # sum(losses).backward()
             regParam = 0.000001
