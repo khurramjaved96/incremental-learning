@@ -215,7 +215,7 @@ for seed in args.seeds:
                 # TEMP CODE
 
                 my_trainer.setup_training()
-                adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, 0.8, args.cuda, train_iterator)
+                adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, args.cuda, train_iterator)
 
 
                 # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
