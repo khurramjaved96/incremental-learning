@@ -143,7 +143,7 @@ class softmax_evaluator():
             data, target = Variable(data, volatile=True), Variable(target)
             if thres:
                 output = model(data)
-                output = output*scale
+                output = output*Variable(scale.float())
             elif scale is not None:
                 # print("Gets here, getting outputs")
                 output = model(data, scale = Variable(scale.float()))
