@@ -11,6 +11,7 @@ from torch.autograd import Variable
 import numpy as np
 import utils.utils as ut
 import torchvision
+import model
 
 class GenericTrainer:
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
@@ -148,7 +149,7 @@ class Trainer(GenericTrainer):
 
     def setup_training(self):
         print(self.threshold / np.max(self.threshold))
-        # self.threshold = np.ones(100, dtype=np.float64)
+        self.threshold = np.ones(100, dtype=np.float64)
 
         # self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
@@ -165,6 +166,10 @@ class Trainer(GenericTrainer):
         for param in self.model_fixed.parameters():
             param.requires_grad = False
         self.model_fixed.eval()
+        myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
+        if self.args.cuda:
+            myModel.cuda()
+        self.model = myModel
 
     def train(self, epoch):
 
@@ -269,7 +274,7 @@ class Trainer(GenericTrainer):
                 l1Reg.backward()
             loss.backward()
             self.optimizer.step()
-        # self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
+        self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
 
 
