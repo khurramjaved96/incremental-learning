@@ -48,7 +48,7 @@ parser.add_argument('--upsampling', action='store_true', default=False,
 parser.add_argument('--pp', action='store_true', default=False,
                     help='Privacy perserving')
 parser.add_argument('--alphas', type=float, nargs='+', default=[1.0], help='Weight given to new classes vs old classes in loss')
-parser.add_argument('--decay', type=float, default=0.00004, help='Weight decay (L2 penalty).')
+parser.add_argument('--decay', type=float, default=0.00005, help='Weight decay (L2 penalty).')
 parser.add_argument('--alpha-increment', type=float, default=1.0, help='Weight decay (L2 penalty).')
 parser.add_argument('--l1', type=float, default=0.0, help='Weight decay (L1 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
