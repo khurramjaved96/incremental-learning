@@ -173,15 +173,15 @@ for seed in args.seeds:
                         print ("Current Epoch:", epoch)
                         print("Train Classifier:", tError)
                         print("Test Classifier:", t_classifier.evaluate(myModel, test_iterator))
-                        print("Test Classifier Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
+                        print("Test Classifier Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, my_trainer.older_classes, args.step_size))
                         print("Test Classifier Thres Form:",
-                          t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, True))
+                          t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, True, my_trainer.older_classes, args.step_size))
 
                 # Evaluate the learned classifier
                 img = None
 
                 print("Test Classifier Final:", t_classifier.evaluate(myModel, test_iterator))
-                print("Test Classifier Final Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
+                print("Test Classifier Final Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, my_trainer.older_classes, args.step_size))
 
                 y_scaled.append(t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
                 y1.append(t_classifier.evaluate(myModel, test_iterator))
@@ -203,7 +203,7 @@ for seed in args.seeds:
 
                 # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
                 tcMatrix = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes)
-                tcMatrix_scaled = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes, my_trainer.threshold)
+                tcMatrix_scaled = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
                 nmcMatrix = nmc.get_confusion_matrix(myModel, test_iterator, dataset.classes)
                 nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(myModel, test_iterator, dataset.classes)
 
