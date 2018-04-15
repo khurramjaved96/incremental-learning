@@ -277,7 +277,7 @@ class Trainer(GenericTrainer):
             loss.backward()
             for param in self.model.named_parameters():
                 if "fc.weight" in param[0]:
-                    self.threshold += np.sum(param[1].grad.data.cpu().numpy(), 1)
+                    self.threshold += np.sum(np.abs(param[1].grad.data.cpu().numpy(), 1))
                     # param.grad = param.grad * (myT * myT) * self.args.alpha
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)

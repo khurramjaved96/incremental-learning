@@ -112,10 +112,11 @@ class softmax_evaluator():
         self.totalFeatures = np.zeros((100, 1))
 
     def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10):
-        scale = np.copy(scale)
+
         model.eval()
         correct = 0
         if scale is not None:
+            scale = np.copy(scale)
             scale = scale/np.max(scale)
             # print ("Gets here")
             scaleTemp = np.copy(scale)
@@ -157,13 +158,14 @@ class softmax_evaluator():
         return 100. * correct / len(loader.dataset)
 
     def get_confusion_matrix(self, model, loader, size, scale=None, older_classes=None, step_size=10):
-        scale = np.copy(scale)
+
         model.eval()
         test_loss = 0
         correct = 0
         cMatrix = confusionmeter.ConfusionMeter(size, True)
 
         if scale is not None:
+            scale = np.copy(scale)
             scale = scale/np.max(scale)
             # print ("Gets here")
             scale = 1 / scale
