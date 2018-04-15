@@ -170,7 +170,7 @@ class Trainer(GenericTrainer):
         if self.args.cuda:
             myModel.cuda()
         self.model = myModel
-        self.optimizer = torch.optim.SGD(myModel.parameters(), self.args.lr, momentum=self.args.momentum,
+        self.optimizer = torch.optim.SGD(self.model.parameters(), self.args.lr, momentum=self.args.momentum,
                                     weight_decay=self.args.decay, nesterov=True)
 
     def train(self, epoch):

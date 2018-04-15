@@ -169,43 +169,43 @@ for seed in args.seeds:
                     my_trainer.train(epoch)
                     # print(my_trainer.threshold)
                     if epoch % args.log_interval == (args.log_interval-1):
-                        tError = t_classifier.evaluate(myModel, train_iterator)
+                        tError = t_classifier.evaluate(my_trainer.model, train_iterator)
                         print ("Current Epoch:", epoch)
                         print("Train Classifier:", tError)
-                        print("Test Classifier:", t_classifier.evaluate(myModel, test_iterator))
-                        print("Test Classifier Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
+                        print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
+                        print("Test Classifier Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
                         print("Test Classifier Thres Form:",
-                          t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, True, my_trainer.older_classes, args.step_size))
+                          t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, True, my_trainer.older_classes, args.step_size))
 
                 # Evaluate the learned classifier
                 img = None
 
-                print("Test Classifier Final:", t_classifier.evaluate(myModel, test_iterator))
-                print("Test Classifier Final Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
+                print("Test Classifier Final:", t_classifier.evaluate(my_trainer.model, test_iterator))
+                print("Test Classifier Final Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
 
-                y_scaled.append(t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
-                y1.append(t_classifier.evaluate(myModel, test_iterator))
+                y_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
+                y1.append(t_classifier.evaluate(my_trainer.model, test_iterator))
 
                 # Update means using the train iterator; this is iCaRL case
-                nmc.update_means(myModel, train_iterator, dataset.classes)
+                nmc.update_means(my_trainer.model, train_iterator, dataset.classes)
                 # Update mean using all the data. This is equivalent to memory_budget = infinity
-                nmc_ideal.update_means(myModel, train_iterator_nmc, dataset.classes)
+                nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
                 # Compute the the nmc based classification results
-                tempTrain = t_classifier.evaluate(myModel, train_iterator)
+                tempTrain = t_classifier.evaluate(my_trainer.model, train_iterator)
                 train_y.append(tempTrain)
 
 
 
-                testY = nmc.evaluate(myModel, test_iterator)
-                testY_ideal = nmc_ideal.evaluate(myModel, test_iterator)
+                testY = nmc.evaluate(my_trainer.model, test_iterator)
+                testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
                 y.append(testY)
                 nmc_ideal_cum.append(testY_ideal)
 
                 # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
-                tcMatrix = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes)
-                tcMatrix_scaled = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
-                nmcMatrix = nmc.get_confusion_matrix(myModel, test_iterator, dataset.classes)
-                nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(myModel, test_iterator, dataset.classes)
+                tcMatrix = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
+                tcMatrix_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
+                nmcMatrix = nmc.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
+                nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
 
                 # Printing results
                 print("Train NMC", tempTrain)
