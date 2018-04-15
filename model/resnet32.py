@@ -112,11 +112,11 @@ class CifarResNet(nn.Module):
         x = self.stage_3(x)
         s3 = x
         x = self.avgpool(x)
-        if allStages:
-            return s1, s2, s3
         x = x.view(x.size(0), -1)
-        if allStagesWithLabels:
-            return s1, s2, s3, F.sigmoid(self.fc(x)/T)
+        if allStages:
+            return s1, s2, s3, x / torch.norm(x, 2, 1).unsqueeze(1)
+        elif allStagesWithLabels:
+            return s1, s2, s3, x / torch.norm(x, 2, 1).unsqueeze(1), F.sigmoid(self.fc(x)/T)
         elif feature:
             return x / torch.norm(x, 2, 1).unsqueeze(1)
         elif featureWithLabels:

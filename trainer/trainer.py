@@ -81,7 +81,7 @@ class Trainer(GenericTrainer):
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
         super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
 
-    def convert_to_adversarial_instance(self, instance, target_class, target_instance, alpha = 0.25, iters = 25):
+    def convert_to_adversarial_instance(self, instance, target_class, target_instance, alpha = 0.1, iters = 25):
         # generate adversarial instances only through the least updated model for any class
         if target_class not in self.old_models:
             self.old_models[target_class] = copy.deepcopy(self.model_fixed)
@@ -110,10 +110,15 @@ class Trainer(GenericTrainer):
         target_confidence = (target_confidence)[0][target_class].data.cpu().numpy()[0]
         outputFeatureTarget = Variable(outputFeatureTarget.data, requires_grad=False)
 
-        stage1Target, stage2Target, stage3Target = self.old_models[target_class](target_instance, allStages=True)
+        stage1Target, stage2Target, stage3Target, finalLayerTarget = self.old_models[target_class](target_instance, allStages=True)
         stage1Target = Variable(stage1Target.data, requires_grad=False)
+        stage1Num = stage1Target.nelement()
         stage2Target = Variable(stage2Target.data, requires_grad=False)
+        stage2Num = stage2Target.nelement()
         stage3Target = Variable(stage3Target.data, requires_grad=False)
+        stage3Num = stage3Target.nelement()
+        finalLayerTarget = Variable(finalLayerTarget.data, requires_grad=False)
+        finalLayerNum = finalLayerTarget.nelement()
 
         self.old_models[target_class].zero_grad()
         prevLoss = 100000
@@ -121,13 +126,13 @@ class Trainer(GenericTrainer):
             instance.grad = None
 
             # Calculate loss through features in different layers
-            stage1Current, stage2Current, stage3Current, current_confidence = self.old_models[target_class](instance, allStagesWithLabels=True)
-            stage1Loss = torch.sum(torch.abs(stage1Current - stage1Target))
-            stage2Loss = torch.sum(torch.abs(stage2Current - stage2Target))
-            stage3Loss = torch.sum(torch.abs(stage3Current - stage3Target))
+            stage1Current, stage2Current, stage3Current, finalLayerCurrent, current_confidence = self.old_models[target_class](instance, allStagesWithLabels=True)
+            stage1Loss = torch.sum(torch.abs(stage1Current - stage1Target)) / stage1Num
+            stage2Loss = torch.sum(torch.abs(stage2Current - stage2Target)) / stage2Num
+            stage3Loss = torch.sum(torch.abs(stage3Current - stage3Target)) / stage3Num
+            finalLayerLoss = torch.sum(torch.abs(finalLayerCurrent - finalLayerTarget)) / finalLayerNum
 
-            featureLossScalar = 0
-
+            featureLossScalar = finalLayerLoss.data.cpu().numpy().tolist()[0]
             stage1LossScalar = stage1Loss.data.cpu().numpy().tolist()[0]
             stage2LossScalar = stage2Loss.data.cpu().numpy().tolist()[0]
             stage3LossScalar = stage3Loss.data.cpu().numpy().tolist()[0]
@@ -135,7 +140,7 @@ class Trainer(GenericTrainer):
             # Get confidences
             current_confidence = (current_confidence)[0][target_class].data.cpu().numpy()[0]
 
-            if abs(prevLoss - featureLossScalar - stage1LossScalar - stage2LossScalar - stage3LossScalar) < 50:
+            if abs(prevLoss - featureLossScalar - stage1LossScalar - stage2LossScalar - stage3LossScalar) < 0.02:
                 break
             prevLoss = featureLossScalar + stage1LossScalar + stage2LossScalar + stage3LossScalar
 
@@ -149,8 +154,9 @@ class Trainer(GenericTrainer):
 
             # Update instance with adversarial noise
             adv_noise = alpha * torch.sign(instance.grad.data)
-            instance.data = instance.data - adv_noise
+            instance.data -= adv_noise
 
+        # Debug
         print('Iteration:', str(i), 'Target Confidence', "{0:.2f}".format(target_confidence),
               'Current Confidence', "{0:.2f}".format(current_confidence), 'Target ' + str(target_class),
               'Loss ' + str(featureLossScalar + stage1LossScalar + stage2LossScalar + stage3LossScalar))
@@ -213,6 +219,7 @@ class Trainer(GenericTrainer):
         self.model.train()
 
         for batch_idx, (data, target) in enumerate(self.train_data_iterator):
+            print("minibatch# " + str(batch_idx))
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
