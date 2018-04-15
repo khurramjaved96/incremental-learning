@@ -134,6 +134,7 @@ class softmax_evaluator():
             # scale = np.log(scale)
             # print (scale)
             # scale = scale-1
+            scale = scale/np.linalg.norm(scale, 1)
             scale = torch.from_numpy(scale).unsqueeze(0)
             if self.cuda:
                 scale = scale.cuda()
