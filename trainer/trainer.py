@@ -305,8 +305,8 @@ class DisguisedFoolingSampleGeneration():
 
             ut.visualizeTensor(data.cpu(), "../pathData.jpg")
             if self.cuda:
-                data = data.cuda()
-                target = target.cuda()
+                data = data.cuda(1)
+                target = target.cuda(1)
             outputTemp = self.model(Variable(data), getAllFeatures=True).data
             # self.processed_images = Variable(data, requires_grad=True)
 
@@ -315,14 +315,14 @@ class DisguisedFoolingSampleGeneration():
             instance = instance.unsqueeze(0).repeat(100,1,1,1)
             perm = torch.randperm(100)
             if self.cuda:
-                perm = perm.cuda()
+                perm = perm.cuda(1)
             instance = data[perm]
             instance = data
             # print ("shape of instance", instance.shape)
             # print ("Shape of input", self.processed_images.shape)
 
             if self.cuda:
-                instance = instance.cuda()
+                instance = instance.cuda(1)
             instance = self.gaussian(instance, 0, 0.2, self.cuda)
             self.processed_image = Variable(instance, requires_grad=True)
             lRate = 0.00001
@@ -392,9 +392,9 @@ class DisguisedFoolingSampleGeneration():
     def gaussian(self, ins,mean,stddev, cuda):
         temp = ins.new(ins.size())
         if cuda:
-            temp = temp.cuda()
+            temp = temp.cuda(1)
         noise = temp.normal_(mean, stddev)
         if cuda:
-            noise = noise.cuda()
+            noise = noise.cuda(1)
         # print (noise)
         return ins + noise
