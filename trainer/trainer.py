@@ -281,6 +281,7 @@ class Trainer(GenericTrainer):
                     # param.grad = param.grad * (myT * myT) * self.args.alpha
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
+        print (self.threshold)
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
 
 
