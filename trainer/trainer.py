@@ -391,6 +391,8 @@ class DisguisedFoolingSampleGeneration():
 
     def gaussian(self, ins,mean,stddev, cuda):
         temp = ins.new(ins.size())
+        if cuda:
+            temp = temp.cuda()
         noise = temp.normal_(mean, stddev)
         if cuda:
             noise = noise.cuda()
