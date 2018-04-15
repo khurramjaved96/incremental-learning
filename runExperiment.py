@@ -203,7 +203,7 @@ for seed in args.seeds:
 
                 # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
                 tcMatrix = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes)
-                tcMatrix_scaled = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes, my_trainer.threshold , False, my_trainer.older_classes, args.step_size)
+                tcMatrix_scaled = t_classifier.get_confusion_matrix(myModel, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
                 nmcMatrix = nmc.get_confusion_matrix(myModel, test_iterator, dataset.classes)
                 nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(myModel, test_iterator, dataset.classes)
 
