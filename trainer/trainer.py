@@ -213,7 +213,7 @@ class Trainer(GenericTrainer):
             output = self.model(Variable(data))
             # loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
-            # self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
+            self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
             # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
             temp = self.threshold/np.max(self.threshold)
             temp = 1/temp
@@ -256,7 +256,7 @@ class Trainer(GenericTrainer):
                 if self.args.cuda:
                     mult = mult.cuda()
 
-                # self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
+                self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
                 # loss2 = loss2.sum(dim=1)
                 # loss2 = loss2.sum() / len(loss)
@@ -275,10 +275,10 @@ class Trainer(GenericTrainer):
                 l1Reg = self.model(Variable(data),getAllFeatures =True).norm(1)*self.args.l1
                 l1Reg.backward()
             loss.backward()
-            for param in self.model.named_parameters():
-                if "fc.weight" in param[0]:
-                    self.threshold += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
-                    # param.grad = param.grad * (myT * myT) * self.args.alpha
+            # for param in self.model.named_parameters():
+            #     if "fc.weight" in param[0]:
+            #         self.threshold += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
+            #         # param.grad = param.grad * (myT * myT) * self.args.alpha
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
         print (self.threshold)
@@ -328,7 +328,7 @@ class DisguisedFoolingSampleGeneration():
             lRate = 0.00001
             optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
 
-            for i in range(1, 100):
+            for i in range(1, 20):
                 # Process image and return variable
                 # self.processed_image = preprocess_image(self.initial_image)
                 # Define optimizer for the image
