@@ -166,13 +166,13 @@ class Trainer(GenericTrainer):
         for param in self.model_fixed.parameters():
             param.requires_grad = False
         self.model_fixed.eval()
-        myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
-        if self.args.cuda:
-            myModel.cuda()
-        self.model = myModel
-        self.optimizer = torch.optim.SGD(self.model.parameters(), self.args.lr, momentum=self.args.momentum,
-                                    weight_decay=self.args.decay, nesterov=True)
-        self.model.eval()
+        # myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
+        # if self.args.cuda:
+        #     myModel.cuda()
+        # self.model = myModel
+        # self.optimizer = torch.optim.SGD(self.model.parameters(), self.args.lr, momentum=self.args.momentum,
+        #                             weight_decay=self.args.decay, nesterov=True)
+        # self.model.eval()
 
     def train(self, epoch):
 
