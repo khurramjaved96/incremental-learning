@@ -174,6 +174,8 @@ for seed in args.seeds:
                         print("Train Classifier:", tError)
                         print("Test Classifier:", t_classifier.evaluate(myModel, test_iterator))
                         print("Test Classifier Scaled:", t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold))
+                        print("Test Classifier Thres Form:",
+                          t_classifier.evaluate(myModel, test_iterator, my_trainer.threshold, True))
 
                 # Evaluate the learned classifier
                 img = None

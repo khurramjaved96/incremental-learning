@@ -117,7 +117,19 @@ class softmax_evaluator():
         if scale is not None:
             scale = scale/np.max(scale)
             # print ("Gets here")
-            scale = 1 / scale
+            scaleTemp = np.copy(scale)
+            if thres:
+                for x in range(0, len(scale)):
+                    temp = 0
+                    for y in range(0, len(scale)):
+                        if x == y:
+                            pass
+                        else:
+                            temp=temp+(scale[y]/scale[x])
+                        scaleTemp[x] = temp
+                scale = scaleTemp
+            else:
+                scale = 1 / scale
             # scale[len(older_classes)+step_size:len(scale)] = 1
             # scale = np.log(scale)
             # print (scale)
@@ -131,7 +143,7 @@ class softmax_evaluator():
             data, target = Variable(data, volatile=True), Variable(target)
             if thres:
                 output = model(data)
-
+                output = output*scale
             elif scale is not None:
                 # print("Gets here, getting outputs")
                 output = model(data, scale = Variable(scale.float()))
