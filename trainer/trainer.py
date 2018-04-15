@@ -266,6 +266,7 @@ class Trainer(GenericTrainer):
                 # Scale the stored gradients by a factor of my
 
                 for param in self.model.parameters():
+                    print (param.grad)
                     param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
                     # param.grad = param.grad * (myT * myT) * self.args.alpha
             # sum(losses).backward()
