@@ -394,7 +394,7 @@ class DisguisedFoolingSampleGeneration():
         temp = ins.new(ins.size())
         if cuda:
             temp = temp.cuda()
-        noise = temp.cpu().normal_(mean, stddev)
+        noise = torch.randn(ins.size()).cuda() * stddev
         if cuda:
             noise = noise.cuda()
         # print (noise)
