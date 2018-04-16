@@ -51,6 +51,9 @@ parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[500],
                     help='How many images can we store at max. 0 will result in fine-tuning')
 parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; example CIFAR, MNIST')
+parser.add_argument('--lwf', action='store_true', default=False,
+                    help='Use learning without forgetting. Ignores memory-budget '
+                         '("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')
 parser.add_argument('--rand', action='store_true', default=False,
                     help='Replace exemplars with random instances')
 parser.add_argument('--adversarial', action='store_true', default=True,
