@@ -304,10 +304,7 @@ class DisguisedFoolingSampleGeneration():
         for batch_idx, (data, target) in enumerate(self.iterator):
 
             ut.visualizeTensor(data.cpu(), "../pathData.jpg")
-            if self.cuda:
-                data = data.cuda()
-                target = target.cuda()
-            outputTemp = self.model(Variable(data), getAllFeatures=True).data
+
             # self.processed_images = Variable(data, requires_grad=True)
 
             # self.processed_image = Variable(self.initial_image*2, requires_grad=True)
@@ -328,6 +325,13 @@ class DisguisedFoolingSampleGeneration():
             instance = self.gaussian(instance, 0, 0.2, self.cuda)
             if self.cuda:
                 instance = instance.cuda()
+                
+            if self.cuda:
+                data = data.cuda()
+                target = target.cuda()
+            outputTemp = self.model(Variable(data), getAllFeatures=True).data
+
+
             self.processed_image = Variable(instance, requires_grad=True)
             lRate = 0.00001
             optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
