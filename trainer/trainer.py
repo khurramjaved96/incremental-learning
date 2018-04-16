@@ -399,7 +399,8 @@ class DisguisedFoolingSampleGeneration():
         # noise = torch.randn(ins.size()) * stddev
         print (noise)
         print ("Noise Dimensions", noise.shape)
-        if cuda:
-            noise = noise.cuda()
+        # if cuda:
+        #     noise = noise.cuda()
         # print (noise)
-        return ins + noise
+        ins.data = ins.data + noise
+        return ins
