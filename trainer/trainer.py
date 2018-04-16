@@ -325,7 +325,7 @@ class DisguisedFoolingSampleGeneration():
             instance = self.gaussian(instance, 0, 0.2, self.cuda)
             if self.cuda:
                 instance = instance.cuda()
-                
+
             if self.cuda:
                 data = data.cuda()
                 target = target.cuda()
@@ -411,5 +411,5 @@ class DisguisedFoolingSampleGeneration():
         #     noise = noise.cuda()
         # print (noise)
 
-        ins = ins + noise.double()
+        ins = ins + noise.float()
         return ins
