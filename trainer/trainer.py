@@ -276,9 +276,9 @@ class Trainer(GenericTrainer):
                 l1Reg.backward()
             loss.backward()
             cur=1.0
-            # if len(self.older_classes) > 0
-            for param in self.model.named_parameters():
-                param[1].grad = param[1].grad * cur/len(list(self.model.named_parameters()))
+            if len(self.older_classes) > 0:
+                for param in self.model.named_parameters():
+                    param[1].grad = param[1].grad * cur/len(list(self.model.named_parameters()))
 
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
