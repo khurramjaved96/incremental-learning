@@ -275,10 +275,11 @@ class Trainer(GenericTrainer):
                 l1Reg = self.model(Variable(data),getAllFeatures =True).norm(1)*self.args.l1
                 l1Reg.backward()
             loss.backward()
-            # for param in self.model.named_parameters():
-            #     if "fc.weight" in param[0]:
-            #         self.threshold += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
-            #         # param.grad = param.grad * (myT * myT) * self.args.alpha
+            cur=1.0
+            # if len(self.older_classes) > 0
+            for param in self.model.named_parameters():
+                param[1].grad = param[1].grad * cur/len(list(self.model.named_parameters()))
+
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
         # print (self.threshold)
