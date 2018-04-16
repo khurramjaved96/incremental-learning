@@ -406,7 +406,7 @@ class DisguisedFoolingSampleGeneration():
         noise = torch.from_numpy(noise)
         # noise = torch.randn(ins.size()) * stddev
         # print (noise)
-        print ("Noise Dimensions", noise.shape)
+        # print ("Noise Dimensions", noise.shape)
         # if cuda:
         #     noise = noise.cuda()
         # print (noise)
