@@ -211,7 +211,7 @@ class Trainer(GenericTrainer):
             y_onehot.scatter_(1, target, 1)
 
             output = self.model(Variable(data))
-
+            # loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
             self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
             # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
@@ -226,8 +226,7 @@ class Trainer(GenericTrainer):
                 weight_vec = Variable(weight_vec.squeeze(0).float())
                 # if batch_idx == 0:
                 #     print ("Weight Vec", weight_vec)
-            loss = F.binary_cross_entropy(output, Variable(y_onehot))
-            # loss = F.kl_div(output, Variable(y_onehot))
+            loss = F.kl_div(output, Variable(y_onehot))
 
 
             losses.append(loss)
@@ -258,8 +257,7 @@ class Trainer(GenericTrainer):
                     mult = mult.cuda()
 
                 self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
-                # loss2 = F.kl_div(output2, Variable(pred2.data))
-                loss2 = F.binary_cross_entropy(output2, Variable(pred2.data))
+                loss2 = F.kl_div(output2, Variable(pred2.data))
                 # loss2 = loss2.sum(dim=1)
                 # loss2 = loss2.sum() / len(loss)
                 losses.append(loss2)
@@ -267,9 +265,9 @@ class Trainer(GenericTrainer):
                 loss2.backward(retain_graph=True)
                 # Scale the stored gradients by a factor of my
 
-                # for param in self.model.parameters():
-                #     if param.grad is not None:
-                #         param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
+                for param in self.model.parameters():
+                    if param.grad is not None:
+                        param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
 
             # sum(losses).backward()
             regParam = 0.000001

@@ -135,13 +135,11 @@ class CifarResNet(nn.Module):
         if feature:
             return x / torch.norm(x, 2, 1).unsqueeze(1)
         if labels:
-            return F.sigmoid(self.fc(x))
             return F.softmax(self.fc(x)/T)
         if scale is not None:
             x = self.fc(x)
             x = x
-            temp = F.sigmoid(x)
-            # temp = F.softmax(x / T)
+            temp = F.softmax(x / T)
             temp = temp*scale
             # print("Gets here; scaled output")
             # print (scale)
@@ -151,8 +149,6 @@ class CifarResNet(nn.Module):
             # 0/0
             return temp
             return temp / scale
-
-        return F.sigmoid(self.fc(x))
         return F.log_softmax(self.fc(x)/T)
 
     def forwardFeature(self, x):
