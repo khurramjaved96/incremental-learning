@@ -390,6 +390,7 @@ class DisguisedFoolingSampleGeneration():
         return self.processed_image.data
 
     def gaussian(self, ins,mean,stddev, cuda):
+        print (ins.size())
         temp = ins.new(ins.size())
         if cuda:
             temp = temp.cuda()
