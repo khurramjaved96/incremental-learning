@@ -278,9 +278,10 @@ class Trainer(GenericTrainer):
             cur=1.0
             if len(self.older_classes) > 0:
                 for param in self.model.named_parameters():
-                    temp = cur/len(list(self.model.named_parameters()))
-                    temp*= 0.7
-                    param[1].grad = param[1].grad * (temp+0.3)
+                    temp = cur/float(len(list(self.model.named_parameters())))
+                    cur+=1
+                    temp*= 0.95
+                    param[1].grad = param[1].grad * (temp+0.05)
 
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
