@@ -322,7 +322,7 @@ class DisguisedFoolingSampleGeneration():
             # print ("Shape of input", self.processed_images.shape)
 
             if self.cuda:
-                instance = instance.cuda(0)
+                instance = instance.cuda()
             instance = self.gaussian(instance, 0, 0.2, self.cuda)
             self.processed_image = Variable(instance, requires_grad=True)
             lRate = 0.00001
@@ -394,7 +394,7 @@ class DisguisedFoolingSampleGeneration():
         temp = ins.new(ins.size())
         if cuda:
             temp = temp.cuda()
-        noise = torch.randn(ins.size()).cuda() * stddev
+        noise = torch.randn(ins.size()) * stddev
         if cuda:
             noise = noise.cuda()
         # print (noise)
