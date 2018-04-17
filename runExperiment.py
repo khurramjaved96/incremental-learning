@@ -149,6 +149,7 @@ for seed in args.seeds:
             y_scaled = []
             nmc_ideal_cum = []
             y_scaled_dec = []
+            y_random_bins = []
 
             nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
             nmc_ideal = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
@@ -191,6 +192,11 @@ for seed in args.seeds:
                                             my_trainer.older_classes, args.step_size, True)
                 print("Test Classifier Descriptor:",
                       tempValue)
+
+                randomBins = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
+                                                    my_trainer.older_classes, args.step_size, True, True)
+
+                y_random_bins.append(randomBins)
 
                 y_scaled_dec.append(tempValue)
 
@@ -267,6 +273,7 @@ for seed in args.seeds:
                 my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
                 my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
                 my_plotter.plot(x, y_scaled_dec, title=args.name, legend="Trained Classifier with Assumption")
+                my_plotter.plot(x, y_random_bins, title=args.name, legend="Trained Classifier with Random Bins")
 
                 # Saving the line plot
                 my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
