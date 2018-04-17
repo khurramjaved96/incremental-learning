@@ -111,7 +111,7 @@ class softmax_evaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10):
+    def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10, descriptor=False):
 
         model.eval()
         correct = 0
@@ -152,6 +152,14 @@ class softmax_evaluator():
                 output = model(data, scale = Variable(scale.float()))
             else:
                 output = model(data)
+            if descriptor:
+                outputTemp = output.data.cpu().numpy()
+                targetTemp = target.cpu().numpy()
+                for a in range(0, len(targetTemp)):
+                    outputTemp[a,targetTemp[a]%step_size:targetTemp[a]%step_size+step_size]+=2
+                output = torch.from_numpy(outputTemp)
+                if self.cuda:
+                    output = output.cuda()
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
