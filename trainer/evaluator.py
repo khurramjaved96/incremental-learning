@@ -140,6 +140,7 @@ class softmax_evaluator():
             scale = torch.from_numpy(scale).unsqueeze(0)
             if self.cuda:
                 scale = scale.cuda()
+        tempCounter=0
         for data, target in loader:
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
@@ -157,7 +158,11 @@ class softmax_evaluator():
                 outputTemp = output.data.cpu().numpy()
                 targetTemp = target.data.cpu().numpy()
                 for a in range(0, len(targetTemp)):
-                    outputTemp[a,targetTemp[a]%step_size:targetTemp[a]%step_size+step_size]+=2
+                    outputTemp[a,int(float(targetTemp[a])/step_size)*step_size:(int(float(targetTemp[a])/step_size)*step_size)+step_size]+=20
+                if tempCounter==0:
+                    print (int(float(targetTemp[a])/step_size)*step_size, (int(float(targetTemp[a])/step_size)*step_size)+step_size )
+                    tempCounter+=1
+
                 output = torch.from_numpy(outputTemp)
                 if self.cuda:
                     output = output.cuda()
