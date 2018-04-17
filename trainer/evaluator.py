@@ -50,7 +50,7 @@ class NearestMeanEvaluator():
                     result[outer, minClass*step_size:(minClass+1)*step_size] += 300000
                 result = torch.from_numpy(result)
                 if self.cuda:
-                    result = result.cuda() 
+                    result = result.cuda()
             _, pred = torch.min(result, 1)
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 

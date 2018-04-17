@@ -148,6 +148,7 @@ for seed in args.seeds:
 
             y_scaled = []
             nmc_ideal_cum = []
+            y_scaled_dec = []
 
             nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
             nmc_ideal = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
@@ -182,6 +183,13 @@ for seed in args.seeds:
 
                 print("Test Classifier Final:", t_classifier.evaluate(my_trainer.model, test_iterator))
                 print("Test Classifier Final Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
+
+                tempValue = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
+                                            my_trainer.older_classes, args.step_size, True)
+                print("Test Classifier Descriptor:",
+                      tempValue)
+
+                y_scaled_dec.append(tempValue)
 
                 y_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
                 y1.append(t_classifier.evaluate(my_trainer.model, test_iterator))
@@ -229,6 +237,7 @@ for seed in args.seeds:
                 my_experiment.results["NMC"] = [x, y]
                 my_experiment.results["Trained Classifier"] = [x, y1]
                 my_experiment.results["Trained Classifier Scaled"] = [x, y_scaled]
+                my_experiment.results["Trained Classifier with Assumption"] = [x, y_scaled_dec]
                 my_experiment.results["Train Error Classifier"] = [x, train_y]
                 my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
                 my_experiment.store_json()
