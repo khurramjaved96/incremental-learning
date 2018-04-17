@@ -176,7 +176,7 @@ class softmax_evaluator():
                 targetTemp = target.data.cpu().numpy()
                 if falseDec:
                     for a in range(0, len(targetTemp)):
-                        random = np.random.choice(len(older_classes)+step_size, step_size-1,replace=False)
+                        random = np.random.choice(len(older_classes)+step_size, step_size-1,replace=False).tolist()
                         if targetTemp[a] in random:
                             pass
                         else:
