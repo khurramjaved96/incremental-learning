@@ -155,7 +155,7 @@ class softmax_evaluator():
             if descriptor:
                 # To compare with FB paper
                 outputTemp = output.data.cpu().numpy()
-                targetTemp = target.cpu().numpy()
+                targetTemp = target.data.cpu().numpy()
                 for a in range(0, len(targetTemp)):
                     outputTemp[a,targetTemp[a]%step_size:targetTemp[a]%step_size+step_size]+=2
                 output = torch.from_numpy(outputTemp)
