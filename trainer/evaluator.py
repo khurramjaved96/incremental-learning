@@ -128,7 +128,7 @@ class softmax_evaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10, descriptor=False):
+    def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10, descriptor=False, falseDec= False):
 
         model.eval()
         correct = 0
@@ -174,8 +174,15 @@ class softmax_evaluator():
                 # To compare with FB paper
                 outputTemp = output.data.cpu().numpy()
                 targetTemp = target.data.cpu().numpy()
-                for a in range(0, len(targetTemp)):
-                    outputTemp[a,int(float(targetTemp[a])/step_size)*step_size:(int(float(targetTemp[a])/step_size)*step_size)+step_size]+=20
+                if falseDec:
+                    for a in range(0, len(targetTemp)):
+                        random = np.random.choice(len(older_classes)+step_size, step_size-1,replace=False)
+                        random.append(targetTemp[a])
+                        for b in random:
+                            outputTemp[a,b] += 20
+                else:
+                    for a in range(0, len(targetTemp)):
+                        outputTemp[a,int(float(targetTemp[a])/step_size)*step_size:(int(float(targetTemp[a])/step_size)*step_size)+step_size]+=20
                 if tempCounter==0:
                     print (int(float(targetTemp[a])/step_size)*step_size, (int(float(targetTemp[a])/step_size)*step_size)+step_size )
                     tempCounter+=1
