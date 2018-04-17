@@ -207,6 +207,9 @@ for seed in args.seeds:
                 tcMatrix_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
                 nmcMatrix = nmc.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
                 nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
+                tcMatrix_scaled_binning = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes,
+                                                                    my_trainer.threshold, my_trainer.older_classes,
+                                                                    args.step_size, True)
 
                 # Printing results
                 print("Train NMC", tempTrain)
@@ -237,6 +240,8 @@ for seed in args.seeds:
                 my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
                 my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
                                       my_experiment.path + "tcMatrix_scaled", tcMatrix_scaled)
+                my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+                                      my_experiment.path + "tcMatrix_scaled_binning", tcMatrix_scaled_binning)
                 my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
                                       nmcMatrix)
                 my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,

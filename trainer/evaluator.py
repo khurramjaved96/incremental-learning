@@ -38,10 +38,10 @@ class NearestMeanEvaluator():
             result = torch.norm(result, 2, 2)
             if kMean:
                 result = result.cpu().numpy()
-                print (result.shape)
-                0/0
+                tempClassifier=np.zeros(len(result)/step_size)
                 for tempCounter in range(0, step_size):
-                    pass
+                    tempClassifier[tempCounter] = np.sum(result[tempCounter*step_size:(tempCounter*step_size)+step_size])
+                minClass = np.argmin(tempClassifier)
 
             _, pred = torch.min(result, 1)
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
