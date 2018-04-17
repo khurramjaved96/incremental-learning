@@ -172,7 +172,7 @@ class softmax_evaluator():
                 output = model(data)
             if descriptor:
                 # To compare with FB paper
-                output = output/Variable(scale.float())
+                # output = output/Variable(scale.float())
                 outputTemp = output.data.cpu().numpy()
                 targetTemp = target.data.cpu().numpy()
                 if falseDec:
