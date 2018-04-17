@@ -161,6 +161,7 @@ class softmax_evaluator():
                 output = torch.from_numpy(outputTemp)
                 if self.cuda:
                     output = output.cuda()
+                output = Variable(output)
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
