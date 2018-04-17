@@ -21,7 +21,7 @@ class NearestMeanEvaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def evaluate(self, model, loader):
+    def evaluate(self, model, loader, step_size= 10, kMean=False):
         model.eval()
         if self.means is None:
             self.means = np.zeros((100, model.featureSize))
@@ -34,7 +34,15 @@ class NearestMeanEvaluator():
             data, target = Variable(data, volatile=True), Variable(target)
             output = model(data, True).unsqueeze(1)
             result = (output.data - self.means.float())
+
             result = torch.norm(result, 2, 2)
+            if kMean:
+                result = result.cpu().numpy()
+                print (result.shape)
+                0/0
+                for tempCounter in range(0, step_size):
+                    pass
+
             _, pred = torch.min(result, 1)
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
@@ -54,6 +62,7 @@ class NearestMeanEvaluator():
             data, target = Variable(data, volatile=True), Variable(target)
             output = model(data, True).unsqueeze(1)
             result = (output.data - self.means.float())
+
             result = torch.norm(result, 2, 2)
             # NMC for classification
             _, pred = torch.min(result, 1)
@@ -172,7 +181,7 @@ class softmax_evaluator():
 
         return 100. * correct / len(loader.dataset)
 
-    def get_confusion_matrix(self, model, loader, size, scale=None, older_classes=None, step_size=10):
+    def get_confusion_matrix(self, model, loader, size, scale=None, older_classes=None, step_size=10, descriptor=False):
 
         model.eval()
         test_loss = 0
@@ -203,6 +212,18 @@ class softmax_evaluator():
                 output = model(data, scale = Variable(scale.float()))
             else:
                 output = model(data)
+
+            if descriptor:
+                # To compare with FB paper
+                outputTemp = output.data.cpu().numpy()
+                targetTemp = target.data.cpu().numpy()
+                for a in range(0, len(targetTemp)):
+                    outputTemp[a,int(float(targetTemp[a])/step_size)*step_size:(int(float(targetTemp[a])/step_size)*step_size)+step_size]+=20
+                output = torch.from_numpy(outputTemp)
+                if self.cuda:
+                    output = output.cuda()
+                output = Variable(output)
+
             test_loss += F.nll_loss(output, target, size_average=False).data[0]  # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()

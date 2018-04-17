@@ -196,6 +196,7 @@ for seed in args.seeds:
 
 
 
+                testY1 = nmc.evaluate(my_trainer.model, test_iterator, step_size=args.step_size,  kMean = True)
                 testY = nmc.evaluate(my_trainer.model, test_iterator)
                 testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
                 y.append(testY)
@@ -210,6 +211,7 @@ for seed in args.seeds:
                 # Printing results
                 print("Train NMC", tempTrain)
                 print("Test NMC", testY)
+                print ("Test NMC with Binning", testY1)
 
 
                 # TEMP CODE
