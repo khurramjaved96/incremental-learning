@@ -177,7 +177,10 @@ class softmax_evaluator():
                 if falseDec:
                     for a in range(0, len(targetTemp)):
                         random = np.random.choice(len(older_classes)+step_size, step_size-1,replace=False)
-                        random.append(targetTemp[a])
+                        if targetTemp[a] in random:
+                            pass
+                        else:
+                            random.append(targetTemp[a])
                         for b in random:
                             outputTemp[a,b] += 20
                 else:
