@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from .gan_utils import normal_init
 
 class Generator(nn.Module):
-    def __init__(self, d=384, c=1, nz=100, num_classes=10):
+    def __init__(self, d=384, c=1, num_classes=10, nz=100):
         super(Generator, self).__init__()
         self.nz = nz
         self.num_classes = num_classes
@@ -34,7 +34,7 @@ class Generator(nn.Module):
 
     def init_weights(self, mean, std):
         for m in self._modules:
-            normal_init(self._modules[m], mean, std)
+            normal_init(self._modules[m], mean, std, False)
 
 class Discriminator(nn.Module):
     def __init__(self, d=16, c=1, num_classes=10):
@@ -88,4 +88,4 @@ class Discriminator(nn.Module):
 
     def init_weights(self, mean, std):
         for m in self._modules:
-            normal_init(self._modules[m], mean, std)
+            normal_init(self._modules[m], mean, std, False)

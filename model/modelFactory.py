@@ -4,6 +4,7 @@ import model.testModel as tm
 import model.cDCGAN as cdcgan
 import model.DCGAN as dcgan
 import model.WGAN as wgan
+import model.ACGAN as acgan
 
 class ModelFactory():
     def __init__(self):
@@ -75,6 +76,21 @@ class ModelFactory():
             else:
                 G = wgan.Generator(d)
                 D = wgan.Discriminator(d)
+            G.init_weights(mean=0.0, std=0.02)
+            D.init_weights(mean=0.0, std=0.02)
+            return G, D
+
+        elif model_type=="acgan":
+            num_classes = 100 if dataset=="CIFAR100" else 10
+            if d != 16:
+                print("[!!!] d>16, You sure??")
+
+            if dataset=="CIFAR100" or dataset=="CIFAR10":
+                G = acgan.Generator(d, 3, num_classes)
+                D = acgan.Discriminator(d, 3, num_classes)
+            else:
+                G = acgan.Generator(d, 1, num_classes)
+                D = acgan.Discriminator(d, 1, num_classes)
             G.init_weights(mean=0.0, std=0.02)
             D.init_weights(mean=0.0, std=0.02)
             return G, D
