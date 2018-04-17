@@ -153,6 +153,7 @@ class softmax_evaluator():
             else:
                 output = model(data)
             if descriptor:
+                # To compare with FB paper
                 outputTemp = output.data.cpu().numpy()
                 targetTemp = target.cpu().numpy()
                 for a in range(0, len(targetTemp)):
