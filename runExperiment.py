@@ -24,6 +24,8 @@ parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='SGD momentum (default: 0.9)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
+parser.add_argument('--random-init', action='store_true', default=False,
+                    help='To initialize model using previous weights or random weights in each iteration')
 parser.add_argument('--no-distill', action='store_true', default=False,
                     help='disable distillation loss')
 parser.add_argument('--distill-only-exemplars', action='store_true', default=False,
