@@ -184,7 +184,7 @@ for seed in args.seeds:
                               t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
                                                     my_trainer.older_classes, args.step_size, True, True))
                         print("Test Classifier Higher Model:",
-                              t_classifier.evaluate(my_trainer.model, test_iterator, higher=False))
+                              t_classifier.evaluate(my_trainer.model, test_iterator, higher=True))
 
                 # Evaluate the learned classifier
                 img = None
@@ -200,7 +200,7 @@ for seed in args.seeds:
                 randomBins = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
                                                     my_trainer.older_classes, args.step_size, True, True)
 
-                higher_y.append(t_classifier.evaluate(my_trainer.model, test_iterator, higher=False))
+                higher_y.append(t_classifier.evaluate(my_trainer.model, test_iterator, higher=True))
                 y_random_bins.append(randomBins)
 
                 y_scaled_dec.append(tempValue)
