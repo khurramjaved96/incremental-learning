@@ -219,12 +219,7 @@ class Trainer(GenericTrainer):
 
             loss = F.kl_div(output, Variable(y_onehot))
 
-            y_onehot.zero_()
-            # output = self.model(Variable(data),predictClass=True)
-            # target = (target/self.args.step_size).int().long()
-            # # target.unsqueeze_(1)
-            # y_onehot.scatter_(1, target, 1)
-            # lossHigher = F.kl_div(output, Variable(y_onehot))
+
 
 
             losses.append(loss)
@@ -276,8 +271,18 @@ class Trainer(GenericTrainer):
                     if param.grad is not None:
                         param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
 
-                lossHigher.backward(retain_graph=True)
-            loss.backward()
+
+            loss.backward(retrain_graph=True)
+
+
+            y_onehot.zero_()
+            output = self.model(Variable(data), predictClass=True)
+            target = (target / self.args.step_size).int().long()
+            # target.unsqueeze_(1)
+            y_onehot.scatter_(1, target, 1)
+            lossHigher = F.kl_div(output, Variable(y_onehot))
+            
+            lossHigher.backward()
             # cur=1.0
             # if len(self.older_classes) > 0:
             #     for param in self.model.named_parameters():
