@@ -147,7 +147,7 @@ for seed in args.seeds:
             y = []
             y1 = []
             train_y = []
-
+            higher_y = []
             y_scaled = []
             nmc_ideal_cum = []
             y_scaled_dec = []
@@ -200,6 +200,7 @@ for seed in args.seeds:
                 randomBins = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
                                                     my_trainer.older_classes, args.step_size, True, True)
 
+                higher_y.append(t_classifier.evaluate(my_trainer.model, test_iterator, higher=False))
                 y_random_bins.append(randomBins)
 
                 y_scaled_dec.append(tempValue)
@@ -271,6 +272,7 @@ for seed in args.seeds:
 
                 # Plotting the line diagrams of all the possible cases
                 my_plotter.plot(x, y, title=args.name, legend="NMC")
+                my_plotter.plot(x, higher_y, title=args.name, legend="Higher Model")
                 my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
                 my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
                 my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
