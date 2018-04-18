@@ -228,7 +228,7 @@ class Trainer(GenericTrainer):
 
 
             losses.append(loss)
-            losses.append(lossHigher)
+            # losses.append(lossHigher)
             myT = self.args.T
             if self.args.no_distill:
                 pass
