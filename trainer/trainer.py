@@ -271,21 +271,21 @@ class Trainer(GenericTrainer):
 
             loss.backward(retain_graph=True)
 
+            if len(self.older_classes) > 0:
+                y_onehot.zero_()
+                target = (target / self.args.step_size).int().long()
+                # target.unsqueeze_(1)
+                y_onehot.scatter_(1, target, 1)
+                lossHigher = F.kl_div(output2, Variable(y_onehot))
 
-            y_onehot.zero_()
-            target = (target / self.args.step_size).int().long()
-            # target.unsqueeze_(1)
-            y_onehot.scatter_(1, target, 1)
-            lossHigher = F.kl_div(output2, Variable(y_onehot))
-
-            lossHigher.backward()
-            # cur=1.0
-            # if len(self.older_classes) > 0:
-            #     for param in self.model.named_parameters():
-            #         temp = cur/float(len(list(self.model.named_parameters())))
-            #         cur+=1
-            #         temp*= 0.95
-            #         param[1].grad = param[1].grad * (temp)
+                lossHigher.backward()
+                # cur=1.0
+                # if len(self.older_classes) > 0:
+                #     for param in self.model.named_parameters():
+                #         temp = cur/float(len(list(self.model.named_parameters())))
+                #         cur+=1
+                #         temp*= 0.95
+                #         param[1].grad = param[1].grad * (temp)
 
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
