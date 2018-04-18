@@ -128,7 +128,7 @@ class softmax_evaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10, descriptor=False, falseDec= False):
+    def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10, descriptor=False, falseDec= False, higher=False):
 
         model.eval()
         correct = 0
@@ -168,6 +168,9 @@ class softmax_evaluator():
             elif scale is not None:
                 # print("Gets here, getting outputs")
                 output = model(data, scale = Variable(scale.float()))
+            elif higher:
+                _, output = model(data, predictClass=True)
+                target = (target / step_size).int().long()
             else:
                 output = model(data)
             if descriptor:

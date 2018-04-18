@@ -183,6 +183,8 @@ for seed in args.seeds:
                         print("Test Classifier Random Bins:",
                               t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
                                                     my_trainer.older_classes, args.step_size, True, True))
+                        print("Test Classifier Higher Model:",
+                              t_classifier.evaluate(my_trainer.model, test_iterator, higher=False))
 
                 # Evaluate the learned classifier
                 img = None
