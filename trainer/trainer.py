@@ -272,6 +272,7 @@ class Trainer(GenericTrainer):
             loss.backward(retain_graph=True)
 
             if len(self.older_classes) > 0:
+                output, output2 = self.model(Variable(data), predictClass=True)
                 y_onehot.zero_()
                 target = (target / self.args.step_size).int().long()
                 # target.unsqueeze_(1)
