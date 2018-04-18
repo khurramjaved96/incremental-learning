@@ -239,7 +239,6 @@ for seed in args.seeds:
                 # TEMP CODE
 
                 my_trainer.setup_training()
-                adv = trainer.DisguisedFoolingSampleGeneration(my_trainer.model, args.cuda, train_iterator)
 
 
                 # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
@@ -279,5 +278,4 @@ for seed in args.seeds:
 
                 # Saving the line plot
                 my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
-                if args.pp:
-                    img = adv.generate()
+              
