@@ -276,7 +276,7 @@ class Trainer(GenericTrainer):
                     if param.grad is not None:
                         param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
 
-            lossHigher.backward(retain_graph=True)
+                lossHigher.backward(retain_graph=True)
             loss.backward()
             # cur=1.0
             # if len(self.older_classes) > 0:
