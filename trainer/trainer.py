@@ -167,6 +167,7 @@ class Trainer(GenericTrainer):
             param.requires_grad = False
         self.model_fixed.eval()
         if self.args.random_init:
+            print ("Random Initilization of weights")
             myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
             if self.args.cuda:
                 myModel.cuda()
@@ -215,22 +216,19 @@ class Trainer(GenericTrainer):
             # loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
             self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
-            # Keep track of how many instances of a class have been seen. This should be an array with all elements = classSize
-            temp = self.threshold/np.max(self.threshold)
-            temp = 1/temp
-            weight_vec = torch.from_numpy(temp)
-            # weight_vec = weight_vec/weight_vec.norm(1)
-            # print (weight_vec)
-            if self.args.cuda:
-                weight_vec = Variable(weight_vec.cuda().squeeze(0).float())
-            else:
-                weight_vec = Variable(weight_vec.squeeze(0).float())
-                # if batch_idx == 0:
-                #     print ("Weight Vec", weight_vec)
+
             loss = F.kl_div(output, Variable(y_onehot))
+
+            y_onehot.zero_()
+            output = self.model(Variable(data),predictClass=True)
+            target = (target/self.args.step_size).int().float()
+            target.unsqueeze_(1)
+            y_onehot.scatter_(1, target, 1)
+            lossHigher = F.kl_div(output, Variable(y_onehot))
 
 
             losses.append(loss)
+            losses.append(lossHigher)
             myT = self.args.T
             if self.args.no_distill:
                 pass
@@ -259,22 +257,26 @@ class Trainer(GenericTrainer):
 
                 self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
-                # loss2 = loss2.sum(dim=1)
-                # loss2 = loss2.sum() / len(loss)
+
+                pred3 = self.model_fixed(Variable(data), T=myT, labels=True, predictClass=True)
+                # Softened output of the model
+                output3 = self.model(Variable(data), T=myT, predictClass=True)
+
+
+                loss3 = F.kl_div(output3, Variable(pred3.data))
+
                 losses.append(loss2)
+                losses.append(loss3)
                 # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
+                loss3.backward(retain_graph=True)
                 # Scale the stored gradients by a factor of my
 
                 for param in self.model.parameters():
                     if param.grad is not None:
                         param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
 
-            # sum(losses).backward()
-            regParam = 0.000001
-            if self.args.l1 > 0:
-                l1Reg = self.model(Variable(data),getAllFeatures =True).norm(1)*self.args.l1
-                l1Reg.backward()
+            lossHigher.backward(retain_graph=True)
             loss.backward()
             # cur=1.0
             # if len(self.older_classes) > 0:
@@ -288,133 +290,3 @@ class Trainer(GenericTrainer):
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
         # print (self.threshold)
         # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
-
-
-from torch.optim import SGD
-
-class DisguisedFoolingSampleGeneration():
-    """
-        Produces an image that maximizes a certain class with gradient ascent, breaks as soon as
-        the target prediction confidence is captured
-    """
-
-    def __init__(self, model, cuda, iterator):
-        self.iterator = iterator
-        self.model = model
-        self.model.eval()
-        self.cuda = cuda
-
-    def generate(self):
-        self.iterator.dataset.no_transformation = True
-        for batch_idx, (data, target) in enumerate(self.iterator):
-
-            ut.visualizeTensor(data.cpu(), "../pathData.jpg")
-
-            # self.processed_images = Variable(data, requires_grad=True)
-
-            # self.processed_image = Variable(self.initial_image*2, requires_grad=True)
-
-            # instance = torch.mean(data,dim=0)
-
-            # instance = instance.unsqueeze(0).repeat(100,1,1,1)
-
-            # perm = torch.randperm(100)
-            # if self.cuda:
-            #     perm = perm.cuda()
-            # instance = data[perm]
-            instance = data
-            # print ("shape of instance", instance.shape)
-            # print ("Shape of input", self.processed_images.shape)
-
-
-            instance = self.gaussian(instance, 0, 0.2, self.cuda)
-            if self.cuda:
-                instance = instance.cuda()
-
-            if self.cuda:
-                data = data.cuda()
-                target = target.cuda()
-            outputTemp = self.model(Variable(data), getAllFeatures=True).data
-
-
-            self.processed_image = Variable(instance, requires_grad=True)
-            lRate = 0.00001
-            optimizer = SGD([self.processed_image], lr=lRate, momentum=0.9)
-
-            for i in range(1, 20):
-                # Process image and return variable
-                # self.processed_image = preprocess_image(self.initial_image)
-                # Define optimizer for the image
-                if i == 150:
-                    lRate/=10
-                if i == 250:
-                    lRate/=10
-                for param_group in optimizer.param_groups:
-                    param_group['lr'] = lRate
-                # Forward
-
-                output = self.model(self.processed_image, getAllFeatures=True)
-                # Get confidence from softmax
-
-
-                # Target specific class
-                class_loss = F.mse_loss(output, Variable(outputTemp),reduce=False)
-
-                # class_loss = -output[0, self.target_class]
-                print('Iteration:', str(i), 'Class Loss', class_loss)
-                # Zero grads
-                self.processed_image.grad = None
-                # Backward
-                class_loss.backward(outputTemp)
-                # Update image
-                optimizer.step()
-                # Recreate image
-                # self.initial_image = recreate_image(self.processed_image)
-                # Save image
-                # Set min = 0 and max = 1
-                # self.processed_image.data = self.processed_image.data - torch.mean(self.processed_image.data)
-                min = torch.min(self.processed_image.data, dim=1, keepdim=True)
-                # print ("min Shape", min)
-                min = torch.min(min[0], dim=2, keepdim=True)
-                # print("min Shape", min.shape)
-                min = torch.min(min[0], dim=3, keepdim=True)[0]
-
-                max = torch.max(self.processed_image.data, dim=1, keepdim=True)
-                # print ("min Shape", min)
-                max = torch.max(max[0], dim=2, keepdim=True)
-                # print("min Shape", min.shape)
-                max = torch.max(max[0], dim=3, keepdim=True)[0]
-
-                self.processed_image.data = self.processed_image.data - min
-                self.processed_image.data = self.processed_image.data / max
-
-                # self.processed_image.data = self.processed_image.data - torch.min(self.processed_image.data)
-                # self.processed_image.data = self.processed_image.data/torch.max(self.processed_image.data)
-                if i%100 == 1:
-                    ut.visualizeTensor(self.processed_image.data.cpu(), "../path"+str(i)+".jpg")
-            # tempData  = torchvision.transforms.ToPILImage()(self.processed_image.data.cpu().numpy())
-            tempData = np.swapaxes(np.swapaxes(self.processed_image.data.cpu().numpy(),1,3), 1,2)
-            self.iterator.dataset.data[target.cpu().numpy()] = (tempData*255).astype(np.uint8)
-            for batch_idx, (data, target) in enumerate(self.iterator):
-                ut.visualizeTensor(data.cpu(), "../pathDataTemp.jpg")
-                break
-
-        self.iterator.dataset.no_transformation = False
-        return self.processed_image.data
-
-    def gaussian(self, ins,mean,stddev, cuda):
-        print (ins.size())
-        temp = ins.new(ins.size())
-        if cuda:
-            temp = temp.cuda()
-        noise = np.random.normal(mean, stddev, ins.size())
-        noise = torch.from_numpy(noise)
-        # noise = torch.randn(ins.size()) * stddev
-        # print (noise)
-        # print ("Noise Dimensions", noise.shape)
-        # if cuda:
-        #     noise = noise.cuda()
-        # print (noise)
-
-        ins = ins + noise.float()
-        return ins

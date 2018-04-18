@@ -74,6 +74,7 @@ class CifarResNet(nn.Module):
         self.stage_3 = self._make_layer(block, 64, layer_blocks, 2)
         self.avgpool = nn.AvgPool2d(8)
         self.fc = nn.Linear(64 * block.expansion, num_classes)
+        self.fc2 = nn.Linear(64 * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -100,30 +101,7 @@ class CifarResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x, feature=False, T=1, labels=False, getAllFeatures = False, scale=None):
-        # print ("X shape", x.shape)
-        if getAllFeatures:
-            x1 = self.conv_1_3x3(x)
-            x2 = F.relu(self.bn_1(x1), inplace=True)
-            x3 = self.stage_1(x2)
-            x3Features = x3.view(x3.size(0), -1)/x3.size(0)
-            # print("X3 shape", x3Features.shape)
-            x4 = self.stage_2(x3)
-            x4Features = x4.view(x4.size(0), -1)/x4.size(0)
-            # print("X4 shape", x4Features.shape)
-            x5 = self.stage_3(x4)
-            x5Features = x5.view(x5.size(0), -1)/x5.size(0)
-            # print("X5 shape", x5Features.shape)
-            x6 = self.avgpool(x5)
-            x7 = x6.view(x6.size(0), -1)/x6.size(0)
-            x8 = x6.view(x6.size(0), -1)
-            x8 = self.fc(x8)
-            # print ("X7 shape", x7.shape)
-            finalFeature = torch.cat((x3Features, x4Features, x5Features, x7, x8), dim=1)
-            # print (finalFeature.shape)
-            # 0/0
-            return finalFeature
-
+    def forward(self, x, feature=False, T=1, labels=False, scale=None, predictClass=False):
 
         x = self.conv_1_3x3(x)
         x = F.relu(self.bn_1(x), inplace=True)
@@ -135,20 +113,17 @@ class CifarResNet(nn.Module):
         if feature:
             return x / torch.norm(x, 2, 1).unsqueeze(1)
         if labels:
+            if predictClass:
+                return F.softmax(self.fc2(x)/T)
             return F.softmax(self.fc(x)/T)
         if scale is not None:
             x = self.fc(x)
-            x = x
             temp = F.softmax(x / T)
             temp = temp*scale
-            # print("Gets here; scaled output")
-            # print (scale)
-
-            # scale = F.log(scale)
-            # print (scale)
-            # 0/0
             return temp
-            return temp / scale
+
+        if predictClass:
+            return F.log_softmax(self.fc2(x)/T)
         return F.log_softmax(self.fc(x)/T)
 
     def forwardFeature(self, x):
