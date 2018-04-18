@@ -114,7 +114,7 @@ class CifarResNet(nn.Module):
             return x / torch.norm(x, 2, 1).unsqueeze(1)
         if labels:
             if predictClass:
-                return F.softmax(self.fc2(x)/T)
+                return  F.softmax(self.fc(x)/T), F.softmax(self.fc2(x)/T)
             return F.softmax(self.fc(x)/T)
         if scale is not None:
             x = self.fc(x)
@@ -123,7 +123,7 @@ class CifarResNet(nn.Module):
             return temp
 
         if predictClass:
-            return F.log_softmax(self.fc2(x)/T)
+            return F.log_softmax(self.fc(x)/T), F.log_softmax(self.fc2(x)/T)
         return F.log_softmax(self.fc(x)/T)
 
     def forwardFeature(self, x):

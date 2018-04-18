@@ -212,7 +212,7 @@ class Trainer(GenericTrainer):
             target.unsqueeze_(1)
             y_onehot.scatter_(1, target, 1)
 
-            output = self.model(Variable(data))
+            output, output2 = self.model(Variable(data), predictClass = True)
             # loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
             self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
@@ -241,9 +241,9 @@ class Trainer(GenericTrainer):
                         for param in self.model.parameters():
                             param.requires_grad = True
                 # Get softened targets generated from previous model;
-                pred2 = self.model_fixed(Variable(data), T=myT, labels=True)
+                pred2, pred3 = self.model_fixed(Variable(data), T=myT, labels=True, predictClass=True)
                 # Softened output of the model
-                output2 = self.model(Variable(data), T=myT)
+                output2, output3 = self.model(Variable(data), T=myT, predictClass=True )
 
                 # Compute second loss
                 mult = Variable(torch.FloatTensor([1-self.args.alpha]))
@@ -253,9 +253,6 @@ class Trainer(GenericTrainer):
                 self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
-                pred3 = self.model_fixed(Variable(data), T=myT, labels=True, predictClass=True)
-                # Softened output of the model
-                output3 = self.model(Variable(data), T=myT, predictClass=True)
 
 
                 loss3 = F.kl_div(output3, Variable(pred3.data))
@@ -276,11 +273,10 @@ class Trainer(GenericTrainer):
 
 
             y_onehot.zero_()
-            output = self.model(Variable(data), predictClass=True)
             target = (target / self.args.step_size).int().long()
             # target.unsqueeze_(1)
             y_onehot.scatter_(1, target, 1)
-            lossHigher = F.kl_div(output, Variable(y_onehot))
+            lossHigher = F.kl_div(output2, Variable(y_onehot))
 
             lossHigher.backward()
             # cur=1.0

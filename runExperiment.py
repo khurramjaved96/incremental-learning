@@ -278,4 +278,3 @@ for seed in args.seeds:
 
                 # Saving the line plot
                 my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
-              
