@@ -219,7 +219,7 @@ class Trainer(GenericTrainer):
 
             loss = F.kl_div(output, Variable(y_onehot))
 
-            # y_onehot.zero_()
+            y_onehot.zero_()
             # output = self.model(Variable(data),predictClass=True)
             # target = (target/self.args.step_size).int().long()
             # # target.unsqueeze_(1)
