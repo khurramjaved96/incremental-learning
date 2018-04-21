@@ -116,6 +116,7 @@ class CifarResNet(nn.Module):
             if predictClass:
                 return  F.softmax(self.fc(x)/T), F.softmax(self.fc2(x)/T)
             return F.softmax(self.fc(x)/T)
+
         if scale is not None:
             x = self.fc(x)
             temp = F.softmax(x / T)

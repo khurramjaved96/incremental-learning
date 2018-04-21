@@ -49,6 +49,10 @@ parser.add_argument('--upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
 parser.add_argument('--pp', action='store_true', default=False,
                     help='Privacy perserving')
+
+parser.add_argument('--hs', action='store_true', default=False,
+                    help='Hierarchical Softmax')
+
 parser.add_argument('--alphas', type=float, nargs='+', default=[1.0], help='Weight given to new classes vs old classes in loss')
 parser.add_argument('--decay', type=float, default=0.00005, help='Weight decay (L2 penalty).')
 parser.add_argument('--alpha-increment', type=float, default=1.0, help='Weight decay (L2 penalty).')
@@ -66,6 +70,8 @@ parser.add_argument('--rand', action='store_true', default=False,
                     help='Replace exemplars with random instances')
 parser.add_argument('--adversarial', action='store_true', default=False,
                     help='Replace exemplars with adversarial instances')
+import progressbar
+
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
