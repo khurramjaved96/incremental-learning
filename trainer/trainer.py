@@ -212,7 +212,7 @@ class Trainer(GenericTrainer):
             target.unsqueeze_(1)
             y_onehot.scatter_(1, target, 1)
 
-            output, output2 = self.model(Variable(data), predictClass = True)
+            output, output2_t = self.model(Variable(data), predictClass = True)
             # loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
             self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
@@ -220,10 +220,6 @@ class Trainer(GenericTrainer):
             loss = F.kl_div(output, Variable(y_onehot))
 
 
-
-
-            losses.append(loss)
-            # losses.append(lossHigher)
             myT = self.args.T
             if self.args.no_distill:
                 pass
@@ -245,20 +241,14 @@ class Trainer(GenericTrainer):
                 # Softened output of the model
                 output2, output3 = self.model(Variable(data), T=myT, predictClass=True)
 
-                # Compute second loss
-                mult = Variable(torch.FloatTensor([1-self.args.alpha]))
-                if self.args.cuda:
-                    mult = mult.cuda()
-
                 self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
 
+                if self.args.hs:
+                    loss3 = F.kl_div(output3, Variable(pred3.data))
 
-                loss3 = F.kl_div(output3, Variable(pred3.data))
 
-                losses.append(loss2)
-                losses.append(loss3)
                 # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
                 loss3.backward(retain_graph=True)
@@ -271,13 +261,12 @@ class Trainer(GenericTrainer):
 
             loss.backward(retain_graph=True)
 
-            if len(self.older_classes) > 0:
-                output, output2 = self.model(Variable(data), predictClass=True)
+            if len(self.older_classes) > 0 and self.args.hs:
                 y_onehot.zero_()
                 target = (target / self.args.step_size).int().long()
                 # target.unsqueeze_(1)
                 y_onehot.scatter_(1, target, 1)
-                lossHigher = F.kl_div(output2, Variable(y_onehot))
+                lossHigher = F.kl_div(output2_t, Variable(y_onehot))
 
                 lossHigher.backward()
                 # cur=1.0
