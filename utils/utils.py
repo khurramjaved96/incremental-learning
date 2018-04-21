@@ -73,6 +73,38 @@ def saveConfusionMatrix(epoch, path, model, args, dataset, test_loader):
     plt.gcf().clear()
     return 100. * correct / len(test_loader.dataset)
 
+def get_confusion_matrix_nmc(path, model, loader, size, args, means, epoch):
+    model.eval()
+    test_loss = 0
+    correct = 0
+    # Get the confusion matrix object
+    cMatrix = confusionmeter.ConfusionMeter(size, True)
+
+    for data, target in loader:
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+            means = means.cuda()
+        data, target = Variable(data, volatile=True), Variable(target)
+        output = model(data, True).unsqueeze(1)
+        result = (output.data - means.float())
+
+        result = torch.norm(result, 2, 2)
+        # NMC for classification
+        _, pred = torch.min(result, 1)
+        # Evaluate results
+        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+        # Add the results in appropriate places in the matrix.
+        cMatrix.add(pred, target.data.view_as(pred))
+
+    test_loss /= len(loader.dataset)
+    img = cMatrix.value()
+    import matplotlib.pyplot as plt
+
+    plt.imshow(img, cmap='plasma', interpolation='nearest')
+    plt.colorbar()
+    plt.savefig(path + str(epoch) + ".jpg")
+    plt.gcf().clear()
+    return 100. * correct / len(loader.dataset)
 
 def constructExperimentName(args):
     import os

@@ -173,6 +173,11 @@ class Trainer():
                                    self.experiment.path + "CONFUSION",
                                    self.model, self.args, self.dataset,
                                    self.test_iterator)
+            ut.get_confusion_matrix_nmc(self.experiment.path + "CONFUSION_NMC",
+                                        self.model, self.test_iterator,
+                                        self.num_classes, self.args, nmc.means,
+                                        int(class_group / self.args.step_size)
+                                        * self.args.epochs_class + epoch)
 
             #Plot
             y.append(self.classifier_trainer.evaluate(self.test_iterator))
