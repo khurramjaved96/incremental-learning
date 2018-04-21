@@ -245,13 +245,14 @@ class Trainer(GenericTrainer):
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
 
-                if self.args.hs:
-                    loss3 = F.kl_div(output3, Variable(pred3.data))
+
 
 
                 # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
-                loss3.backward(retain_graph=True)
+                if self.args.hs:
+                    loss3 = F.kl_div(output3, Variable(pred3.data))
+                    loss3.backward(retain_graph=True)
                 # Scale the stored gradients by a factor of my
 
                 for param in self.model.parameters():
