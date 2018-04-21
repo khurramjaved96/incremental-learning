@@ -243,7 +243,7 @@ class Trainer(GenericTrainer):
                 # Get softened targets generated from previous model;
                 pred2, pred3 = self.model_fixed(Variable(data), T=myT, labels=True, predictClass=True)
                 # Softened output of the model
-                output2, output3 = self.model(Variable(data), T=myT, predictClass=True )
+                output2, output3 = self.model_fixed(Variable(data), T=myT, predictClass=True )
 
                 # Compute second loss
                 mult = Variable(torch.FloatTensor([1-self.args.alpha]))
