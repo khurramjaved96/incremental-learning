@@ -13,6 +13,16 @@ def normalize_images(images, mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5]):
     #No need to return but the var is needed
     return images
 
+def compute_acc(preds, labels):
+    '''
+    Computes the classification acc
+    '''
+    correct = 0
+    preds_ = preds.data.max(1)[1]
+    correct = preds_.eq(labels.data).cpu().sum()
+    acc = float(correct) / float(len(labels.data)) * 100.0
+    return acc
+
 def get_new_iterator(cuda, train_loader, new_batch_size):
     kwargs = {'num_workers': 1, 'pin_memory': True} if cuda else {}
     train_iterator = torch.utils.data.DataLoader(train_loader,

@@ -51,6 +51,7 @@ def generate_examples(
     In case of Non-Conditional GAN, the samples in the dict are random, they do
     not correspond to the keys in the dict
     Just passing in random noise to the generator and storing the results in dict
+    Generates a batch of 100 examples at a time
     args: args
     num_examples: Total number of examples to generate
     active_classes: List of all classes trained on till now
@@ -64,17 +65,28 @@ def generate_examples(
     G.eval()
     examples = {}
     for idx, klass in enumerate(active_classes):
-        # Generator outputs 100 images at a time
         for _ in range(num_examples//100):
-            noise = torch.randn(100,100,1,1)
-            #TODO refactor these conditionals
-            if is_cond:
+            if args.process == "cdcgan":
                 targets = torch.zeros(100, total_classes, 1, 1)
                 targets[:, klass] = 1
+                noise = torch.randn(100, 100, 1, 1)
+            elif args.process == "acgan":
+                targets = np.zeros((100, total_classes))
+                targets[:, klass] = 1
+                nz_noise = np.random.normal(0, 1, (100, 100))
+                combined_noise = np.append(targets, nz_noise, axis=1)
+                noise = torch.from_numpy(combined_noise)
+                noise = noise.view(100, 100+total_classes, 1, 1).float()
+            else:
+                noise = torch.randn(100, 100, 1, 1)
             if args.cuda:
                 noise = Variable(noise.cuda(), volatile=True)
-                targets = Variable(targets.cuda(), volatile=True) if is_cond else None
-            images = G(noise, targets) if is_cond else G(noise)
+                if args.process == "cdcgan":
+                    targets = Variable(targets.cuda(), volatile=True)
+            if args.process == "cdcgan":
+                images = G(noise, targets)
+            else:
+                images = G(noise)
             if not klass in examples.keys():
                 examples[klass] = images
             else:

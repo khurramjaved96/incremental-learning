@@ -41,7 +41,7 @@ class Trainer():
         self.fixed_g = None
         self.examples = {}
         self.increment = 0
-        self.is_cond = args.process == "cdcgan"
+        self.is_cond = (args.process == "cdcgan" or args.process == "acgan")
         if args.ideal_nmc:
             self.train_iterator_ideal = train_iterator_ideal
             self.train_loader_ideal = train_loader_ideal

@@ -26,6 +26,7 @@ class Generator(nn.Module):
     def forward(self, input):
         x = input.view(-1, self.nz + self.num_classes)
         x = self.fc1(x)
+        x = x.view(-1, 384, 1, 1)
         x = F.relu(self.ct2_bn(self.ct2(x)))
         x = F.relu(self.ct3_bn(self.ct3(x)))
         x = F.relu(self.ct4_bn(self.ct4(x)))
