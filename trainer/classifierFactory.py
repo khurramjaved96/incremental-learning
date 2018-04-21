@@ -65,7 +65,6 @@ class NearestMeanClassifier():
 
             #TODO make efficient and calculate this once
             #TODO make sure that the gradients and not stored
-            #
             if (old_classes != None and is_cond == False):
                 old_targets = torch.zeros(target.shape[0]).byte()
                 for klass in old_classes:

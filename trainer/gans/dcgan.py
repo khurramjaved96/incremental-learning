@@ -94,7 +94,7 @@ class DCGAN(GAN):
                 d_loss = d_real_loss + d_fake_loss
 
                 #Perform a backward step
-                d_losses_e.append(d_loss)
+                d_losses_e.append(d_loss_total.cpu().data.numpy())
                 d_loss.backward()
                 d_opt.step()
 
@@ -121,20 +121,20 @@ class DCGAN(GAN):
                     # Calculate euclidean distance
                     distance_loss = torch.mean(euclidean_dist(output_fake, output_real))
                     total_loss = g_loss + (self.args.joint_gan_alpha * distance_loss)
-                    dist_losses_e.append(distance_loss)
+                    dist_losses_e.append(distance_loss.cpu().data.numpy())
 
                 #Backward step
                 total_loss.backward()
-                g_losses_e.append(g_loss)
+                g_losses_e.append(g_loss.cpu().data.numpy())
                 g_opt.step()
 
             #-------------End Epoch-----------#
             #Print Stats and save results
-            mean_g = (sum(g_losses_e)/len(g_losses_e)).cpu().data.numpy()[0]
-            mean_d = (sum(d_losses_e)/len(d_losses_e)).cpu().data.numpy()[0]
+            mean_g = (sum(g_losses_e)/len(g_losses_e))
+            mean_d = (sum(d_losses_e)/len(d_losses_e))
             mean_dist = None
             if self.args.joint_gan_obj:
-                mean_dist = (sum(dist_losses_e)/len(dist_losses_e)).cpu().data.numpy()[0]
+                mean_dist = (sum(dist_losses_e)/len(dist_losses_e))
             g_losses.append(mean_g)
             d_losses.append(mean_d)
 

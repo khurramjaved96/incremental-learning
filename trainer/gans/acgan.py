@@ -123,7 +123,8 @@ class ACGAN(GAN):
                 a_label.data.copy_(torch.from_numpy(nz_labels))
 
                 g_output = G(noise)
-                d_output, a_output = D(g_output.detach())
+                g_output_temp = g_output.detach()
+                d_output, a_output = D(g_output_temp)
                 d_loss_fake = d_criterion(d_output, d_label)
                 a_loss_fake = a_criterion(a_output, a_label)
                 d_fake_total = d_loss_fake + a_loss_fake
@@ -131,7 +132,7 @@ class ACGAN(GAN):
                 d_loss_total = d_real_total + d_fake_total
                 fake_prob_e.append(d_output.data.mean())
                 d_opt.step()
-                d_losses_e.append(d_loss_total)
+                d_losses_e.append(d_loss_total.cpu().data.numpy())
 
                 #-------------Train Generator-----------#
                 G.zero_grad()
@@ -142,11 +143,11 @@ class ACGAN(GAN):
                 g_loss_total = d_loss_g + a_loss_g
                 g_loss_total.backward()
                 g_opt.step()
-                g_losses_e.append(g_loss_total)
+                g_losses_e.append(g_loss_total.cpu().data.numpy())
             #-------------End Epoch-----------#
             #Print Stats and save results
-            mean_g = (sum(g_losses_e)/len(g_losses_e)).cpu().data.numpy()[0]
-            mean_d = (sum(d_losses_e)/len(d_losses_e)).cpu().data.numpy()[0]
+            mean_g = (sum(g_losses_e)/len(g_losses_e))
+            mean_d = (sum(d_losses_e)/len(d_losses_e))
             mean_acc = (sum(acc_e)/len(acc_e))
             mean_prob_real = (sum(real_prob_e)/len(real_prob_e))
             mean_prob_fake = (sum(fake_prob_e)/len(fake_prob_e))
