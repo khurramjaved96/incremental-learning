@@ -27,10 +27,11 @@ class MNIST(Dataset):
     def __init__(self):
         super().__init__(10, "MNIST", 6000, 1000)
 
-        self.train_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
-        ])
+        self.train_transform = transforms.Compose(
+             [transforms.ToTensor(),
+             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+
+        self.alt_transform = None
 
         self.test_transform = transforms.Compose([
              transforms.ToTensor(),

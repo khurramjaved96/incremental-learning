@@ -251,7 +251,7 @@ class IncrementalLoader(td.Dataset):
 
         if (not self.do_alt_transform) and self.transform is not None:
             img = self.transform(img)
-        else:
+        elif self.alt_transform is not None:
             img = self.alt_transform(img)
 
         if not self.labels[index] in self.active_classes:
