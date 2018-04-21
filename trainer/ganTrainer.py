@@ -164,7 +164,8 @@ class Trainer():
             #Save ckpt if required
             if self.args.save_g_ckpt:
                 gutils.save_checkpoint(self.args.gan_epochs[self.increment],
-                                       self.increment, self.experiment, self.G)
+                                       self.increment, self.experiment,
+                                       self.G, self.D)
 
             #-------------Save and Plot data-----------#
             #Saving confusion matrix

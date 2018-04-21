@@ -249,9 +249,9 @@ class IncrementalLoader(td.Dataset):
         if self.dataset_name == "MNIST":
             img = np.expand_dims(img, axis=2)
 
-        if (not self.do_alt_transform) and self.transform is not None:
+        if (not (self.do_alt_transform and self.alt_transform is not None)) and self.transform is not None:
             img = self.transform(img)
-        elif self.alt_transform is not None:
+        else:
             img = self.alt_transform(img)
 
         if not self.labels[index] in self.active_classes:

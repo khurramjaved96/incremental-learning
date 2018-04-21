@@ -120,9 +120,9 @@ def save_gan_losses(g_loss, d_loss, epochs, increment, experiment, name='GAN_LOS
     plt.close()
 
 
-def save_checkpoint(epoch, increment, experiment, G):
+def save_checkpoint(epoch, increment, experiment, G, D=None):
     '''
-    Saves the Generator ckpt to disk
+    Saves the ckpt to disk
     '''
     if epoch == 0:
         return
@@ -130,6 +130,12 @@ def save_checkpoint(epoch, increment, experiment, G):
     path = experiment.path + "checkpoints/"
     torch.save(G.state_dict(),
                '{0}G_inc_{1}_e_{2}.pth'.format(path, increment, epoch))
+    if D is None:
+        return
+    print("[*] Saving Discriminator checkpoint")
+    path = experiment.path + "checkpoints/"
+    torch.save(D.state_dict(),
+               '{0}D_inc_{1}_e_{2}.pth'.format(path, increment, epoch))
 
 
 def load_checkpoint(g_ckpt_path, increment, G):

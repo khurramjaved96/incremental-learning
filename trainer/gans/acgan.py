@@ -77,7 +77,10 @@ class ACGAN(GAN):
             for batch_idx, (image, label) in enumerate(self.train_iterator):
                 iters = iters + 1
                 batch_size = image.shape[0]
-                if batch_size != self.args.batch_size:
+                if self.args.cuda:
+                    image = image.cuda()
+                    label = label.cuda()
+                if inp.shape[0] != batch_size:
                     inp.data.resize_as_(image)
                     noise.data.resize_(batch_size, nz, 1, 1)
                     d_label.data.resize_(batch_size)
@@ -91,9 +94,6 @@ class ACGAN(GAN):
                 # https://discuss.pytorch.org/t/how-to-use-the-backward-functions-for-multiple-losses/1826/6 Huh?
                 ##Train using real images
                 D.zero_grad()
-                if self.args.cuda:
-                    image = image.cuda()
-                    label = label.cuda()
                 inp.data.copy_(image)
                 d_label.data.fill_(real_label)
                 a_label.data.copy_(label)
@@ -170,7 +170,7 @@ class ACGAN(GAN):
                                        self.experiment)
             #Save ckpt if interval is satisfied
             if self.args.save_g_ckpt and epoch % self.args.ckpt_interval == 0:
-                gutils.save_checkpoint(epoch, increment, self.experiment, G)
+                gutils.save_checkpoint(epoch, increment, self.experiment, G, D)
             time_taken = time.time() - start_time
             print("[GAN] Epoch: %d" % epoch,
                   "Iters: %d" % iters,
