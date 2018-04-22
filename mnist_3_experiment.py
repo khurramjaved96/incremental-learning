@@ -183,10 +183,11 @@ for seed in args.seeds:
                         print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
                         print("Test Classifier Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
 
-                my_trainer.update_frozen_model()
-                print ("Removing class 3")
+                print("Removing class 3")
                 my_trainer.setup_training()
-                my_trainer.limit_class(3,0, False)
+                my_trainer.limit_class(3, 0, False)
+                my_trainer.update_frozen_model()
+
 
                 # Running epochs_class epochs
                 for epoch in range(0, args.epochs_class):
