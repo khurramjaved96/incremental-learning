@@ -4,8 +4,7 @@
 # in .log file with same name.
 # Script keeps restarting every 10 seconds to look for new tasks.
 
-if [ "-e experimentQueue/*.t" ]
-then
+if [ "-e experimentQueue/*.t" ]; then
   for k in experimentQueue/*.t; do
     echo "Executing" $k
     chmod a+x $k

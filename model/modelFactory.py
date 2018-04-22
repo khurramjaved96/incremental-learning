@@ -87,7 +87,7 @@ class ModelFactory():
                 print("[!!!] d<16, You sure??")
                 assert False
             if d == 32:
-                gen_d = 768:
+                gen_d = 768
             if dataset=="CIFAR100" or dataset=="CIFAR10":
                 G = acgan.Generator(gen_d, 3, num_classes)
                 D = acgan.Discriminator(d, 3, num_classes)
