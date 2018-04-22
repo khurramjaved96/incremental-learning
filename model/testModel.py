@@ -17,21 +17,32 @@ class Net(nn.Module):
         self.conv5_bn3 = nn.BatchNorm2d(12)
         self.conv5_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(48, 100)
-        self.fc2 = nn.Linear(100, noClasses)
+        self.fc = nn.Linear(100, noClasses)
         self.featureSize = 48
-    def forward(self, x, feature=False):
+    def forward(self, x, feature=False, T=1, labels=False, scale=None, predictClass=False):
+       
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
         x = self.conv2_bn1(self.conv2(x))
         x = F.relu(F.max_pool2d(self.conv2_bn2(self.conv3(x)), 2))
         x = F.relu(F.max_pool2d(self.conv2_bn3(self.conv4(x)), 2))
         x = F.relu(F.max_pool2d(self.conv5_drop(self.conv5_bn3(self.conv5(x))), 2))
-        # print ("X after conv", x.shape)
-        x = x.view(-1, 48)
-
+        x = x.view(x.size(0), -1)
         if feature:
-            # print ("Size = ",torch.norm(x, 2, 1).unsqueeze(1).shape)
             return x / torch.norm(x, 2, 1).unsqueeze(1)
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
-        x = self.fc2(x)
-        return F.softmax(x)
+
+        if labels:
+            if predictClass:
+                return F.softmax(self.fc(x) / T), F.softmax(self.fc2(x) / T)
+            return F.softmax(self.fc(x) / T)
+
+        if scale is not None:
+            x = self.fc(x)
+            temp = F.softmax(x / T)
+            temp = temp * scale
+            return temp
+
+        if predictClass:
+            return F.log_softmax(self.fc(x) / T), F.log_softmax(self.fc2(x) / T)
+        return F.log_softmax(self.fc(x) / T)
