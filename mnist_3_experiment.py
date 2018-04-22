@@ -59,7 +59,7 @@ parser.add_argument('--alpha-increment', type=float, default=1.0, help='Weight d
 parser.add_argument('--l1', type=float, default=0.0, help='Weight decay (L1 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--T', type=float, default=1, help='Tempreture used for softening the targets')
-parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[2000],
+parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[200000],
                     help='How many images can we store at max. 0 will result in fine-tuning')
 parser.add_argument('--epochs-class', type=int, default=30, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="MNIST", help='Dataset to be used; example CIFAR, MNIST')
@@ -185,8 +185,9 @@ for seed in args.seeds:
 
                 my_trainer.update_frozen_model()
                 print ("Removing class 3")
-                my_trainer.limit_class(3,0, False)
                 my_trainer.setup_training()
+                my_trainer.limit_class(3,0, False)
+
                 # Running epochs_class epochs
                 for epoch in range(0, args.epochs_class):
                     my_trainer.update_lr(epoch)
@@ -246,9 +247,6 @@ for seed in args.seeds:
                 print ("Test NMC with Binning", testY1)
 
 
-                # TEMP CODE
-
-                my_trainer.setup_training()
 
 
                 # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
