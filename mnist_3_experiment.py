@@ -191,8 +191,8 @@ for seed in args.seeds:
                 my_trainer.limit_class(4, 0, False)
                 my_trainer.limit_class(5, 0, False)
                 my_trainer.limit_class(6, 0, False)
-                my_trainer.limit_class(7, 0, False)
-                my_trainer.limit_class(8, 0, False)
+                # my_trainer.limit_class(7, 0, False)
+                # my_trainer.limit_class(8, 0, False)
                 my_trainer.update_frozen_model()
 
 
