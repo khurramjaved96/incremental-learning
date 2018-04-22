@@ -73,8 +73,8 @@ class IncrementalLoader(td.Dataset):
             self.remove_class(n)
             self.__update_length()
             return False
-        if k > self.class_size:
-            k = self.class_size
+        if k > self.indices[n][1] - self.indices[n][0]:
+            k = self.indices[n][1] - self.indices[n][0]
         if n in self.limited_classes:
             self.limited_classes[n] = k
             # Remove this line; this turns off oversampling
