@@ -241,7 +241,7 @@ class Trainer(GenericTrainer):
                 # Softened output of the model
                 output2, output3 = self.model(Variable(data), T=myT, predictClass=True)
 
-                self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
+                self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
 
@@ -257,7 +257,7 @@ class Trainer(GenericTrainer):
 
                 for param in self.model.parameters():
                     if param.grad is not None:
-                        param.grad=param.grad*(myT*myT)*(len(self.older_classes)/self.args.step_size)*self.args.alpha
+                        param.grad=param.grad*(myT*myT)*self.args.alpha
 
 
             loss.backward(retain_graph=True)

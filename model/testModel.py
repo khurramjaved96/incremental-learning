@@ -20,7 +20,7 @@ class Net(nn.Module):
         self.fc = nn.Linear(100, noClasses)
         self.featureSize = 48
     def forward(self, x, feature=False, T=1, labels=False, scale=None, predictClass=False):
-       
+
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
         x = self.conv2_bn1(self.conv2(x))
         x = F.relu(F.max_pool2d(self.conv2_bn2(self.conv3(x)), 2))
