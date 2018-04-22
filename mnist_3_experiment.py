@@ -32,7 +32,7 @@ parser.add_argument('--distill-only-exemplars', action='store_true', default=Fal
                     help='Only compute the distillation loss on images from the examplar set')
 parser.add_argument('--no-random', action='store_true', default=False,
                     help='Disable random shuffling of classes')
-parser.add_argument('--no-herding', action='store_true', default=False,
+parser.add_argument('--no-herding', action='store_true', default=True,
                     help='Disable herding for NMC')
 parser.add_argument('--seeds', type=int, nargs='+', default=[23423],
                     help='Seeds values to be used')
