@@ -71,6 +71,7 @@ class IncrementalLoader(td.Dataset):
     def limit_class(self, n, k):
         if k == 0:
             self.remove_class(n)
+            self.__update_length()
             return False
         if k > self.class_size:
             k = self.class_size
@@ -170,7 +171,8 @@ class IncrementalLoader(td.Dataset):
         :param index: 
         :return: 
         '''
-        assert (index < self.class_size * self.total_classes)
+        assert (index < len(self.data))
+        assert (index < self.len)
 
         length = 0
         temp_a = 0
