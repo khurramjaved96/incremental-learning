@@ -12,6 +12,9 @@ then
     cat $k >> $k.log
     $k >> $k.log
     rm -f $k
+    if hash notify-send 2>/dev/null; then
+        notify-send eQueueRunner $k" execution complete"
+    fi
   done
 fi
 
