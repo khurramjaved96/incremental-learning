@@ -80,7 +80,7 @@ class AutoEncoderTrainer(GenericTrainer):
 class Trainer(GenericTrainer):
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
         super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
-        self.threshold = np.ones(100, dtype=np.float64)
+        self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
 
 
     def convert_to_adversarial_instance(self, instance, target_class, required_confidence = 0.90, alpha = 1, iters = 100):
@@ -149,7 +149,7 @@ class Trainer(GenericTrainer):
 
     def setup_training(self):
         print(self.threshold / np.max(self.threshold))
-        self.threshold = np.ones(100, dtype=np.float64)
+        self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
 
         # self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
