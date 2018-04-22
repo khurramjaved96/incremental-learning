@@ -185,7 +185,7 @@ for seed in args.seeds:
 
                 print("Removing class 3")
                 my_trainer.setup_training()
-                my_trainer.limit_class(3, 0, False)
+                # my_trainer.limit_class(3, 0, False)
                 my_trainer.update_frozen_model()
 
 
