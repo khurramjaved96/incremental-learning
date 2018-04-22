@@ -63,7 +63,7 @@ class Plotter():
         import matplotlib.pyplot as plt
         plt.imshow(img, cmap='jet', interpolation='nearest')
         plt.colorbar()
-        plt.savefig(path + str(epoch) + ".jpg")
+        plt.savefig(path + str(epoch) + ".svg", format='svg', dpi=1200)
         plt.gcf().clear()
 
     def saveImage(self, img, path, epoch):
