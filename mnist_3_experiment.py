@@ -30,7 +30,7 @@ parser.add_argument('--no-distill', action='store_true', default=False,
                     help='disable distillation loss')
 parser.add_argument('--distill-only-exemplars', action='store_true', default=False,
                     help='Only compute the distillation loss on images from the examplar set')
-parser.add_argument('--no-random', action='store_true', default=False,
+parser.add_argument('--no-random', action='store_true', default=True,
                     help='Disable random shuffling of classes')
 parser.add_argument('--no-herding', action='store_true', default=True,
                     help='Disable herding for NMC')
@@ -185,7 +185,10 @@ for seed in args.seeds:
 
                 print("Removing class 3")
                 my_trainer.setup_training()
+                my_trainer.limit_class(1, 0, False)
+                my_trainer.limit_class(2, 0, False)
                 my_trainer.limit_class(3, 0, False)
+                my_trainer.limit_class(4, 0, False)
                 my_trainer.update_frozen_model()
 
 

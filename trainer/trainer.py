@@ -82,42 +82,6 @@ class Trainer(GenericTrainer):
         super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
         self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
 
-
-    def convert_to_adversarial_instance(self, instance, target_class, required_confidence = 0.90, alpha = 1, iters = 100):
-        0/0
-        instance.unsqueeze_(0)
-        instance = Variable(instance, requires_grad=True)
-
-        ce_loss = nn.CrossEntropyLoss()
-        im_label_as_var = Variable(torch.from_numpy(np.asarray([target_class])))
-
-        #self.model_fixed.eval()
-        for i in range(1, iters):
-            instance.grad = None
-
-            # Forward
-            output = self.model_fixed(instance)
-
-            # Get confidence
-            target_confidence = (output)[0][target_class].data.numpy()[0]
-            print('Iteration:', str(i), 'Target Confidence', "{0:.4f}".format(target_confidence))
-            if target_confidence > required_confidence:
-                break
-
-            # Zero grads
-            self.model_fixed.zero_grad()
-
-            # Backward
-            pred_loss = ce_loss(output, im_label_as_var)
-            pred_loss.backward()
-
-            # Update instance with adversarial noise
-            adv_noise = alpha * torch.sign(instance.grad.data)
-            instance.data = instance.data - adv_noise
-        #self.model_fixed.train()
-
-        return torch.from_numpy(instance.data.cpu().numpy().squeeze(0)).float()
-
     def update_lr(self, epoch):
         for temp in range(0, len(self.args.schedule)):
             if self.args.schedule[temp] == epoch:
@@ -184,41 +148,20 @@ class Trainer(GenericTrainer):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
-            weight_vector = (target * 0).int()
-            for elem in self.older_classes:
-                weight_vector = weight_vector + (target == elem).int()
-
-            # Use this to implement decayed distillation
-
-            old_classes_indices = torch.squeeze(torch.nonzero((weight_vector > 0)).long())
-            new_classes_indices = torch.squeeze(torch.nonzero((weight_vector == 0)).long())
-
             self.optimizer.zero_grad()
-            losses = []
-            if self.args.rand or self.args.adversarial:
-                for old in old_classes_indices:
-                    if self.args.rand:
-                        data[old] = self.dataset.get_random_instance()
-                    elif self.args.adversarial:
-                        data[old] = self.convert_to_adversarial_instance(self.dataset.get_random_instance(), target[old])
 
             y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
-            mult = Variable(torch.FloatTensor([self.args.alpha]))
             if self.args.cuda:
                 y_onehot = y_onehot.cuda()
-                mult = mult.cuda()
 
             y_onehot.zero_()
             target.unsqueeze_(1)
             y_onehot.scatter_(1, target, 1)
 
             output, output2_t = self.model(Variable(data), predictClass = True)
-            # loss = F.binary_cross_entropy(output, Variable(y_onehot))
-
             self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
 
             loss = F.kl_div(output, Variable(y_onehot))
-
 
             myT = self.args.T
             if self.args.no_distill:
@@ -244,35 +187,14 @@ class Trainer(GenericTrainer):
                 self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
-
-
-
-
-                # Store the gradients in the gradient buffers
                 loss2.backward(retain_graph=True)
-                if self.args.hs:
-                    loss3 = F.kl_div(output3, Variable(pred3.data))
-                    loss3.backward(retain_graph=True)
-                # Scale the stored gradients by a factor of my
 
                 for param in self.model.parameters():
                     if param.grad is not None:
                         param.grad=param.grad*(myT*myT)*self.args.alpha
 
-
             loss.backward(retain_graph=True)
-
-            if len(self.older_classes) > 0 and self.args.hs:
-                y_onehot.zero_()
-                target = (target / self.args.step_size).int().long()
-                # target.unsqueeze_(1)
-                y_onehot.scatter_(1, target, 1)
-                lossHigher = F.kl_div(output2_t, Variable(y_onehot))
-
-                lossHigher.backward()
-
 
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
-        # print (self.threshold)
-        # print ("Alpha value", (len(self.older_classes) / self.args.step_size))
+
