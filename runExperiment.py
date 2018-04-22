@@ -180,7 +180,7 @@ for seed in args.seeds:
                     # print(my_trainer.threshold)
                     if epoch % args.log_interval == (args.log_interval-1):
                         tError = t_classifier.evaluate(my_trainer.model, train_iterator)
-                        print ("Current Epoch:", epoch)
+                        print("*********CURRENT EPOCH********** : ", epoch)
                         print("Train Classifier:", tError)
                         print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
                         print("Test Classifier Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
