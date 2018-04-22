@@ -31,6 +31,13 @@ class ModelFactory():
                 return res.resnet20(10)
             return res.resnet20(100)
 
+        elif model_type == "resnet10":
+            if dataset == "MNIST":
+                return res.resnet10mnist(10)
+            elif dataset == "CIFAR10":
+                return res.resnet20(10)
+            return res.resnet20(100)
+
 
         elif model_type== "resnet44":
             if dataset == "MNIST":
