@@ -210,6 +210,7 @@ for seed in args.seeds:
                 print("Test Classifier Final:", t_classifier.evaluate(my_trainer.model, test_iterator))
                 print("Test Classifier Final Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
 
+                my_trainer.setup_training()
 
 
 
@@ -246,7 +247,6 @@ for seed in args.seeds:
                 print("Train NMC", tempTrain)
                 print("Test NMC", testY)
                 print ("Test NMC with Binning", testY1)
-
 
 
 
