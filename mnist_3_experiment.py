@@ -210,8 +210,6 @@ for seed in args.seeds:
                 print("Test Classifier Final:", t_classifier.evaluate(my_trainer.model, test_iterator))
                 print("Test Classifier Final Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
 
-                my_trainer.setup_training()
-
 
 
 
@@ -239,16 +237,13 @@ for seed in args.seeds:
                 tcMatrix_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
                 nmcMatrix = nmc.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
                 nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
-                tcMatrix_scaled_binning = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes,
-                                                                    my_trainer.threshold, my_trainer.older_classes,
-                                                                    args.step_size, True)
+
 
                 # Printing results
                 print("Train NMC", tempTrain)
                 print("Test NMC", testY)
-                print ("Test NMC with Binning", testY1)
 
-
+                my_trainer.setup_training()
 
                 # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
                 x.append(class_group + args.step_size)
@@ -267,8 +262,6 @@ for seed in args.seeds:
                 my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
                 my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
                                       my_experiment.path + "tcMatrix_scaled", tcMatrix_scaled)
-                my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-                                      my_experiment.path + "tcMatrix_scaled_binning", tcMatrix_scaled_binning)
                 my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
                                       nmcMatrix)
                 my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
