@@ -94,7 +94,7 @@ class DCGAN(GAN):
                 d_loss = d_real_loss + d_fake_loss
 
                 #Perform a backward step
-                d_losses_e.append(d_loss_total.cpu().data.numpy())
+                d_losses_e.append(d_loss.cpu().data.numpy())
                 d_loss.backward()
                 d_opt.step()
 

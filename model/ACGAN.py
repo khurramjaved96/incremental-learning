@@ -6,6 +6,7 @@ from .gan_utils import normal_init
 class Generator(nn.Module):
     def __init__(self, d=384, c=1, num_classes=10, nz=100):
         super(Generator, self).__init__()
+        self.d = d
         self.nz = nz
         self.num_classes = num_classes
         self.fc1 = nn.Linear(nz+num_classes, d)
@@ -26,7 +27,7 @@ class Generator(nn.Module):
     def forward(self, input):
         x = input.view(-1, self.nz + self.num_classes)
         x = self.fc1(x)
-        x = x.view(-1, 384, 1, 1)
+        x = x.view(-1, self.d, 1, 1)
         x = F.relu(self.ct2_bn(self.ct2(x)))
         x = F.relu(self.ct3_bn(self.ct3(x)))
         x = F.relu(self.ct4_bn(self.ct4(x)))
@@ -40,6 +41,7 @@ class Generator(nn.Module):
 class Discriminator(nn.Module):
     def __init__(self, d=16, c=1, num_classes=10):
         super(Discriminator, self).__init__()
+        self.d = d
         self.conv1 = nn.Conv2d(c, d, 3, 2, 1, bias=False)
         self.Drop1 = nn.Dropout(0.5)
 
@@ -80,7 +82,7 @@ class Discriminator(nn.Module):
         x = self.Drop6(F.leaky_relu(self.conv6_bn(self.conv6(x)), 0.2))
 
         #When d=16, d*32=512, TODO
-        x = x.view(-1, 4*4*512)
+        x = x.view(-1, 4*4*self.d*32)
         fc_dis = self.fc_dis(x)
         fc_aux = self.fc_aux(x)
         liklihood_correct_class = self.softmax(fc_aux)
