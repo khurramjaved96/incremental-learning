@@ -209,6 +209,10 @@ class Trainer(GenericTrainer):
                         param.grad=param.grad*(myT*myT)*self.args.alpha
 
             loss.backward(retain_graph=True)
+            if len(self.older_classes) > 0:
+                for param in self.model.named_parameters():
+                    if "conv_1_3x3" in param[0] or "stage_1" in param[0] or "bn_1" in param[0] or "stage_2" in param[0]:
+                        param[1].grad = param[1].grad*0
 
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
