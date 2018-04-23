@@ -190,6 +190,7 @@ class Trainer(GenericTrainer):
                 #     if epoch == 4 and batch_idx == 0:
                 #         for param in self.model.parameters():
                 #             param.requires_grad = True
+                
                 # Get softened targets generated from previous model;
                 pred2, pred3 = self.model_fixed(Variable(data), T=myT, labels=True, predictClass=True)
                 # Softened output of the model
