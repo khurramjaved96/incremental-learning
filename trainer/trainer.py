@@ -177,19 +177,19 @@ class Trainer(GenericTrainer):
             elif len(self.older_classes) > 0:
 
 
-                if "fc" in param[0]:
-                    param[1].requies_grad = True
-
-                    # This is for warm up period; i.e, for the first four epochs, only train the fc layers.
-                    if epoch == 0 and batch_idx == 0:
-                        for param in self.model.named_parameters():
-                            if "fc" in param[0]:
-                                param[1].requies_grad = True
-                            else:
-                                param[1].requires_grad = False
-                    if epoch == 4 and batch_idx == 0:
-                        for param in self.model.parameters():
-                            param.requires_grad = True
+                # if "fc" in param[0]:
+                #     param[1].requies_grad = True
+                #
+                #     # This is for warm up period; i.e, for the first four epochs, only train the fc layers.
+                #     if epoch == 0 and batch_idx == 0:
+                #         for param in self.model.named_parameters():
+                #             if "fc" in param[0]:
+                #                 param[1].requies_grad = True
+                #             else:
+                #                 param[1].requires_grad = False
+                #     if epoch == 4 and batch_idx == 0:
+                #         for param in self.model.parameters():
+                #             param.requires_grad = True
                 # Get softened targets generated from previous model;
                 pred2, pred3 = self.model_fixed(Variable(data), T=myT, labels=True, predictClass=True)
                 # Softened output of the model
