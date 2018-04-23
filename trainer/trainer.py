@@ -161,14 +161,23 @@ class Trainer(GenericTrainer):
             output, output2_t = self.model(Variable(data), predictClass = True)
             self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
 
-            loss = F.kl_div(output, Variable(y_onehot))
+
+            if len(self.older_classes) > 0:
+                for param in self.model.named_parameters():
+                    if "conv_1_3x3.weight" in param[0]:
+                        param[1].requies_grad = False
+
 
             myT = self.args.T
             if self.args.no_distill:
                 pass
 
             elif len(self.older_classes) > 0:
-                if self.args.lwf:
+
+
+                if "fc" in param[0]:
+                    param[1].requies_grad = True
+
                     # This is for warm up period; i.e, for the first four epochs, only train the fc layers.
                     if epoch == 0 and batch_idx == 0:
                         for param in self.model.named_parameters():
