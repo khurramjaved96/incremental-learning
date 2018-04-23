@@ -115,8 +115,10 @@ class Trainer():
                     target = None
         return data, target
 
-    def train(self, gan_images=None, gan_labels=None, batch_size=None):
+    def train(self, gan_images=None, gan_labels=None, batch_size=None, D=None):
         self.model.train()
+        if D is not None:
+            D.eval()
 
         for batch_idx, (data, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
@@ -139,7 +141,11 @@ class Trainer():
             y_onehot.scatter_(1, target, 1)
 
             output = self.model(Variable(data))
-            if not self.args.no_distill:
+            if self.args.ac_distill:
+                if len(self.older_classes) > 0:
+                    pred2 = D(Variable(data, True))[1]
+                    y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
+            elif not self.args.no_distill:
                 if len(self.older_classes) > 0:
                     pred2 = self.model_fixed(Variable(data))
                     y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]

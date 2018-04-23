@@ -82,8 +82,7 @@ parser.add_argument('--optimize-feat-epochs', type=int, default=20, help='How ma
 parser.add_argument('--optimize-feat-lr', type=float, default=0.00001, help='lr for optimize-features')
 parser.add_argument('--joint-gan-obj', default=False, action='store_true', help='Whether to jointly train GAN and minimize the logit distance')
 parser.add_argument('--joint-gan-alpha', type=float, default=1, help='Contribution of logit distance minimizer in GAN loss')
-
-
+parser.add_argument('--ac-distill', default=False, action='store_true', help='Whether to use ACGAN\'s discriminator outputs in distillation')
 
 args = parser.parse_args()
 

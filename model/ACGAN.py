@@ -73,7 +73,7 @@ class Discriminator(nn.Module):
 
         print(self)
 
-    def forward(self, img):
+    def forward(self, img, get_features=False):
         x = self.Drop1(F.leaky_relu(self.conv1(img), 0.2))
         x = self.Drop2(F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2))
         x = self.Drop3(F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2))
@@ -83,8 +83,10 @@ class Discriminator(nn.Module):
 
         #When d=16, d*32=512, TODO
         x = x.view(-1, 4*4*self.d*32)
-        fc_dis = self.fc_dis(x)
         fc_aux = self.fc_aux(x)
+        if get_features:
+            return fc_aux
+        fc_dis = self.fc_dis(x)
         liklihood_correct_class = self.softmax(fc_aux)
         liklihood_real_img = self.sigmoid(fc_dis).view(-1,1).squeeze(1)
         return liklihood_real_img, liklihood_correct_class

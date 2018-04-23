@@ -149,6 +149,9 @@ def load_checkpoint(g_ckpt_path, increment, G):
     filename = None
     for f in os.listdir(g_ckpt_path):
         vals = f.split('_')
+        #TODO Load the discriminator too
+        if vals[0] != "G":
+            continue
         incr = int(vals[2])
         epoch = int(vals[4].split('.')[0])
         if incr == increment and epoch > max_e:
