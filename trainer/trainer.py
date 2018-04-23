@@ -150,6 +150,14 @@ class Trainer(GenericTrainer):
 
             self.optimizer.zero_grad()
 
+            if len(self.older_classes) > 0:
+                for param in self.model.named_parameters():
+                    if "conv_1_3x3" in param[0] or "stage_1" in param[0]:
+                        if batch_idx == 0:
+                            print ("Freezing Weights")
+                        param[1].requies_grad = False
+
+
             y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
             if self.args.cuda:
                 y_onehot = y_onehot.cuda()
@@ -162,12 +170,7 @@ class Trainer(GenericTrainer):
             self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
 
 
-            if len(self.older_classes) > 0:
-                for param in self.model.named_parameters():
-                    if "conv_1_3x3" in param[0]:
-                        if batch_idx == 0:
-                            print ("Freezing Weights")
-                        param[1].requies_grad = False
+
 
             loss = F.kl_div(output, Variable(y_onehot))
             myT = self.args.T
@@ -190,7 +193,7 @@ class Trainer(GenericTrainer):
                 #     if epoch == 4 and batch_idx == 0:
                 #         for param in self.model.parameters():
                 #             param.requires_grad = True
-                
+
                 # Get softened targets generated from previous model;
                 pred2, pred3 = self.model_fixed(Variable(data), T=myT, labels=True, predictClass=True)
                 # Softened output of the model
