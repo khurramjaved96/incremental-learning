@@ -153,8 +153,8 @@ class Trainer(GenericTrainer):
             if len(self.older_classes) > 0:
                 for param in self.model.named_parameters():
                     if "conv_1_3x3" in param[0] or "stage_1" in param[0] or "bn_1" in param[0] or "stage_2" in param[0]:
-                        if batch_idx == 0:
-                            print ("Freezing Weights")
+                        # if batch_idx == 0:
+                        #     print ("Freezing Weights")
                         param[1].requies_grad = False
 
 
