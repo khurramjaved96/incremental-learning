@@ -167,7 +167,7 @@ class Trainer(GenericTrainer):
                     if "conv_1_3x3.weight" in param[0]:
                         param[1].requies_grad = False
 
-
+            loss = F.kl_div(output, Variable(y_onehot))
             myT = self.args.T
             if self.args.no_distill:
                 pass
