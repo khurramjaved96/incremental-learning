@@ -189,7 +189,8 @@ class Trainer(GenericTrainer):
             self.left_over.append(pop_val)
 
     def update_leftover(self, k):
-        self.older_classes.append(k)
+        if k not in self.older_classes:
+            self.older_classes.append(k)
 
     def limit_class(self, n, k, herding=True):
         if not herding:
@@ -197,7 +198,8 @@ class Trainer(GenericTrainer):
         else:
             # print("Sorting by herding")
             self.train_loader.limit_class_and_sort(n, k, self.model_fixed)
-        self.older_classes.append(n)
+        if n not in self.older_classes:
+            self.older_classes.append(n)
 
     def setup_training(self):
         for param_group in self.optimizer.param_groups:
@@ -261,4 +263,16 @@ class Trainer(GenericTrainer):
 
             loss = F.binary_cross_entropy(output, Variable(y_onehot))
             loss.backward()
+
+            # Freeze any model layers if required
+            if self.args.store_features:
+                for child in self.model.named_children():
+                    if "conv_1_3x3" in child[0] and len(self.older_classes) > 0:
+                        for param in child[1].parameters():
+                            param.grad *= 0
+                    elif "bn" in child[0] and len(self.older_classes) > 0:
+                        child[1].eval()
+                        for param in child[1].parameters():
+                            param.grad *= 0
+
             self.optimizer.step()

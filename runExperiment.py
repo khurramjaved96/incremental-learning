@@ -58,6 +58,9 @@ parser.add_argument('--rand', action='store_true', default=False,
                     help='Replace exemplars with random instances')
 parser.add_argument('--adversarial', action='store_true', default=True,
                     help='Replace exemplars with adversarial instances')
+parser.add_argument('--store_features', action='store_true', default=False,
+                    help='Instead of storing exemplars, store their features outputted by the initial layers of the '
+                         'model. This is implemented here by freezing those perspective layers')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -70,8 +73,11 @@ dataset = dataHandler.DatasetFactory.get_dataset(args.dataset)
 if args.step_size<2:
     print("Step size of 1 will result in no learning;")
     assert False
-if args.adversarial and args.model_type.find("resnet") == -1:
+elif args.adversarial and args.model_type.find("resnet") == -1:
     print("Adversarial instance training only supported with resnet models;")
+    assert False
+elif args.store_features and args.model_type.find("resnet") == -1:
+    print("Feature storing only supported with resnet models;")
     assert False
 
 for seed in args.seeds:
