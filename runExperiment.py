@@ -155,9 +155,8 @@ for seed in args.seeds:
             train_y = []
             higher_y = []
             y_scaled = []
+            y_grad_scaled = []
             nmc_ideal_cum = []
-            y_scaled_dec = []
-            y_random_bins = []
 
             nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
             nmc_ideal = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
@@ -184,33 +183,25 @@ for seed in args.seeds:
                         print("Train Classifier:", tError)
                         print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
                         print("Test Classifier Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
-                        print("Test Classifier Corrent Bins:",
-                          t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size, True))
-                        print("Test Classifier Random Bins:",
-                              t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
-                                                    my_trainer.older_classes, args.step_size, True, True))
-                        print("Test Classifier Higher Model:",
-                              t_classifier.evaluate(my_trainer.model, test_iterator, higher=True))
+                        print("Test Classifier Grad Scaled:",t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,my_trainer.older_classes, args.step_size))
+
 
                 # Evaluate the learned classifier
                 img = None
 
                 print("Test Classifier Final:", t_classifier.evaluate(my_trainer.model, test_iterator))
                 print("Test Classifier Final Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
+                print("Test Classifier Final Grad Scaled:",
+                      t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
+                                            my_trainer.older_classes, args.step_size))
 
-                tempValue = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
-                                            my_trainer.older_classes, args.step_size, True)
-                print("Test Classifier Descriptor:",
-                      tempValue)
 
-                randomBins = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
-                                                    my_trainer.older_classes, args.step_size, True, True)
 
                 higher_y.append(t_classifier.evaluate(my_trainer.model, test_iterator, higher=True))
-                y_random_bins.append(randomBins)
 
-                y_scaled_dec.append(tempValue)
 
+                y_grad_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
+                                            my_trainer.older_classes, args.step_size))
                 y_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
                 y1.append(t_classifier.evaluate(my_trainer.model, test_iterator))
 
@@ -233,6 +224,9 @@ for seed in args.seeds:
                 # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
                 tcMatrix = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
                 tcMatrix_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
+                tcMatrix_grad_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes,
+                                                                    my_trainer.threshold2, my_trainer.older_classes,
+                                                                    args.step_size)
                 nmcMatrix = nmc.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
                 nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
                 tcMatrix_scaled_binning = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes,
@@ -256,7 +250,7 @@ for seed in args.seeds:
                 my_experiment.results["NMC"] = [x, y]
                 my_experiment.results["Trained Classifier"] = [x, y1]
                 my_experiment.results["Trained Classifier Scaled"] = [x, y_scaled]
-                my_experiment.results["Trained Classifier with Assumption"] = [x, y_scaled_dec]
+                my_experiment.results["Trained Classifier Grad Scaled"] = [x, y_grad_scaled]
                 my_experiment.results["Train Error Classifier"] = [x, train_y]
                 my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
                 my_experiment.store_json()
@@ -280,11 +274,10 @@ for seed in args.seeds:
                 my_plotter.plot(x, y, title=args.name, legend="NMC")
                 my_plotter.plot(x, higher_y, title=args.name, legend="Higher Model")
                 my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
+                my_plotter.plot(x, y_grad_scaled, title=args.name, legend="Trained Classifier Grad Scaled")
                 my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
                 my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
                 my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
-                my_plotter.plot(x, y_scaled_dec, title=args.name, legend="Trained Classifier with Assumption")
-                my_plotter.plot(x, y_random_bins, title=args.name, legend="Trained Classifier with Random Bins")
 
                 # Saving the line plot
                 my_plotter.save_fig(my_experiment.path, dataset.classes + 1)

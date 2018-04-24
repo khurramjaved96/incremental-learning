@@ -81,6 +81,7 @@ class Trainer(GenericTrainer):
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
         super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
         self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
+        self.threshold2 = np.ones(self.dataset.classes, dtype=np.float64)
 
     def update_lr(self, epoch):
         for temp in range(0, len(self.args.schedule)):
@@ -112,8 +113,10 @@ class Trainer(GenericTrainer):
             self.older_classes.append(n)
 
     def setup_training(self):
-        print(self.threshold / np.max(self.threshold))
+        print("Threshold", self.threshold / np.max(self.threshold))
+        print("Threshold 2", self.threshold2 / np.max(self.threshold2))
         self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
+        self.threshold2 = np.ones(self.dataset.classes, dtype=np.float64)
 
         # self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
@@ -150,12 +153,12 @@ class Trainer(GenericTrainer):
 
             self.optimizer.zero_grad()
 
-            if len(self.older_classes) > 0:
-                for param in self.model.named_parameters():
-                    if "conv_1_3x3" in param[0] or "stage_1" in param[0] or "bn_1" in param[0] or "stage_2" in param[0]:
-                        # if batch_idx == 0:
-                        #     print ("Freezing Weights")
-                        param[1].requies_grad = False
+            # if len(self.older_classes) > 0:
+            #     for param in self.model.named_parameters():
+            #         if "conv_1_3x3" in param[0] or "stage_1" in param[0] or "bn_1" in param[0] or "stage_2" in param[0]:
+            #             # if batch_idx == 0:
+            #             #     print ("Freezing Weights")
+            #             param[1].requies_grad = False
 
 
             y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
@@ -207,13 +210,18 @@ class Trainer(GenericTrainer):
                 for param in self.model.parameters():
                     if param.grad is not None:
                         param.grad=param.grad*(myT*myT)*self.args.alpha
+                for param in self.model.named_parameters():
+                    if "fc.weight" in param[0]:
+                        self.threshold2 += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
+
 
             loss.backward(retain_graph=True)
-            if len(self.older_classes) > 0:
-                for param in self.model.named_parameters():
-                    if "conv_1_3x3" in param[0] or "stage_1" in param[0] or "bn_1" in param[0] or "stage_2" in param[0]:
-                        param[1].grad = param[1].grad*0
+            # if len(self.older_classes) > 0:
+            #     for param in self.model.named_parameters():
+            #         if "conv_1_3x3" in param[0] or "stage_1" in param[0] or "bn_1" in param[0] or "stage_2" in param[0]:
+            #             param[1].grad = param[1].grad*0
 
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
+        self.threshold2[len(self.older_classes) + self.args.step_size:len(self.threshold2)] = np.max(self.threshold2)
 
