@@ -142,9 +142,8 @@ class Trainer():
 
             output = self.model(Variable(data))
             if self.args.ac_distill:
-                if len(self.older_classes) > 0:
-                    pred2 = D(Variable(data, True))[1]
-                    y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
+                pred2 = D(Variable(data, True))[1]
+                y_onehot = pred2.data
             elif not self.args.no_distill:
                 if len(self.older_classes) > 0:
                     pred2 = self.model_fixed(Variable(data))

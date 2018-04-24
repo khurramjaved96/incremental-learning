@@ -95,41 +95,6 @@ class Trainer():
                     for k in self.examples:
                         self.examples[k] = self.examples[k].data.cpu()
 
-            #-------------Train Classifier-----------#
-            epoch = 0
-            for epoch in range(0, self.args.epochs_class):
-                self.classifier_trainer.update_lr(epoch)
-                self.classifier_trainer.train(self.examples, self.old_classes,
-                                             self.batch_size, self.D)
-                if epoch % self.args.log_interval == 0:
-                    print("[Classifier] Train:",
-                          self.classifier_trainer.evaluate(self.train_iterator),
-                          "Test:",
-                          self.classifier_trainer.evaluate(self.test_iterator))
-
-            self.classifier_trainer.update_frozen_model()
-
-            #-------------Using NMC Classifier-----------#
-            nmc.update_means(self.model, self.train_iterator, self.args.cuda,
-                            self.dataset.classes, self.old_classes, self.is_cond)
-            nmc_train = nmc.classify(self.model, self.train_iterator,
-                                        self.args.cuda, True)
-            nmc_test = nmc.classify(self.model, self.test_iterator,
-                                    self.args.cuda, True)
-            y_nmc.append(nmc_test)
-
-            if self.args.ideal_nmc:
-                ideal_nmc.update_means(self.model, self.train_iterator_ideal, self.args.cuda,
-                                      self.dataset.classes, [], True)
-                nmc_test_ideal = ideal_nmc.classify(self.model, self.test_iterator,
-                                                    self.args.cuda, True)
-                y_nmc_ideal.append(nmc_test_ideal)
-
-            print("Train NMC: ", nmc_train)
-            print("Test NMC: ", nmc_test)
-            if self.args.ideal_nmc:
-                print("Test NMC (Ideal)", nmc_test_ideal)
-
             #-------------Train GAN-----------#
             #Get new G and D only if it doesn't exist and persist_gan is off
             if self.G == None or not self.args.persist_gan:
@@ -166,6 +131,41 @@ class Trainer():
                 gutils.save_checkpoint(self.args.gan_epochs[self.increment],
                                        self.increment, self.experiment,
                                        self.G, self.D)
+            #-------------Train Classifier-----------#
+            epoch = 0
+            for epoch in range(0, self.args.epochs_class):
+                self.classifier_trainer.update_lr(epoch)
+                self.classifier_trainer.train(self.examples, self.old_classes,
+                                             self.batch_size, self.D)
+                if epoch % self.args.log_interval == 0:
+                    print("[Classifier] Train:",
+                          self.classifier_trainer.evaluate(self.train_iterator),
+                          "Test:",
+                          self.classifier_trainer.evaluate(self.test_iterator))
+
+            self.classifier_trainer.update_frozen_model()
+
+            #-------------Using NMC Classifier-----------#
+            nmc.update_means(self.model, self.train_iterator, self.args.cuda,
+                            self.dataset.classes, self.old_classes, self.is_cond)
+            nmc_train = nmc.classify(self.model, self.train_iterator,
+                                        self.args.cuda, True)
+            nmc_test = nmc.classify(self.model, self.test_iterator,
+                                    self.args.cuda, True)
+            y_nmc.append(nmc_test)
+
+            if self.args.ideal_nmc:
+                ideal_nmc.update_means(self.model, self.train_iterator_ideal, self.args.cuda,
+                                      self.dataset.classes, [], True)
+                nmc_test_ideal = ideal_nmc.classify(self.model, self.test_iterator,
+                                                    self.args.cuda, True)
+                y_nmc_ideal.append(nmc_test_ideal)
+
+            print("Train NMC: ", nmc_train)
+            print("Test NMC: ", nmc_test)
+            if self.args.ideal_nmc:
+                print("Test NMC (Ideal)", nmc_test_ideal)
+
 
             #-------------Save and Plot data-----------#
             #Saving confusion matrix
