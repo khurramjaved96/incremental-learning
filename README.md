@@ -2,7 +2,7 @@
 In this branch, we implement multiple approaches to do privacy preserving incremental learning. This is in contrast to conventional methods which violate the privacy requirement by either storing real instances as exemplars (i.e. iCARL[1]) or by generating new instances which look visually similar to the real ones (i.e. GAN-based architectures).
 
 ## Approaches 
-1. Generate and use adversarial instances as exemplars for each of the previously learned classes. In the current implementation, Fast Sign Gradient Method[2] is used, and the L1 distance is minimized between features (at different model layers) of adversarial and real instances. The idea is that generated adversarial instances will visually look like random noise, but might contain the discriminatory information required to learn a good classifier. 
+1. Generate and use adversarial instances as exemplars for each of the previously learned classes. In the current implementation, Fast Gradient Sign Method[2] is used, and the L1 distance is minimized between features (at different model layers) of adversarial and real instances. The idea is that generated adversarial instances will visually look like random noise, but might contain the discriminatory information required to learn a good classifier. 
 
 2. Instead of storing exemplars, store their features outputted by the first layer of the model and then freeze the model upto that layer. The idea is that parameters learned by initial layers of the model at first increment are good enough to be used during all increments. Note that this increases the memory requirement by a constant factor, depending upon the size of feature vector used. 
 
