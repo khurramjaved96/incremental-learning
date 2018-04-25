@@ -105,7 +105,7 @@ class Trainer(GenericTrainer):
 
     def increment_classes_2(self, start, end):
         print ("Remaining classes", len(self.all_classes))
-        for temp in range(start, end + self.args.step_size):
+        for temp in range(start, end):
             pop_val = self.all_classes.pop()
             self.train_data_iterator.dataset.add_class(pop_val)
             self.ideal_iterator.dataset.add_class(pop_val)
