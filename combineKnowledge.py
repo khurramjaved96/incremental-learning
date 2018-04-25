@@ -215,127 +215,104 @@ for seed in args.seeds:
                     print("Train Classifier:", tError)
                     print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
                     print("Test Classifier Scaled:",
-                          t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
-                                                my_trainer.older_classes, args.step_size))
+                          t_classifier.evaluate(my_trainer2.model, test_iterator, my_trainer.threshold, False,
+                                                my_trainer2.older_classes, args.step_size))
                     print("Test Classifier Grad Scaled:",
-                          t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
+                          t_classifier.evaluate(my_trainer2.model, test_iterator, my_trainer.threshold2, False,
                                                 my_trainer.older_classes, args.step_size))
-
+            print ("PRINTING MODEL 2")
             models.append(copy.deepcopy(my_trainer.model))
-            print("Test Classifier Final:", t_classifier.evaluate(my_trainer.model, test_iterator))
+            print("Test Classifier Final:", t_classifier.evaluate(my_trainer2.model, test_iterator))
             print("Test Classifier Final Scaled:",
-                  t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
+                  t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer2.threshold, False,
                                         my_trainer.older_classes, args.step_size))
             print("Test Classifier Final Grad Scaled:",
-                  t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
+                  t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer2.threshold2, False,
                                         my_trainer.older_classes, args.step_size))
 
 
-            epoch = 0
-            import progressbar
-
-            # Running epochs_class epochs
-            for epoch in range(0, args.epochs_class):
-                my_trainer.update_lr(epoch)
-                my_trainer.train(epoch)
-                # print(my_trainer.threshold)
-                if epoch % args.log_interval == (args.log_interval-1):
-                    tError = t_classifier.evaluate(my_trainer.model, train_iterator)
-                    print("*********CURRENT EPOCH********** : ", epoch)
-                    print("Train Classifier:", tError)
-                    print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
-                    print("Test Classifier Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
-                    print("Test Classifier Grad Scaled:",t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,my_trainer.older_classes, args.step_size))
-
-            models.append(copy.deepcopy(my_trainer.model))
-            print("Test Classifier Final:", t_classifier.evaluate(my_trainer.model, test_iterator))
-            print("Test Classifier Final Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
-            print("Test Classifier Final Grad Scaled:",
-                  t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
-                                        my_trainer.older_classes, args.step_size))
-
-
-            higher_y.append(t_classifier.evaluate(my_trainer.model, test_iterator, higher=True))
-
-
-            y_grad_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
-                                        my_trainer.older_classes, args.step_size))
-            y_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
-            y1.append(t_classifier.evaluate(my_trainer.model, test_iterator))
-
-            # Update means using the train iterator; this is iCaRL case
-            nmc.update_means(my_trainer.model, train_iterator, dataset.classes)
-            # Update mean using all the data. This is equivalent to memory_budget = infinity
-            nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
-            # Compute the the nmc based classification results
-            tempTrain = t_classifier.evaluate(my_trainer.model, train_iterator)
-            train_y.append(tempTrain)
-
-
-
-            testY1 = nmc.evaluate(my_trainer.model, test_iterator, step_size=args.step_size,  kMean = True)
-            testY = nmc.evaluate(my_trainer.model, test_iterator)
-            testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
-            y.append(testY)
-            nmc_ideal_cum.append(testY_ideal)
-
-            # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
-            tcMatrix = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
-            tcMatrix_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
-            tcMatrix_grad_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes,
-                                                                my_trainer.threshold2, my_trainer.older_classes,
-                                                                args.step_size)
-            nmcMatrix = nmc.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
-            nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
-            tcMatrix_scaled_binning = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes,
-                                                                my_trainer.threshold, my_trainer.older_classes,
-                                                                args.step_size, True)
-
-            # Printing results
-            print("Train NMC", tempTrain)
-            print("Test NMC", testY)
-            print ("Test NMC with Binning", testY1)
-
-
-            # TEMP CODE
-
-            my_trainer.setup_training()
-
-
-            # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
-            x.append(class_group + args.step_size)
-
-            my_experiment.results["NMC"] = [x, y]
-            my_experiment.results["Trained Classifier"] = [x, y1]
-            my_experiment.results["Trained Classifier Scaled"] = [x, y_scaled]
-            my_experiment.results["Trained Classifier Grad Scaled"] = [x, y_grad_scaled]
-            my_experiment.results["Train Error Classifier"] = [x, train_y]
-            my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
-            my_experiment.store_json()
-
-            # Finally, plotting the results;
-            my_plotter = plt.Plotter()
-
-            # Plotting the confusion matrices
-            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
-            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-                                  my_experiment.path + "tcMatrix_scaled", tcMatrix_scaled)
-            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-                                  my_experiment.path + "tcMatrix_scaled_binning", tcMatrix_scaled_binning)
-            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
-                                  nmcMatrix)
-            my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-                                  my_experiment.path + "nmcMatrixIdeal",
-                                  nmcMatrixIdeal)
-
-            # Plotting the line diagrams of all the possible cases
-            my_plotter.plot(x, y, title=args.name, legend="NMC")
-            my_plotter.plot(x, higher_y, title=args.name, legend="Higher Model")
-            my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
-            my_plotter.plot(x, y_grad_scaled, title=args.name, legend="Trained Classifier Grad Scaled")
-            my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
-            my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
-            my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
-
-            # Saving the line plot
-            my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
+            #
+            # higher_y.append(t_classifier.evaluate(my_trainer.model, test_iterator, higher=True))
+            #
+            #
+            # y_grad_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
+            #                             my_trainer.older_classes, args.step_size))
+            # y_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
+            # y1.append(t_classifier.evaluate(my_trainer.model, test_iterator))
+            #
+            # # Update means using the train iterator; this is iCaRL case
+            # nmc.update_means(my_trainer.model, train_iterator, dataset.classes)
+            # # Update mean using all the data. This is equivalent to memory_budget = infinity
+            # nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
+            # # Compute the the nmc based classification results
+            # tempTrain = t_classifier.evaluate(my_trainer.model, train_iterator)
+            # train_y.append(tempTrain)
+            #
+            #
+            #
+            # testY1 = nmc.evaluate(my_trainer.model, test_iterator, step_size=args.step_size,  kMean = True)
+            # testY = nmc.evaluate(my_trainer.model, test_iterator)
+            # testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
+            # y.append(testY)
+            # nmc_ideal_cum.append(testY_ideal)
+            #
+            # # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
+            # tcMatrix = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
+            # tcMatrix_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
+            # tcMatrix_grad_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes,
+            #                                                     my_trainer.threshold2, my_trainer.older_classes,
+            #                                                     args.step_size)
+            # nmcMatrix = nmc.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
+            # nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
+            # tcMatrix_scaled_binning = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes,
+            #                                                     my_trainer.threshold, my_trainer.older_classes,
+            #                                                     args.step_size, True)
+            #
+            # # Printing results
+            # print("Train NMC", tempTrain)
+            # print("Test NMC", testY)
+            # print ("Test NMC with Binning", testY1)
+            #
+            #
+            # # TEMP CODE
+            #
+            # my_trainer.setup_training()
+            #
+            #
+            # # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
+            # x.append(class_group + args.step_size)
+            #
+            # my_experiment.results["NMC"] = [x, y]
+            # my_experiment.results["Trained Classifier"] = [x, y1]
+            # my_experiment.results["Trained Classifier Scaled"] = [x, y_scaled]
+            # my_experiment.results["Trained Classifier Grad Scaled"] = [x, y_grad_scaled]
+            # my_experiment.results["Train Error Classifier"] = [x, train_y]
+            # my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
+            # my_experiment.store_json()
+            #
+            # # Finally, plotting the results;
+            # my_plotter = plt.Plotter()
+            #
+            # # Plotting the confusion matrices
+            # my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
+            # my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+            #                       my_experiment.path + "tcMatrix_scaled", tcMatrix_scaled)
+            # my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+            #                       my_experiment.path + "tcMatrix_scaled_binning", tcMatrix_scaled_binning)
+            # my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
+            #                       nmcMatrix)
+            # my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+            #                       my_experiment.path + "nmcMatrixIdeal",
+            #                       nmcMatrixIdeal)
+            #
+            # # Plotting the line diagrams of all the possible cases
+            # my_plotter.plot(x, y, title=args.name, legend="NMC")
+            # my_plotter.plot(x, higher_y, title=args.name, legend="Higher Model")
+            # my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
+            # my_plotter.plot(x, y_grad_scaled, title=args.name, legend="Trained Classifier Grad Scaled")
+            # my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
+            # my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
+            # my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
+            #
+            # # Saving the line plot
+            # my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
