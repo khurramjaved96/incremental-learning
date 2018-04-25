@@ -326,8 +326,8 @@ class Distiller(GenericTrainer):
                     self.threshold2 += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
 
             self.optimizer.step()
-        self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
-        self.threshold2[len(self.older_classes) + self.args.step_size:len(self.threshold2)] = np.max(self.threshold2)
+        self.threshold[0:80] = np.max(self.threshold)
+        self.threshold2[0:80] = np.max(self.threshold2)
 
 
 
