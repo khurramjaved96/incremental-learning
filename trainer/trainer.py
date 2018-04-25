@@ -213,9 +213,10 @@ class Trainer(GenericTrainer):
 
 
             loss.backward(retain_graph=True)
-            
+
             for param in self.model.named_parameters():
                 if "fc.weight" in param[0]:
+                    self.threshold2*=0.99
                     self.threshold2 += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
 
             # if len(self.older_classes) > 0:
