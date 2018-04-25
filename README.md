@@ -1,36 +1,23 @@
-# iCarl2.0
-This is an on-going pytorch implementation of iCarl[1].
+# Privacy Preserving Incremental Learning
+In this branch, we implement multiple approaches to do privacy preserving incremental learning. This is in contrast to conventional methods which violate the privacy requirement by either storing real instances as exemplars (i.e. iCARL[1]) or by generating new instances which look visually similar to the real ones (i.e. GAN-based architectures).
 
-## Interface to run experiments
+## Approaches 
+1. Generate and use adversarial instances as exemplars for each of the previously learned classes. In the current implementation, Fast Sign Gradient Method[2] is used, and the L1 distance is minimized between features (at different model layers) of adversarial and real instances. The idea is that generated adversarial instances will visually look like random noise, but might contain the discriminatory information required to learn a good classifier. 
 
-``` bash
-runExperiment.py [-h] [--batch-size N] [--test-batch-size N]
-                        [--epochs N] [--lr LR]
-                        [--schedule SCHEDULE [SCHEDULE ...]]
-                        [--gammas GAMMAS [GAMMAS ...]] [--momentum M]
-                        [--no-cuda] [--no-distill] [--no-random]
-                        [--no-herding] [--oversampling] [--seed S]
-                        [--log-interval N] [--model-type MODEL_TYPE]
-                        [--name NAME] [--sortby SORTBY] [--decay DECAY]
-                        [--step-size STEP_SIZE]
-                        [--memory-budget MEMORY_BUDGET]
-                        [--epochs-class EPOCHS_CLASS] [--classes CLASSES]
-                        [--depth DEPTH] [--Dataset DATASET]
-```
-## Dependencies 
+2. Instead of storing exemplars, store their features outputted by the first layer of the model and then freeze the model upto that layer. The idea is that parameters learned by initial layers of the model at first increment are good enough to be used during all increments. Note that this increases the memory requirement by a constant factor, depending upon the size of feature vector used. 
 
-1. Pytorch 0.3.0.post4
-2. Python 3.6 
-3. torchnet (https://github.com/pytorch/tnt) 
-
-## Branches
-1. GAN driven incremental learning is being done in the branch gan.
-2. Auto-encoder based knowledge preservation is being implemented in branch autoencoders
-
-=======
 ## Results 
-![alt text](http://khurramjaved96.github.io/random/result.jpg "Incremental Learning on MNIST")
+Results generated on CIFAR100 with a step-size of 10 and a memory-budget of 2000. Note that;
 
+1. Catastrophic Forgetting is the vanilla method used for incremental learning in which classes are incrementally learned by fine-tuning the model at each subsequent increment. 
+2. LwF uses distillation loss to prevent some of the adverse affects of fine-tuning but does not rely on any exemplars from previous classes.
+3. iCARL also uses distilattion loss but does rely on exemplars and is therefore not privacy preserving. The results are plotted here only for a reference.  
+
+![resultsCIFAR100](plot.jpg "Results on CIFAR100")
+
+To reproduce these results, overwrite few of the default parameters with either **--store_features --lr=0.5** or **--adversarial** or **--lwf**. 
 
 ## References
-[1] https://arxiv.org/abs/1611.07725
+[1] Incremental Classifier and Representation Learning https://arxiv.org/abs/1611.07725
+
+[2] Explaining and Harnessing Adversarial Examples https://arxiv.org/abs/1412.6572
