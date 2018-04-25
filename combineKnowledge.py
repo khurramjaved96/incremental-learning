@@ -201,7 +201,7 @@ for seed in args.seeds:
                 # Trainer object used for training
             my_trainer2 = trainer.Distiller(train_iterator_combined, test_iterator, dataset, myModel, args, optimizer,
                                          train_iterator_nmc)
-
+            my_trainer = my_trainer2
 
             my_trainer2.increment_classes((0,80), train_iterator_combined)
             my_trainer2.update_frozen_model()
@@ -213,21 +213,21 @@ for seed in args.seeds:
                     tError = t_classifier.evaluate(my_trainer.model, train_iterator)
                     print("*********CURRENT EPOCH********** : ", epoch)
                     print("Train Classifier:", tError)
-                    print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
+                    print("Test Classifier:", t_classifier.evaluate(my_trainer2.model, test_iterator))
                     print("Test Classifier Scaled:",
-                          t_classifier.evaluate(my_trainer2.model, test_iterator, my_trainer.threshold, False,
+                          t_classifier.evaluate(my_trainer2.model, test_iterator, my_trainer2.threshold, False,
                                                 my_trainer2.older_classes, args.step_size))
                     print("Test Classifier Grad Scaled:",
-                          t_classifier.evaluate(my_trainer2.model, test_iterator, my_trainer.threshold2, False,
+                          t_classifier.evaluate(my_trainer2.model, test_iterator, my_trainer2.threshold2, False,
                                                 my_trainer.older_classes, args.step_size))
             print ("PRINTING MODEL 2")
-            models.append(copy.deepcopy(my_trainer.model))
+            models.append(copy.deepcopy(my_trainer2.model))
             print("Test Classifier Final:", t_classifier.evaluate(my_trainer2.model, test_iterator))
             print("Test Classifier Final Scaled:",
-                  t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer2.threshold, False,
+                  t_classifier.evaluate(my_trainer2.model, test_iterator, my_trainer2.threshold, False,
                                         my_trainer.older_classes, args.step_size))
             print("Test Classifier Final Grad Scaled:",
-                  t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer2.threshold2, False,
+                  t_classifier.evaluate(my_trainer2.model, test_iterator, my_trainer2.threshold2, False,
                                         my_trainer.older_classes, args.step_size))
 
 
