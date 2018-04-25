@@ -153,14 +153,6 @@ class Trainer(GenericTrainer):
 
             self.optimizer.zero_grad()
 
-            # if len(self.older_classes) > 0:
-            #     for param in self.model.named_parameters():
-            #         if "conv_1_3x3" in param[0] or "stage_1" in param[0] or "bn_1" in param[0] or "stage_2" in param[0]:
-            #             # if batch_idx == 0:
-            #             #     print ("Freezing Weights")
-            #             param[1].requies_grad = False
-
-
             y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
             if self.args.cuda:
                 y_onehot = y_onehot.cuda()
@@ -183,19 +175,19 @@ class Trainer(GenericTrainer):
             elif len(self.older_classes) > 0:
 
 
-                # if "fc" in param[0]:
-                #     param[1].requies_grad = True
-                #
-                #     # This is for warm up period; i.e, for the first four epochs, only train the fc layers.
-                #     if epoch == 0 and batch_idx == 0:
-                #         for param in self.model.named_parameters():
-                #             if "fc" in param[0]:
-                #                 param[1].requies_grad = True
-                #             else:
-                #                 param[1].requires_grad = False
-                #     if epoch == 4 and batch_idx == 0:
-                #         for param in self.model.parameters():
-                #             param.requires_grad = True
+                if "fc" in param[0]:
+                    param[1].requies_grad = True
+
+                    # This is for warm up period; i.e, for the first four epochs, only train the fc layers.
+                    if epoch == 0 and batch_idx == 0:
+                        for param in self.model.named_parameters():
+                            if "fc" in param[0]:
+                                param[1].requies_grad = True
+                            else:
+                                param[1].requires_grad = False
+                    if epoch == 4 and batch_idx == 0:
+                        for param in self.model.parameters():
+                            param.requires_grad = True
 
                 # Get softened targets generated from previous model;
                 pred2, pred3 = self.model_fixed(Variable(data), T=myT, labels=True, predictClass=True)
@@ -227,4 +219,115 @@ class Trainer(GenericTrainer):
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
         self.threshold2[len(self.older_classes) + self.args.step_size:len(self.threshold2)] = np.max(self.threshold2)
+
+
+
+class Distiller(GenericTrainer):
+    def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
+        super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
+        self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
+        self.threshold2 = np.ones(self.dataset.classes, dtype=np.float64)
+
+    def update_lr(self, epoch):
+        for temp in range(0, len(self.args.schedule)):
+            if self.args.schedule[temp] == epoch:
+                for param_group in self.optimizer.param_groups:
+                    self.current_lr = param_group['lr']
+                    param_group['lr'] = self.current_lr * self.args.gammas[temp]
+                    print("Changing learning rate from", self.current_lr, "to",
+                          self.current_lr * self.args.gammas[temp])
+                    self.current_lr *= self.args.gammas[temp]
+
+    def increment_classes(self, classGroup, iterator):
+        for temp in range(classGroup[0], classGroup[1]):
+            iterator.dataset.add_class(self.all_classes[temp])
+        return
+
+
+    def limit_class(self, n, k, herding=True):
+        if not herding:
+            self.train_loader.limit_class(n, k)
+        else:
+            # print("Sorting by herding")
+            self.train_loader.limit_class_and_sort(n, k, self.model_fixed)
+        if n not in self.older_classes:
+            self.older_classes.append(n)
+
+    def setup_training(self):
+        print("Threshold", self.threshold / np.max(self.threshold))
+        print("Threshold 2", self.threshold2 / np.max(self.threshold2))
+        self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
+        self.threshold2 = np.ones(self.dataset.classes, dtype=np.float64)
+
+        # self.args.alpha += self.args.alpha_increment
+        for param_group in self.optimizer.param_groups:
+            print("Setting LR to", self.args.lr)
+            param_group['lr'] = self.args.lr
+            self.current_lr = self.args.lr
+        for val in self.left_over:
+            self.limit_class(val, int(self.args.memory_budget / len(self.left_over)), not self.args.no_herding)
+
+
+    def update_frozen_model(self):
+        self.model.eval()
+        self.model_fixed = copy.deepcopy(self.model)
+        for param in self.model_fixed.parameters():
+            param.requires_grad = False
+        self.model_fixed.eval()
+        if self.args.random_init:
+            print ("Random Initilization of weights")
+            myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
+            if self.args.cuda:
+                myModel.cuda()
+            self.model = myModel
+            self.optimizer = torch.optim.SGD(self.model.parameters(), self.args.lr, momentum=self.args.momentum,
+                                        weight_decay=self.args.decay, nesterov=True)
+            self.model.eval()
+
+
+    def distill(self, model1, model2):
+
+        self.model.train()
+
+        for batch_idx, (data, target) in enumerate(self.train_data_iterator):
+            if self.args.cuda:
+                data, target = data.cuda(), target.cuda()
+
+            self.optimizer.zero_grad()
+
+            myT = self.args.T
+
+            output2 = self.model(Variable(data), T=myT)
+
+
+            pred2  = model1(Variable(data), T=myT, labels=True)
+            self.threshold += np.sum(pred2.data.cpu().numpy(), 0) * (myT * myT) * self.args.alpha
+            loss2 = F.kl_div(output2, Variable(pred2.data))
+
+            pred3 = model2(Variable(data), T=myT, labels=True)
+            self.threshold += np.sum(pred3.data.cpu().numpy(), 0) * (myT * myT) * self.args.alpha
+            loss3 = F.kl_div(output2, Variable(pred3.data))
+
+
+            loss2.backward(retain_graph=True)
+            loss3.backward()
+
+
+            for param in self.model.parameters():
+                if param.grad is not None:
+                    param.grad = param.grad * (myT * myT) * self.args.alpha
+
+
+
+
+            for param in self.model.named_parameters():
+                if "fc.weight" in param[0]:
+                    self.threshold2*=0.99
+                    self.threshold2 += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
+
+            self.optimizer.step()
+        self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
+        self.threshold2[len(self.older_classes) + self.args.step_size:len(self.threshold2)] = np.max(self.threshold2)
+
+
 
