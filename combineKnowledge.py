@@ -199,11 +199,9 @@ for seed in args.seeds:
                 my_trainer.setup_training()
 
                 # Trainer object used for training
-            my_trainer2 = trainer.Distiller(train_iterator_combined, test_iterator, dataset, myModel, args, optimizer,
-                                         train_iterator_nmc)
-            my_trainer = my_trainer2
+            my_trainer.increment_classes_2(20,100)
 
-            my_trainer2.increment_classes((0,80), train_iterator_combined)
+            my_trainer2 = my_trainer
             my_trainer2.update_frozen_model()
             for epoch in range(0, args.epochs_class):
                 my_trainer2.update_lr(epoch)

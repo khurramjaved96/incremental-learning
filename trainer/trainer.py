@@ -102,6 +102,14 @@ class Trainer(GenericTrainer):
             # print("Train Classes", self.train_data_iterator.dataset.active_classes)
             self.left_over.append(pop_val)
 
+    def increment_classes_2(self, start, end):
+        for temp in range(start, end + self.args.step_size):
+            pop_val = self.all_classes.pop()
+            self.train_data_iterator.dataset.add_class(pop_val)
+            self.ideal_iterator.dataset.add_class(pop_val)
+            self.test_data_iterator.dataset.add_class(pop_val)
+            # print("Train Classes", self.train_data_iterator.dataset.active_classes)
+            self.left_over.append(pop_val)
 
     def limit_class(self, n, k, herding=True):
         if not herding:
@@ -219,6 +227,50 @@ class Trainer(GenericTrainer):
             self.optimizer.step()
         self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
         self.threshold2[len(self.older_classes) + self.args.step_size:len(self.threshold2)] = np.max(self.threshold2)
+
+    def distill(self, model1, model2):
+
+        self.model.train()
+
+        for batch_idx, (data, target) in enumerate(self.train_data_iterator):
+            if self.args.cuda:
+                data, target = data.cuda(), target.cuda()
+
+            self.optimizer.zero_grad()
+
+            myT = self.args.T
+
+            output2 = self.model(Variable(data), T=myT)
+
+
+            pred2  = model1(Variable(data), T=myT, labels=True)
+            self.threshold += np.sum(pred2.data.cpu().numpy(), 0) * (myT * myT) * self.args.alpha
+            loss2 = F.kl_div(output2, Variable(pred2.data))
+
+            pred3 = model2(Variable(data), T=myT, labels=True)
+            self.threshold += np.sum(pred3.data.cpu().numpy(), 0) * (myT * myT) * self.args.alpha
+            loss3 = F.kl_div(output2, Variable(pred3.data))
+
+
+            loss2.backward(retain_graph=True)
+            loss3.backward()
+
+
+            for param in self.model.parameters():
+                if param.grad is not None:
+                    param.grad = param.grad * (myT * myT) * self.args.alpha
+
+
+
+
+            for param in self.model.named_parameters():
+                if "fc.weight" in param[0]:
+                    self.threshold2*=0.99
+                    self.threshold2 += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
+
+            self.optimizer.step()
+        self.threshold[0:80] = np.max(self.threshold)
+        self.threshold2[0:80] = np.max(self.threshold2)
 
 
 
