@@ -94,6 +94,7 @@ class Trainer(GenericTrainer):
                     self.current_lr *= self.args.gammas[temp]
 
     def increment_classes(self, classGroup):
+        print("Remaining classes", len(self.all_classes))
         for temp in range(classGroup, classGroup + self.args.step_size):
             pop_val = self.all_classes.pop()
             self.train_data_iterator.dataset.add_class(pop_val)
@@ -103,6 +104,7 @@ class Trainer(GenericTrainer):
             self.left_over.append(pop_val)
 
     def increment_classes_2(self, start, end):
+        print ("Remaining classes", len(self.all_classes))
         for temp in range(start, end + self.args.step_size):
             pop_val = self.all_classes.pop()
             self.train_data_iterator.dataset.add_class(pop_val)
