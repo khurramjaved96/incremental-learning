@@ -210,9 +210,7 @@ for seed in args.seeds:
                 my_trainer2.distill(models[0],models[1])
                 # print(my_trainer.threshold)
                 if epoch % args.log_interval == (args.log_interval - 1):
-                    tError = t_classifier.evaluate(my_trainer.model, train_iterator)
                     print("*********CURRENT EPOCH********** : ", epoch)
-                    print("Train Classifier:", tError)
                     print("Test Classifier:", t_classifier.evaluate(my_trainer2.model, test_iterator))
                     print("Test Classifier Scaled:",
                           t_classifier.evaluate(my_trainer2.model, test_iterator, my_trainer2.threshold, False,
