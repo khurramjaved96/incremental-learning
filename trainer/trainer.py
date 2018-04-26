@@ -202,7 +202,7 @@ class Trainer(GenericTrainer):
 
             if len(self.older_classes) ==0 or not self.args.no_nl:
                 output, output2_t = self.model(Variable(data2), predictClass=True)
-                self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
+                self.threshold += np.sum(y_onehot.cpu().numpy()/len(y_onehot.cpu().numpy()), 0)
                 loss = F.kl_div(output, Variable(y_onehot))
             myT = self.args.T
             if self.args.no_distill:
@@ -217,7 +217,7 @@ class Trainer(GenericTrainer):
                 # Softened output of the model
                 output2, output3 = self.model(Variable(data3), T=myT, predictClass=True)
 
-                self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*self.args.alpha
+                self.threshold += np.sum(pred2.data.cpu().numpy()/len(pred2.data.cpu().numpy()), 0)*(myT*myT)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
                 loss2.backward(retain_graph=True)
