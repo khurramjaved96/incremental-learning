@@ -174,7 +174,7 @@ class Trainer(GenericTrainer):
 
 
 
-            if not self.args.no_nl:
+            if len(self.older_classes) ==0 or not self.args.no_nl:
                 output, output2_t = self.model(Variable(data), predictClass=True)
                 self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
                 loss = F.kl_div(output, Variable(y_onehot))
@@ -213,7 +213,7 @@ class Trainer(GenericTrainer):
                     if param.grad is not None:
                         param.grad=param.grad*(myT*myT)*self.args.alpha
 
-            if not self.args.no_nl:
+            if len(self.older_classes) ==0 or not self.args.no_nl:
                 loss.backward()
 
             for param in self.model.named_parameters():
