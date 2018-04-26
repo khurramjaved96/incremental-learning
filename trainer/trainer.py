@@ -217,7 +217,7 @@ class Trainer(GenericTrainer):
                 # Softened output of the model
                 output2, output3 = self.model(Variable(data3), T=myT, predictClass=True)
 
-                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)/len(data3)*(myT*myT)*self.args.alpha
+                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)/len(data3))*(myT*myT)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
                 loss2.backward(retain_graph=True)
