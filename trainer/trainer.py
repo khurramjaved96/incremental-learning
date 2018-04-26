@@ -218,7 +218,7 @@ class Trainer(GenericTrainer):
                 output2, output3 = self.model(Variable(data3), T=myT, predictClass=True)
 
                 dataTemp = pred2.data.cpu().numpy()
-                dataTemp[:, 60:100] = output2.data.cpu().numpy()[:, 60:100]
+                # dataTemp[:, 50+len(self.older_classes):100] = output2.data.cpu().numpy()[:, 50+len(self.older_classes):100]
                 pred2 = torch.from_numpy(dataTemp)
                 if self.args.cuda:
                     pred2 = pred2.cuda()
