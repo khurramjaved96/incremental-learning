@@ -110,10 +110,10 @@ class Trainer(GenericTrainer):
             self.train_data_iterator.dataset.add_class(pop_val)
 
             self.ideal_iterator.dataset.add_class(pop_val)
-            self.ideal_iterator.dataset.limit_class(temp, 0)
+            self.ideal_iterator.dataset.limit_class_and_sort(temp, 0)
 
             self.test_data_iterator.dataset.add_class(pop_val)
-            self.test_data_iterator.dataset.limit_class(temp, 0)
+            self.test_data_iterator.dataset.limit_class_and_sort(temp, 0)
             # print("Train Classes", self.train_data_iterator.dataset.active_classes)
 
 
@@ -185,9 +185,9 @@ class Trainer(GenericTrainer):
             target3 = target[old_classes_indices]
             data3 = data[old_classes_indices]
 
-            print ("Target 2", target2.cpu().numpy())
+            # print ("Target 2", target2.cpu().numpy())
 
-            print("Target 3", target3.cpu().numpy())
+            # print("Target 3", target3.cpu().numpy())
 
             y_onehot = torch.FloatTensor(len(target2), self.dataset.classes)
             if self.args.cuda:
