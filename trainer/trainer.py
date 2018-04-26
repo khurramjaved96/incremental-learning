@@ -111,7 +111,9 @@ class Trainer(GenericTrainer):
             self.ideal_iterator.dataset.add_class(pop_val)
             self.test_data_iterator.dataset.add_class(pop_val)
             # print("Train Classes", self.train_data_iterator.dataset.active_classes)
-            self.left_over.append(pop_val)
+
+
+
 
     def limit_class(self, n, k, herding=True):
         if not herding:
@@ -161,21 +163,35 @@ class Trainer(GenericTrainer):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
+
+            weight_vector = (target * 0).int()
+            for elem in range(0,50):
+                weight_vector = weight_vector + (target == elem).int()
+
+            old_classes_indices = torch.squeeze(torch.nonzero((weight_vector > 0)).long())
+            new_classes_indices = torch.squeeze(torch.nonzero((weight_vector == 0)).long())
+
             self.optimizer.zero_grad()
 
-            y_onehot = torch.FloatTensor(len(target), self.dataset.classes)
+            target2 = target[new_classes_indices]
+            data2 = data[new_classes_indices]
+
+            target3 = target[old_classes_indices]
+            data3 = data[old_classes_indices]
+
+            y_onehot = torch.FloatTensor(len(target2), self.dataset.classes)
             if self.args.cuda:
                 y_onehot = y_onehot.cuda()
 
             y_onehot.zero_()
-            target.unsqueeze_(1)
-            y_onehot.scatter_(1, target, 1)
+            target2.unsqueeze_(1)
+            y_onehot.scatter_(1, target2, 1)
 
 
 
 
             if len(self.older_classes) ==0 or not self.args.no_nl:
-                output, output2_t = self.model(Variable(data), predictClass=True)
+                output, output2_t = self.model(Variable(data2), predictClass=True)
                 self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
                 loss = F.kl_div(output, Variable(y_onehot))
             myT = self.args.T
@@ -187,9 +203,9 @@ class Trainer(GenericTrainer):
 
 
                 # Get softened targets generated from previous model;
-                pred2, pred3 = self.model_fixed(Variable(data), T=myT, labels=True, predictClass=True)
+                pred2, pred3 = self.model_fixed(Variable(data3), T=myT, labels=True, predictClass=True)
                 # Softened output of the model
-                output2, output3 = self.model(Variable(data), T=myT, predictClass=True)
+                output2, output3 = self.model(Variable(data3), T=myT, predictClass=True)
 
                 self.threshold += np.sum(pred2.data.cpu().numpy(), 0)*(myT*myT)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
@@ -208,10 +224,7 @@ class Trainer(GenericTrainer):
                     self.threshold2*=0.99
                     self.threshold2 += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
 
-            # if len(self.older_classes) > 0:
-            #     for param in self.model.named_parameters():
-            #         if "conv_1_3x3" in param[0] or "stage_1" in param[0] or "bn_1" in param[0] or "stage_2" in param[0]:
-            #             param[1].grad = param[1].grad*0
+
 
             self.optimizer.step()
         if self.args.no_nl:
