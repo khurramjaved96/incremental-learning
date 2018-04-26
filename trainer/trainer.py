@@ -175,6 +175,8 @@ class Trainer(GenericTrainer):
             old_classes_indices = torch.squeeze(torch.nonzero((weight_vector > 0)).long())
             new_classes_indices = torch.squeeze(torch.nonzero((weight_vector == 0)).long())
 
+
+
             self.optimizer.zero_grad()
 
             target2 = target[new_classes_indices]
@@ -182,6 +184,10 @@ class Trainer(GenericTrainer):
 
             target3 = target[old_classes_indices]
             data3 = data[old_classes_indices]
+
+            print ("Target 2", target2.data.cpu().numpy())
+
+            print("Target 3", target3.data.cpu().numpy())
 
             y_onehot = torch.FloatTensor(len(target2), self.dataset.classes)
             if self.args.cuda:
