@@ -185,9 +185,9 @@ class Trainer(GenericTrainer):
             target3 = target[old_classes_indices]
             data3 = data[old_classes_indices]
 
-            print ("Target 2", target2.data.cpu().numpy())
+            print ("Target 2", target2.cpu().numpy())
 
-            print("Target 3", target3.data.cpu().numpy())
+            print("Target 3", target3.cpu().numpy())
 
             y_onehot = torch.FloatTensor(len(target2), self.dataset.classes)
             if self.args.cuda:
