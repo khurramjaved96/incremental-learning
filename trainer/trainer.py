@@ -110,10 +110,10 @@ class Trainer(GenericTrainer):
             self.train_data_iterator.dataset.add_class(pop_val)
 
             self.ideal_iterator.dataset.add_class(pop_val)
-            self.ideal_iterator.dataset.limit_class_and_sort(temp, 0)
+            self.ideal_iterator.dataset.limit_class(temp, 0)
 
             self.test_data_iterator.dataset.add_class(pop_val)
-            self.test_data_iterator.dataset.limit_class_and_sort(temp, 0)
+            self.test_data_iterator.dataset.limit_class(temp, 0)
             # print("Train Classes", self.train_data_iterator.dataset.active_classes)
 
 
