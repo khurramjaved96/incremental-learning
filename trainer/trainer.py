@@ -223,7 +223,7 @@ class Trainer(GenericTrainer):
                 if self.args.cuda:
                     pred2 = pred2.cuda()
 
-                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)/len(target3.cpu().numpy()))*(myT*myT)*self.args.alpha
+                self.threshold += (np.sum(pred2.cpu().numpy(), 0)/len(target3.cpu().numpy()))*(myT*myT)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2))
 
                 loss2.backward(retain_graph=True)
