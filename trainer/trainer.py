@@ -217,8 +217,14 @@ class Trainer(GenericTrainer):
                 # Softened output of the model
                 output2, output3 = self.model(Variable(data3), T=myT, predictClass=True)
 
+                dataTemp = pred2.data.cpu().numpy()
+                dataTemp[:, 50:100] = output2.data.cpu().numpy()[:, 50:100]
+                pred2 = torch.from_numpy(dataTemp)
+                if self.args.cuda:
+                    pred2 = pred2.cuda()
+
                 self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)/len(target3.cpu().numpy()))*(myT*myT)*self.args.alpha
-                loss2 = F.kl_div(output2, Variable(pred2.data))
+                loss2 = F.kl_div(output2, Variable(pred2))
 
                 loss2.backward(retain_graph=True)
 
