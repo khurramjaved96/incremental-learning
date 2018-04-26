@@ -101,7 +101,7 @@ class CifarResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x, feature=False, T=1, labels=False, scale=None, predictClass=False):
+    def forward(self, x, feature=False, T=1, labels=False, scale=None, predictClass=False, zeroVars = None):
 
         x = self.conv_1_3x3(x)
         x = F.relu(self.bn_1(x), inplace=True)
@@ -123,9 +123,12 @@ class CifarResNet(nn.Module):
             temp = temp*scale
             return temp
 
+        x = self.fc(x)/T
+        if zeroVars is not None:
+            x[:, zeroVars:100] = 0
         if predictClass:
-            return F.log_softmax(self.fc(x)/T), F.log_softmax(self.fc2(x)/T)
-        return F.log_softmax(self.fc(x)/T)
+            return F.log_softmax(x), F.log_softmax(x)
+        return F.log_softmax(x)
 
     def forwardFeature(self, x):
         pass
