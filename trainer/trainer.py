@@ -171,13 +171,13 @@ class Trainer(GenericTrainer):
             target.unsqueeze_(1)
             y_onehot.scatter_(1, target, 1)
 
-            output, output2_t = self.model(Variable(data), predictClass = True)
-            self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
 
 
 
-
-            loss = F.kl_div(output, Variable(y_onehot))
+            if not self.args.no_nl:
+                output, output2_t = self.model(Variable(data), predictClass=True)
+                self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
+                loss = F.kl_div(output, Variable(y_onehot))
             myT = self.args.T
             if self.args.no_distill:
                 pass
@@ -213,8 +213,8 @@ class Trainer(GenericTrainer):
                     if param.grad is not None:
                         param.grad=param.grad*(myT*myT)*self.args.alpha
 
-
-            loss.backward(retain_graph=True)
+            if not self.args.no_nl:
+                loss.backward()
 
             for param in self.model.named_parameters():
                 if "fc.weight" in param[0]:
@@ -227,8 +227,12 @@ class Trainer(GenericTrainer):
             #             param[1].grad = param[1].grad*0
 
             self.optimizer.step()
-        self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
-        self.threshold2[len(self.older_classes) + self.args.step_size:len(self.threshold2)] = np.max(self.threshold2)
+        if self.args.no_nl:
+            self.threshold[len(self.older_classes):len(self.threshold)] = np.max(self.threshold)
+            self.threshold2[len(self.older_classes):len(self.threshold2)] = np.max(self.threshold2)
+        else:
+            self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
+            self.threshold2[len(self.older_classes) + self.args.step_size:len(self.threshold2)] = np.max(self.threshold2)
 
     def distill(self, model1, model2):
 
@@ -376,7 +380,6 @@ class Distiller(GenericTrainer):
 
             for param in self.model.named_parameters():
                 if "fc.weight" in param[0]:
-                    self.threshold2*=0.99
                     self.threshold2 += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
 
             self.optimizer.step()
