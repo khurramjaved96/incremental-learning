@@ -241,8 +241,8 @@ class Trainer(GenericTrainer):
             self.threshold[len(self.older_classes):len(self.threshold)] = np.max(self.threshold)
             self.threshold2[len(self.older_classes):len(self.threshold2)] = np.max(self.threshold2)
         else:
-            self.threshold[len(self.older_classes)+self.args.step_size:len(self.threshold)] = np.max(self.threshold)
-            self.threshold2[len(self.older_classes) + self.args.step_size:len(self.threshold2)] = np.max(self.threshold2)
+            self.threshold[50+len(self.older_classes)+self.args.step_size:50+len(self.threshold)] = np.max(self.threshold)
+            self.threshold2[50+len(self.older_classes) + self.args.step_size:50+len(self.threshold2)] = np.max(self.threshold2)
 
     def distill(self, model1, model2):
 
