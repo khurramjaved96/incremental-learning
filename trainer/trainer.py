@@ -9,11 +9,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
-import utils.utils as ut
-import torchvision
 import model
 import logging
-from utils import Colorer
 
 logger = logging.getLogger('iCARL')
 
@@ -104,7 +101,6 @@ class Trainer(GenericTrainer):
             self.train_data_iterator.dataset.add_class(pop_val)
             self.ideal_iterator.dataset.add_class(pop_val)
             self.test_data_iterator.dataset.add_class(pop_val)
-            # print("Train Classes", self.train_data_iterator.dataset.active_classes)
             self.left_over.append(pop_val)
 
     def increment_classes_2(self, start, end):
@@ -117,7 +113,6 @@ class Trainer(GenericTrainer):
 
             self.test_data_iterator.dataset.add_class(pop_val)
             self.test_data_iterator.dataset.limit_class(pop_val, 0)
-            # print("Train Classes", self.train_data_iterator.dataset.active_classes)
 
 
 
@@ -126,14 +121,20 @@ class Trainer(GenericTrainer):
         if not herding:
             self.train_loader.limit_class(n, k)
         else:
-            # print("Sorting by herding")
             self.train_loader.limit_class_and_sort(n, k, self.model_fixed)
         if n not in self.older_classes:
             self.older_classes.append(n)
 
     def setup_training(self):
-        print("Threshold", self.threshold / np.max(self.threshold))
-        print("Threshold 2", self.threshold2 / np.max(self.threshold2))
+        threshTemp = self.threshold / np.max(self.threshold)
+        threshTemp = ['{0:.2f}'.format(i) for i in threshTemp]
+
+        threshTemp2 = self.threshold2 / np.max(self.threshold2)
+        threshTemp2 = ['{0:.2f}'.format(i) for i in threshTemp2]
+
+        logger.debug("Scale Factor"+",".join(threshTemp))
+        logger.debug("Scale GFactor" + ",".join(threshTemp2))
+
         self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
         self.threshold2 = np.ones(self.dataset.classes, dtype=np.float64)
 
