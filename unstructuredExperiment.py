@@ -82,6 +82,11 @@ parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; e
 parser.add_argument('--lwf', action='store_true', default=True,
                     help='Use learning without forgetting. Ignores memory-budget '
                          '("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')
+
+parser.add_argument('--ignore', action='store_true', default=False,
+                    help='Ignore some logits for computing distillation loss. I believe this should work.')
+
+
 parser.add_argument('--no-nl', action='store_true', default=False,
                     help='No Normal Loss')
 parser.add_argument('--rand', action='store_true', default=False,

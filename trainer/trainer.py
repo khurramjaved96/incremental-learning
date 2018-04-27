@@ -227,7 +227,7 @@ class Trainer(GenericTrainer):
                 pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
                 # Softened output of the model
                 output2 = self.model(Variable(data_distillation_loss), T=myT)
-
+                
                 # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True)
 
 
