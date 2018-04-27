@@ -12,6 +12,8 @@ import plotter as plt
 import trainer
 import logging, sys
 from inspect import getframeinfo, stack
+from tqdm import tqdm
+
 from utils import Colorer
 
 
@@ -208,14 +210,14 @@ for seed in args.seeds:
                 logging.info("Training Standalone Model")
                 my_trainer.getModel()
 
-                for epoch in range(0, args.epochs_class):
+                for epoch in tqdm(range(0, args.epochs_class)):
                     my_trainer.trainSingle(epoch)
 
 
                 tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
                 logging.info("STANDALONE MODEL RESULTS")
-                logging.info("Train Classifier: %0.2f", tError)
-                logging.info("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model_single, test_iterator))
+                logging.info("Train Classifier: %0.2f", tError* float(args.unstructured_size+args.step_size)/(float(args.step_size)))
+                logging.info("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model_single, test_iterator)*(class_group+args.step_size)/args.step_size)
 
                 logging.debug("Adding Standalone model in the list")
                 my_trainer.addModel()
