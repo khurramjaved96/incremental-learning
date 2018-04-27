@@ -62,6 +62,7 @@ parser.add_argument('--T', type=float, default=1, help='Tempreture used for soft
 parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[0],
                     help='How many images can we store at max. 0 will result in fine-tuning')
 parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
+parser.add_argument('--unstructured-size', type=int, default=20, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; example CIFAR, MNIST')
 parser.add_argument('--lwf', action='store_true', default=True,
                     help='Use learning without forgetting. Ignores memory-budget '
@@ -166,7 +167,7 @@ for seed in args.seeds:
             t_classifier = trainer.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
 
             # Loop that incrementally adds more and more classes
-            my_trainer.increment_classes_2(0,50)
+            my_trainer.increment_classes_2(0,args.unstructured_size)
             for class_group in range(0, dataset.classes, args.step_size):
                 print ("SEED:",seed, "MEMORY_BUDGET:", m, "CLASS_GROUP:", class_group)
                 # Add new classes to the train, train_nmc, and test iterator
