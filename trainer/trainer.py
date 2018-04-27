@@ -309,7 +309,6 @@ class Trainer(GenericTrainer):
                 y_onehot.scatter_(1, target_normal_loss, 1)
 
                 output = self.model_single(Variable(data_normal_loss))
-                self.threshold += np.sum(y_onehot.cpu().numpy(), 0)/len(target_normal_loss.cpu().numpy())
                 loss = F.kl_div(output, Variable(y_onehot))
 
                 loss.backward()

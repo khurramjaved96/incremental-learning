@@ -180,29 +180,35 @@ for seed in args.seeds:
                 my_trainer.increment_classes(class_group)
                 epoch = 0
 
+                print ("Current Epoch\tTrain\tTest\tTest Scaled\t Test Grad Scaled")
                 for epoch in range(0, args.epochs_class):
                     my_trainer.update_lr(epoch)
                     my_trainer.train(epoch)
                     # print(my_trainer.threshold)
                     if epoch % args.log_interval == (args.log_interval-1):
                         tError = t_classifier.evaluate(my_trainer.model, train_iterator)
-                        print("*********CURRENT EPOCH********** : ", epoch)
-                        print("Train Classifier:", tError)
-                        print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
-                        print("Test Classifier Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
-                        print("Test Classifier Grad Scaled:",t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,my_trainer.older_classes, args.step_size))
+                        testError = t_classifier.evaluate(my_trainer.model, test_iterator)
+                        tScaled = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size)
+                        tScaledGrad = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,my_trainer.older_classes, args.step_size)
+                        print (str(tError)+"\t"+str(testError)+"\t"+ str(tScaled)+"\t"+str(tScaledGrad))
+                        # print("*********CURRENT EPOCH********** : ", epoch)
+                        # print("Train Classifier:", tError)
+                        # print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
+                        # print("Test Classifier Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
+                        # print("Test Classifier Grad Scaled:",t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,my_trainer.older_classes, args.step_size))
 
                 # Running epochs_class epochs
                 debuginfo ("Training Standalone Model")
                 my_trainer.getModel()
+
                 for epoch in range(0, args.epochs_class):
-                    my_trainer.update_lr(epoch)
                     my_trainer.trainSingle(epoch)
-                    if epoch % args.log_interval == (args.log_interval - 1):
-                        tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
-                        print("*********CURRENT EPOCH********** : ", epoch)
-                        print("Train Classifier:", tError)
-                        print("Test Classifier:", t_classifier.evaluate(my_trainer.model_single, test_iterator))
+
+
+                tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
+                print("STANDALONE MODEL RESULTS: ", epoch)
+                print("Train Classifier:", tError)
+                print("Test Classifier:", t_classifier.evaluate(my_trainer.model_single, test_iterator))
 
                 debuginfo ("unStructuredEchAdding Standalone model in the list")
                 my_trainer.addModel()
