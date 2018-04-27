@@ -235,11 +235,10 @@ class Trainer(GenericTrainer):
                     # Softened output of the model
                     output2 = self.model(Variable(data_distillation_loss), T=myT)
 
-                # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True)
+                # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True
 
-
-                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
-                myT * myT) * self.args.alpha
+                    self.threshold += (np.sum(pred2.data.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
+                    myT * myT) * self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
                 loss2.backward(retain_graph=True)
