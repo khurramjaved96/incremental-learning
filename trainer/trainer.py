@@ -187,7 +187,7 @@ class Trainer(GenericTrainer):
             data_distillation_loss = data[old_classes_indices]
 
             print ("Normal Classes Images", target_normal_loss.cpu().numpy())
-            print("Old Classes Images", target_normal_loss.cpu().numpy())
+            print("Old Classes Images", target_distillation_loss.cpu().numpy())
 
             y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
             if self.args.cuda:
