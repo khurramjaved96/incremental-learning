@@ -17,10 +17,6 @@ from tqdm import tqdm
 from utils import Colorer
 
 
-logging.getLogger().setLevel(logging.INFO)
-logging.basicConfig(format='%(message)s')
-
-
 def debuginfo(message):
     caller = getframeinfo(stack()[1][0])
     print ("%s:%d - %s" % (caller.filename, caller.lineno, message))
@@ -166,17 +162,19 @@ for seed in args.seeds:
             my_experiment = ex.experiment(args.name, args)
 
             logger = logging.getLogger('iCARL')
+            logger.setLevel(logging.DEBUG)
+
             fh = logging.FileHandler(my_experiment.path+".log")
             fh.setLevel(logging.DEBUG)
-            # ch = logging.StreamHandler()
-            # ch.setLevel(logging.INFO)
+
+            ch = logging.StreamHandler()
+            ch.setLevel(logging.INFO)
 
             formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             fh.setFormatter(formatter)
 
-
             logger.addHandler(fh)
-            # logger.addHandler(ch)
+            logger.addHandler(ch)
 
 
 
