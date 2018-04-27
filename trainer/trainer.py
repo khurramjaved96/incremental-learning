@@ -12,6 +12,11 @@ import numpy as np
 import utils.utils as ut
 import torchvision
 import model
+import logging
+from utils import Colorer
+
+logging.getLogger().setLevel(logging.DEBUG)
+logging.basicConfig(format='%(message)s')
 
 class GenericTrainer:
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
@@ -91,7 +96,7 @@ class Trainer(GenericTrainer):
                 for param_group in self.optimizer.param_groups:
                     self.current_lr = param_group['lr']
                     param_group['lr'] = self.current_lr * self.args.gammas[temp]
-                    print("Changing learning rate from", self.current_lr, "to",
+                    logging.debug("Changing learning rate from %d to %d", self.current_lr,
                           self.current_lr * self.args.gammas[temp])
                     self.current_lr *= self.args.gammas[temp]
 
@@ -136,7 +141,7 @@ class Trainer(GenericTrainer):
 
         # self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
-            print("Setting LR to", self.args.lr)
+            logging.debug("Setting LR to %d", self.args.lr)
             param_group['lr'] = self.args.lr
             self.current_lr = self.args.lr
         for val in self.left_over:
@@ -152,7 +157,7 @@ class Trainer(GenericTrainer):
         self.models.append(self.model_fixed)
 
         if self.args.random_init:
-            print ("Random Initilization of weights")
+            logging.warning("Random Initilization of weights")
             myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
             if self.args.cuda:
                 myModel.cuda()
@@ -268,7 +273,7 @@ class Trainer(GenericTrainer):
         for param in model.parameters():
             param.requires_grad = False
         self.models.append(model)
-        print ("Total Models", len(self.models))
+        logging.debug("Total Models %d", len(self.models))
 
     def trainSingle(self, epoch):
 
@@ -277,7 +282,7 @@ class Trainer(GenericTrainer):
                 for param_group in self.optimizer_single.param_groups:
                     self.current_lr = param_group['lr']
                     param_group['lr'] = self.current_lr * self.args.gammas[temp]
-                    print("Changing learning rate from", self.current_lr, "to",
+                    logging.debug("Changing learning rate from %d to %d", self.current_lr,
                           self.current_lr * self.args.gammas[temp])
                     self.current_lr *= self.args.gammas[temp]
 

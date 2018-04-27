@@ -216,7 +216,7 @@ for seed in args.seeds:
                 logging.info("Train Classifier: %d", tError)
                 logging.info("Test Classifier: %d", t_classifier.evaluate(my_trainer.model_single, test_iterator))
 
-                debuginfo ("unStructuredEchAdding Standalone model in the list")
+                logging.info("Adding Standalone model in the list")
                 my_trainer.addModel()
 
 
@@ -266,13 +266,6 @@ for seed in args.seeds:
                 tcMatrix_scaled_binning = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes,
                                                                     my_trainer.threshold, my_trainer.older_classes,
                                                                     args.step_size, True)
-
-                # Printing results
-                print("Train NMC", tempTrain)
-                print("Test NMC", testY)
-                print ("Test NMC with Binning", testY1)
-
-
                 # TEMP CODE
 
                 my_trainer.setup_training()
