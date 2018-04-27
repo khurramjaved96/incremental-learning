@@ -27,7 +27,7 @@ class GenericTrainer:
         self.active_classes = []
         for param in self.model_fixed.parameters():
             param.requires_grad = False
-
+        self.models= []
         self.current_lr = args.lr
         self.all_classes = list(range(dataset.classes))
         self.all_classes.sort(reverse=True)
@@ -146,6 +146,7 @@ class Trainer(GenericTrainer):
     def update_frozen_model(self):
         self.model.eval()
         self.model_fixed = copy.deepcopy(self.model)
+        self.models.append(self.model_fixed)
         for param in self.model_fixed.parameters():
             param.requires_grad = False
         self.model_fixed.eval()
@@ -213,7 +214,8 @@ class Trainer(GenericTrainer):
 
 
                 # Get softened targets generated from previous model;
-                pred2= self.model_fixed(Variable(data3), T=myT, labels=True)
+                tempModel = random.choice(self.models)
+                pred2= tempModel(Variable(data3), T=myT, labels=True)
                 # Softened output of the model
                 output2= self.model(Variable(data3), T=myT)
 
