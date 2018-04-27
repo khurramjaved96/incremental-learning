@@ -168,9 +168,6 @@ class softmax_evaluator():
             elif scale is not None:
                 # print("Gets here, getting outputs")
                 output = model(data, scale = Variable(scale.float()))
-            elif higher:
-                _, output = model(data, predictClass=True)
-                target = (target / step_size).int().long()
             else:
                 output = model(data)
             if descriptor:
