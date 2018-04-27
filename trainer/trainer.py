@@ -211,11 +211,9 @@ class Trainer(GenericTrainer):
 
             elif len(self.older_classes) > 0:
 
-                print("Normal Classes Images", target_normal_loss.cpu().numpy())
-                print("Old Classes Images", target_distillation_loss.cpu().numpy())
-
-                # Get softened targets generated from previous model;
+                # Get softened targets generated from previous model;a
                 tempModel = np.random.choice(self.models)
+                tempModel = self.models[0]
                 pred2= tempModel(Variable(data_distillation_loss), T=myT, labels=True)
                 # Softened output of the model
                 output2= self.model(Variable(data_distillation_loss), T=myT)

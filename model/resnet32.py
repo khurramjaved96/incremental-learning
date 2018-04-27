@@ -121,9 +121,7 @@ class CifarResNet(nn.Module):
             temp = temp*scale
             return temp
 
-
-        x = self.fc(x)/T
-        return F.log_softmax(x)
+        return F.log_softmax(self.fc(x)/T)
 
     def forwardFeature(self, x):
         pass
