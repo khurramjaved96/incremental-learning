@@ -168,13 +168,18 @@ for seed in args.seeds:
             fh = logging.FileHandler(my_experiment.path+".log")
             fh.setLevel(logging.DEBUG)
 
+            fh2 = logging.FileHandler("../temp.log")
+            fh2.setLevel(logging.DEBUG)
+
             ch = logging.StreamHandler()
             ch.setLevel(logging.INFO)
 
             formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             fh.setFormatter(formatter)
+            fh2.setFormatter(formatter)
 
             logger.addHandler(fh)
+            logger.addHandler(fh2)
             logger.addHandler(ch)
 
 
