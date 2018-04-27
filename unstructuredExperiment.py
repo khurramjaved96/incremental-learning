@@ -213,8 +213,8 @@ for seed in args.seeds:
 
                 tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
                 logging.info("STANDALONE MODEL RESULTS %d", epoch)
-                logging.info("Train Classifier: %d", tError)
-                logging.info("Test Classifier: %d", t_classifier.evaluate(my_trainer.model_single, test_iterator))
+                logging.info("Train Classifier: %0.2f", tError)
+                logging.info("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model_single, test_iterator))
 
                 logging.info("Adding Standalone model in the list")
                 my_trainer.addModel()
@@ -223,9 +223,9 @@ for seed in args.seeds:
                 # Evaluate the learned classifier
                 img = None
 
-                logging.info("Test Classifier Final: %d", t_classifier.evaluate(my_trainer.model, test_iterator))
-                logging.info("Test Classifier Final Scaled: %d", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
-                logging.info("Test Classifier Final Grad Scaled: %d",
+                logging.info("Test Classifier Final: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
+                logging.info("Test Classifier Final Scaled: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
+                logging.info("Test Classifier Final Grad Scaled: %0.2f",
                       t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
                                             my_trainer.older_classes, args.step_size))
 
