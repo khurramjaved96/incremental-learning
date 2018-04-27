@@ -9,6 +9,7 @@ from torch.autograd import Variable
 from torchvision import datasets, transforms
 
 import logging
+logger = logging.getLogger('iCARL')
 
 class IncrementalLoader(td.Dataset):
     def __init__(self, data, labels, class_size, classes, active_classes, transform=None, cuda=False,

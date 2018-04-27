@@ -93,7 +93,10 @@ parser.add_argument('--rand', action='store_true', default=False,
                     help='Replace exemplars with random instances')
 parser.add_argument('--adversarial', action='store_true', default=False,
                     help='Replace exemplars with adversarial instances')
-import progressbar
+
+
+
+
 
 
 args = parser.parse_args()
@@ -162,6 +165,16 @@ for seed in args.seeds:
             # Define an experiment.
             my_experiment = ex.experiment(args.name, args)
 
+            logger = logging.getLogger('iCARL')
+            fh = logging.FileHandler(my_experiment.path+".log")
+            fh.setLevel(logger.DEBUG)
+            ch = logging.StreamHandler()
+            ch.setLevel(logger.INFO)
+
+            logger.addHandler(fh)
+            logger.addHandler(ch)
+
+
             # Define the optimizer used in the experiment
             optimizer = torch.optim.SGD(myModel.parameters(), args.lr, momentum=args.momentum,
                                         weight_decay=args.decay, nesterov=True)
@@ -188,12 +201,12 @@ for seed in args.seeds:
             # Loop that incrementally adds more and more classes
             my_trainer.increment_classes_2(0,args.unstructured_size)
             for class_group in range(0, dataset.classes, args.step_size):
-                logging.info("SEED: %d MEMORY BUDGET %d CLASS_GROUP %d",seed, m, class_group)
+                logger.info("SEED: %d MEMORY BUDGET %d CLASS_GROUP %d",seed, m, class_group)
                 # Add new classes to the train, train_nmc, and test iterator
                 my_trainer.increment_classes(class_group)
                 epoch = 0
-
-                for epoch in range(0, args.epochs_class):
+                scores=[]
+                for epoch in tqdm(range(0, args.epochs_class)):
                     my_trainer.update_lr(epoch)
                     my_trainer.train(epoch)
                     # print(my_trainer.threshold)
@@ -205,14 +218,16 @@ for seed in args.seeds:
                         tScaledGrad = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,my_trainer.older_classes, args.step_size)
                         scores = [epoch, tError, testError, tScaled, tScaledGrad]
                         scores = ['{0:.2f}'.format(i) for i in scores]
-                        logging.info("Epoch\tTrain\tTest\tScaled\t GScaled")
-                        logging.info("\t".join(scores))
+                        logger.debug("Epoch\tTrain\tTest\tScaled\t GScaled")
+                        logger.debug("\t".join(scores))
 
                         # print (str(tError)+"\t"+str(testError)+"\t"+ str(tScaled)+"\t"+str(tScaledGrad))
 
+                logger.info("Epoch\tTrain\tTest\tScaled\t GScaled")
+                logger.info("\t".join(scores))
 
                 # Running epochs_class epochs
-                logging.info("Training Standalone Model")
+                logger.info("Training Standalone Model")
                 my_trainer.getModel()
 
                 for epoch in tqdm(range(0, args.epochs_class)):
@@ -220,20 +235,20 @@ for seed in args.seeds:
 
 
                 tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
-                logging.info("STANDALONE MODEL RESULTS")
-                logging.info("Train Classifier: %0.2f", tError* float(args.unstructured_size+args.step_size)/(float(args.step_size)))
-                logging.info("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model_single, test_iterator)*(class_group+args.step_size)/args.step_size)
+                logger.info("STANDALONE MODEL RESULTS")
+                logger.info("Train Classifier: %0.2f", tError* float(args.unstructured_size+args.step_size)/(float(args.step_size)))
+                logger.info("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model_single, test_iterator)*(class_group+args.step_size)/args.step_size)
 
-                logging.debug("Adding Standalone model in the list")
+                logger.debug("Adding Standalone model in the list")
                 my_trainer.addModel()
 
 
                 # Evaluate the learned classifier
                 img = None
 
-                logging.info("Test Classifier Final: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
-                logging.info("Test Classifier Final Scaled: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
-                logging.info("Test Classifier Final Grad Scaled: %0.2f",
+                logger.info("Test Classifier Final: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
+                logger.info("Test Classifier Final Scaled: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
+                logger.info("Test Classifier Final Grad Scaled: %0.2f",
                       t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
                                             my_trainer.older_classes, args.step_size))
 

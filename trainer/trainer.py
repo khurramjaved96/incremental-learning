@@ -15,8 +15,7 @@ import model
 import logging
 from utils import Colorer
 
-logging.getLogger().setLevel(logging.DEBUG)
-logging.basicConfig(format='%(message)s')
+logger = logging.getLogger('iCARL')
 
 class GenericTrainer:
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
@@ -96,7 +95,7 @@ class Trainer(GenericTrainer):
                 for param_group in self.optimizer.param_groups:
                     self.current_lr = param_group['lr']
                     param_group['lr'] = self.current_lr * self.args.gammas[temp]
-                    logging.debug("Changing learning rate from %0.2f to %0.2f", self.current_lr,self.current_lr * self.args.gammas[temp])
+                    logger.debug("Changing learning rate from %0.2f to %0.2f", self.current_lr,self.current_lr * self.args.gammas[temp])
                     self.current_lr *= self.args.gammas[temp]
 
     def increment_classes(self, classGroup):
@@ -140,7 +139,7 @@ class Trainer(GenericTrainer):
 
         # self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
-            logging.debug("Setting LR to %0.2f", self.args.lr)
+            logger.debug("Setting LR to %0.2f", self.args.lr)
             param_group['lr'] = self.args.lr
             self.current_lr = self.args.lr
         for val in self.left_over:
@@ -156,7 +155,7 @@ class Trainer(GenericTrainer):
         self.models.append(self.model_fixed)
 
         if self.args.random_init:
-            logging.warning("Random Initilization of weights")
+            logger.warning("Random Initilization of weights")
             myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
             if self.args.cuda:
                 myModel.cuda()
@@ -281,7 +280,7 @@ class Trainer(GenericTrainer):
         for param in model.parameters():
             param.requires_grad = False
         self.models.append(model)
-        logging.debug("Total Models %d", len(self.models))
+        logger.debug("Total Models %d", len(self.models))
 
     def trainSingle(self, epoch):
 
@@ -290,7 +289,7 @@ class Trainer(GenericTrainer):
                 for param_group in self.optimizer_single.param_groups:
                     self.current_lr = param_group['lr']
                     param_group['lr'] = self.current_lr * self.args.gammas[temp]
-                    logging.debug("Changing learning rate from %0.2f to %0.2f", self.current_lr,
+                    logger.debug("Changing learning rate from %0.2f to %0.2f", self.current_lr,
                           self.current_lr * self.args.gammas[temp])
                     self.current_lr *= self.args.gammas[temp]
 
