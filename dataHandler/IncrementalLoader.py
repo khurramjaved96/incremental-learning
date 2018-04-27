@@ -8,6 +8,7 @@ from PIL import Image
 from torch.autograd import Variable
 from torchvision import datasets, transforms
 
+import logging
 
 class IncrementalLoader(td.Dataset):
     def __init__(self, data, labels, class_size, classes, active_classes, transform=None, cuda=False,
@@ -70,7 +71,7 @@ class IncrementalLoader(td.Dataset):
 
     def limit_class(self, n, k):
         if k == 0:
-            print ("Removing class", n)
+            logging.warning("Removing class %d", n)
             self.remove_class(n)
             self.__update_length()
             return False
