@@ -222,12 +222,19 @@ class Trainer(GenericTrainer):
             elif len(self.older_classes) > 0:
 
                 # Get softened targets generated from previous mode2l;a
-                tempModel = np.random.choice(self.models)
+                tempIndex = np.random.choice(range(len(self.models)))
+                tempModel = self.models[tempIndex]
 
-                pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
-                # Softened output of the model
-                output2 = self.model(Variable(data_distillation_loss), T=myT)
-                
+                if self.args.ignore:
+                    ke = (self.args.unstructured_size+tempIndex*self.args.step_size,self.args.unstructured_size+(tempIndex+1)*self.args.step_size)
+                    pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True, keep=ke)
+                    # Softened output of the model
+                    output2 = self.model(Variable(data_distillation_loss), T=myT, keep=ke)
+                else:
+                    pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
+                    # Softened output of the model
+                    output2 = self.model(Variable(data_distillation_loss), T=myT)
+
                 # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True)
 
 

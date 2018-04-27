@@ -193,7 +193,7 @@ for seed in args.seeds:
                 my_trainer.increment_classes(class_group)
                 epoch = 0
 
-                for epoch in tqdm(range(0, args.epochs_class)) :
+                for epoch in range(0, args.epochs_class):
                     my_trainer.update_lr(epoch)
                     my_trainer.train(epoch)
                     # print(my_trainer.threshold)
