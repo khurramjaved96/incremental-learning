@@ -96,7 +96,6 @@ class Trainer(GenericTrainer):
                     self.current_lr *= self.args.gammas[temp]
 
     def increment_classes(self, classGroup):
-        print("Remaining classes", len(self.all_classes))
         for temp in range(classGroup, classGroup + self.args.step_size):
             pop_val = self.all_classes.pop()
             self.train_data_iterator.dataset.add_class(pop_val)
@@ -106,7 +105,6 @@ class Trainer(GenericTrainer):
             self.left_over.append(pop_val)
 
     def increment_classes_2(self, start, end):
-        print ("Remaining classes", len(self.all_classes))
         for temp in range(start, end):
             pop_val = self.all_classes.pop()
             self.train_data_iterator.dataset.add_class(pop_val)
@@ -170,6 +168,8 @@ class Trainer(GenericTrainer):
         optimizer = torch.optim.SGD(myModel.parameters(), self.args.lr, momentum=self.args.momentum,
                                          weight_decay=self.args.decay, nesterov=True)
         myModel.eval()
+
+        self.current_lr = self.args.lr
 
         self.model_single = myModel
         self.optimizer_single = optimizer

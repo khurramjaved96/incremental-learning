@@ -179,9 +179,7 @@ for seed in args.seeds:
                 # Add new classes to the train, train_nmc, and test iterator
                 my_trainer.increment_classes(class_group)
                 epoch = 0
-                import progressbar
 
-                # Running epochs_class epochs
                 for epoch in range(0, args.epochs_class):
                     my_trainer.update_lr(epoch)
                     my_trainer.train(epoch)
