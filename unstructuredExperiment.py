@@ -190,9 +190,9 @@ for seed in args.seeds:
                         testError = t_classifier.evaluate(my_trainer.model, test_iterator)
                         tScaled = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size)
                         tScaledGrad = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,my_trainer.older_classes, args.step_size)
-                        scores = [tError, testError, tScaled, tScaledGrad]
+                        scores = [epoch, tError, testError, tScaled, tScaledGrad]
                         scores = ['{0:.2f}'.format(i) for i in scores]
-                        print("Current Epoch\tTrain\tTest\tTest Scaled\t Test Grad Scaled")
+                        print("Epoch\tTrain\tTest\tScaled\t GScaled")
                         print ("\t".join(scores))
 
                         # print (str(tError)+"\t"+str(testError)+"\t"+ str(tScaled)+"\t"+str(tScaledGrad))
