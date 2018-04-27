@@ -96,8 +96,7 @@ class Trainer(GenericTrainer):
                 for param_group in self.optimizer.param_groups:
                     self.current_lr = param_group['lr']
                     param_group['lr'] = self.current_lr * self.args.gammas[temp]
-                    logging.debug("Changing learning rate from %d to %d", self.current_lr,
-                          self.current_lr * self.args.gammas[temp])
+                    logging.debug("Changing learning rate from %f to %f", self.current_lr,self.current_lr * self.args.gammas[temp])
                     self.current_lr *= self.args.gammas[temp]
 
     def increment_classes(self, classGroup):
