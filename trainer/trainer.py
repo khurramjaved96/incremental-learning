@@ -230,6 +230,9 @@ class Trainer(GenericTrainer):
                     pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True, keep=ke)
                     # Softened output of the model
                     output2 = self.model(Variable(data_distillation_loss), T=myT, keep=ke)
+                    self.threshold[ke[0]:ke[1]] += (np.sum(pred2.data.cpu().numpy(), 0) / len(
+                        data_distillation_loss.cpu().numpy())) * (
+                                          myT * myT) * self.args.alpha
                 else:
                     pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
                     # Softened output of the model
