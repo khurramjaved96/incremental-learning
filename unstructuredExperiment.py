@@ -14,7 +14,7 @@ import logging, sys
 from inspect import getframeinfo, stack
 
 
-logging.getLogger().setLevel(logging.INFO)
+logging.getLogger().setLevel(logging.DEBUG)
 
 
 def debuginfo(message):
