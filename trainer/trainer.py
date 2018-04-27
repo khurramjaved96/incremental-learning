@@ -217,7 +217,7 @@ class Trainer(GenericTrainer):
                 # Softened output of the model
                 output2, output3 = self.model(Variable(data3), T=myT)
 
-                output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True)
+                # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True)
 
                 dataTemp = pred2.data.cpu().numpy()
                 # dataTemp[:, 50+len(self.older_classes):100] = output2_t.data.cpu().numpy()[:, 50+len(self.older_classes):100]
