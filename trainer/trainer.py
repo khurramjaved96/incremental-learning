@@ -33,6 +33,8 @@ class GenericTrainer:
         self.all_classes.sort(reverse=True)
         self.left_over = []
         self.ideal_iterator = ideal_iterator
+        self.model_single = copy.deepcopy(self.model)
+        self.optimizer_single = None
 
         random.seed(args.seed)
         random.shuffle(self.all_classes)
@@ -161,6 +163,18 @@ class Trainer(GenericTrainer):
                                         weight_decay=self.args.decay, nesterov=True)
             self.model.eval()
 
+    def getModel(self):
+        myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
+        if self.args.cuda:
+            myModel.cuda()
+        optimizer = torch.optim.SGD(myModel.parameters(), self.args.lr, momentum=self.args.momentum,
+                                         weight_decay=self.args.decay, nesterov=True)
+        myModel.eval()
+
+        self.model_single = myModel
+        self.optimizer_single = optimizer
+
+
     def train(self, epoch):
 
         self.model.train()
@@ -169,14 +183,12 @@ class Trainer(GenericTrainer):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
-
             oldClassesIndices = (target * 0).int()
-            for elem in range(0,self.args.unstructured_size):
+            for elem in range(0, self.args.unstructured_size):
                 oldClassesIndices = oldClassesIndices + (target == elem).int()
 
             old_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices > 0)).long())
             new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
-
 
             self.optimizer.zero_grad()
 
@@ -186,8 +198,6 @@ class Trainer(GenericTrainer):
             target_distillation_loss = target[old_classes_indices]
             data_distillation_loss = data[old_classes_indices]
 
-
-
             y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
             if self.args.cuda:
                 y_onehot = y_onehot.cuda()
@@ -196,49 +206,44 @@ class Trainer(GenericTrainer):
             target_normal_loss.unsqueeze_(1)
             y_onehot.scatter_(1, target_normal_loss, 1)
 
-
-
-
-            if len(self.older_classes) ==0 or not self.args.no_nl:
+            if len(self.older_classes) == 0 or not self.args.no_nl:
                 output = self.model(Variable(data_normal_loss))
-                self.threshold += np.sum(y_onehot.cpu().numpy(), 0)/len(target_normal_loss.cpu().numpy())
+                self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
                 loss = F.kl_div(output, Variable(y_onehot))
             myT = self.args.T
-
 
             if self.args.no_distill:
                 pass
 
             elif len(self.older_classes) > 0:
 
-                # Get softened targets generated from previous model;a
+                # Get softened targets generated from previous mode2l;a
                 tempModel = np.random.choice(self.models)
-                tempModel = self.models[0]
-                pred2= tempModel(Variable(data_distillation_loss), T=myT, labels=True)
+
+                pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
                 # Softened output of the model
-                output2= self.model(Variable(data_distillation_loss), T=myT)
+                output2 = self.model(Variable(data_distillation_loss), T=myT)
 
                 # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True)
 
 
-                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)/len(data_distillation_loss.cpu().numpy()))*(myT*myT)*self.args.alpha
+                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
+                myT * myT) * self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
                 loss2.backward(retain_graph=True)
 
                 for param in self.model.parameters():
                     if param.grad is not None:
-                        param.grad=param.grad*(myT*myT)*self.args.alpha
+                        param.grad = param.grad * (myT * myT) * self.args.alpha
 
-            if len(self.older_classes) ==0 or not self.args.no_nl:
+            if len(self.older_classes) == 0 or not self.args.no_nl:
                 loss.backward()
 
             for param in self.model.named_parameters():
                 if "fc.weight" in param[0]:
-                    self.threshold2*=0.99
+                    self.threshold2 *= 0.99
                     self.threshold2 += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
-
-
 
             self.optimizer.step()
 
@@ -249,8 +254,12 @@ class Trainer(GenericTrainer):
             self.threshold[0:self.args.unstructured_size] = np.max(self.threshold)
             self.threshold2[0:self.args.unstructured_size] = np.max(self.threshold2)
 
-            self.threshold[self.args.unstructured_size+len(self.older_classes)+self.args.step_size:self.args.unstructured_size+len(self.threshold)] = np.max(self.threshold)
-            self.threshold2[self.args.unstructured_size+len(self.older_classes) + self.args.step_size:self.args.unstructured_size+len(self.threshold2)] = np.max(self.threshold2)
+            self.threshold[self.args.unstructured_size + len(
+                self.older_classes) + self.args.step_size:self.args.unstructured_size + len(self.threshold)] = np.max(
+                self.threshold)
+            self.threshold2[self.args.unstructured_size + len(
+                self.older_classes) + self.args.step_size:self.args.unstructured_size + len(self.threshold2)] = np.max(
+                self.threshold2)
 
     def distill(self, model1, model2):
 
@@ -296,113 +305,49 @@ class Trainer(GenericTrainer):
         self.threshold[20:100] = np.max(self.threshold)
         self.threshold2[20:100] = np.max(self.threshold2)
 
-
-
-class Distiller(GenericTrainer):
-    def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
-        super().__init__(trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator)
-        self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
-        self.threshold2 = np.ones(self.dataset.classes, dtype=np.float64)
-
-    def update_lr(self, epoch):
-        for temp in range(0, len(self.args.schedule)):
-            if self.args.schedule[temp] == epoch:
-                for param_group in self.optimizer.param_groups:
-                    self.current_lr = param_group['lr']
-                    param_group['lr'] = self.current_lr * self.args.gammas[temp]
-                    print("Changing learning rate from", self.current_lr, "to",
-                          self.current_lr * self.args.gammas[temp])
-                    self.current_lr *= self.args.gammas[temp]
-
-    def increment_classes(self, classGroup, iterator):
-        for temp in range(classGroup[0], classGroup[1]):
-            iterator.dataset.add_class(self.all_classes[temp])
-        return
-
-
-    def limit_class(self, n, k, herding=True):
-        if not herding:
-            self.train_loader.limit_class(n, k)
-        else:
-            # print("Sorting by herding")
-            self.train_loader.limit_class_and_sort(n, k, self.model_fixed)
-        if n not in self.older_classes:
-            self.older_classes.append(n)
-
-    def setup_training(self):
-        print("Threshold", self.threshold / np.max(self.threshold))
-        print("Threshold 2", self.threshold2 / np.max(self.threshold2))
-        self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
-        self.threshold2 = np.ones(self.dataset.classes, dtype=np.float64)
-
-        # self.args.alpha += self.args.alpha_increment
-        for param_group in self.optimizer.param_groups:
-            print("Setting LR to", self.args.lr)
-            param_group['lr'] = self.args.lr
-            self.current_lr = self.args.lr
-        for val in self.left_over:
-            self.limit_class(val, int(self.args.memory_budget / len(self.left_over)), not self.args.no_herding)
-
-
-    def update_frozen_model(self):
-        self.model.eval()
-        self.model_fixed = copy.deepcopy(self.model)
-        for param in self.model_fixed.parameters():
+    def addModel(self):
+        model = copy.deepcopy(self.model_single)
+        model.eval()
+        for param in model.parameters():
             param.requires_grad = False
-        self.model_fixed.eval()
-        if self.args.random_init:
-            print ("Random Initilization of weights")
-            myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
-            if self.args.cuda:
-                myModel.cuda()
-            self.model = myModel
-            self.optimizer = torch.optim.SGD(self.model.parameters(), self.args.lr, momentum=self.args.momentum,
-                                        weight_decay=self.args.decay, nesterov=True)
-            self.model.eval()
+        self.models.append(model)
+        print ("Total Models", len(self.models))
 
+    def trainSingle(self, epoch):
 
-    def distill(self, model1, model2):
-
-        self.model.train()
+        self.model_single.train()
 
         for batch_idx, (data, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
-            self.optimizer.zero_grad()
 
-            myT = self.args.T
+            oldClassesIndices = (target * 0).int()
+            for elem in range(0,self.args.unstructured_size):
+                oldClassesIndices = oldClassesIndices + (target == elem).int()
 
-            output2 = self.model(Variable(data), T=myT)
+            new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
 
+            if len(new_classes_indices)>0:
+                self.optimizer.zero_grad()
 
-            pred2  = model1(Variable(data), T=myT, labels=True)
-            self.threshold += np.sum(pred2.data.cpu().numpy(), 0) * (myT * myT) * self.args.alpha
-            loss2 = F.kl_div(output2, Variable(pred2.data))
+                target_normal_loss = target[new_classes_indices]
+                data_normal_loss = data[new_classes_indices]
 
-            pred3 = model2(Variable(data), T=myT, labels=True)
-            self.threshold += np.sum(pred3.data.cpu().numpy(), 0) * (myT * myT) * self.args.alpha
-            loss3 = F.kl_div(output2, Variable(pred3.data))
+                y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
+                if self.args.cuda:
+                    y_onehot = y_onehot.cuda()
 
+                y_onehot.zero_()
+                target_normal_loss.unsqueeze_(1)
+                y_onehot.scatter_(1, target_normal_loss, 1)
 
-            loss2.backward(retain_graph=True)
-            loss3.backward()
+                output = self.model_single(Variable(data_normal_loss))
+                self.threshold += np.sum(y_onehot.cpu().numpy(), 0)/len(target_normal_loss.cpu().numpy())
+                loss = F.kl_div(output, Variable(y_onehot))
 
+                loss.backward()
 
-            for param in self.model.parameters():
-                if param.grad is not None:
-                    param.grad = param.grad * (myT * myT) * self.args.alpha
-
-
-
-
-            for param in self.model.named_parameters():
-                if "fc.weight" in param[0]:
-                    self.threshold2 += np.sum(np.abs(param[1].grad.data.cpu().numpy()), 1)
-
-            self.optimizer.step()
-        self.threshold[0:80] = np.max(self.threshold)
-        self.threshold2[0:80] = np.max(self.threshold2)
-
+                self.optimizer_single.step()
 
 

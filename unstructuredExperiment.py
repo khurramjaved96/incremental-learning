@@ -11,6 +11,13 @@ import model
 import plotter as plt
 import trainer
 
+from inspect import getframeinfo, stack
+
+def debuginfo(message):
+    caller = getframeinfo(stack()[1][0])
+    print ("%s:%d - %s" % (caller.filename, caller.lineno, message))
+
+
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 35)')
@@ -81,7 +88,6 @@ args.cuda = not args.no_cuda and torch.cuda.is_available()
 
 
 dataset = dataHandler.DatasetFactory.get_dataset(args.dataset)
-
 
 # Checks to make sure parameters are sane
 if args.step_size<2:
@@ -172,8 +178,6 @@ for seed in args.seeds:
                 print ("SEED:",seed, "MEMORY_BUDGET:", m, "CLASS_GROUP:", class_group)
                 # Add new classes to the train, train_nmc, and test iterator
                 my_trainer.increment_classes(class_group)
-                if not class_group==0:
-                    my_trainer.update_frozen_model()
                 epoch = 0
                 import progressbar
 
@@ -189,6 +193,21 @@ for seed in args.seeds:
                         print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
                         print("Test Classifier Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
                         print("Test Classifier Grad Scaled:",t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,my_trainer.older_classes, args.step_size))
+
+                # Running epochs_class epochs
+                debuginfo ("Training Standalone Model")
+                my_trainer.getModel()
+                for epoch in range(0, args.epochs_class):
+                    my_trainer.update_lr(epoch)
+                    my_trainer.trainSingle(epoch)
+                    if epoch % args.log_interval == (args.log_interval - 1):
+                        tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
+                        print("*********CURRENT EPOCH********** : ", epoch)
+                        print("Train Classifier:", tError)
+                        print("Test Classifier:", t_classifier.evaluate(my_trainer.model_single, test_iterator))
+
+                debuginfo ("unStructuredEchAdding StandAlone model in the list")
+                my_trainer.addModel()
 
 
                 # Evaluate the learned classifier
