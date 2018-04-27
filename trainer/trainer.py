@@ -213,7 +213,7 @@ class Trainer(GenericTrainer):
 
 
                 # Get softened targets generated from previous model;
-                pred2, pred3 = self.model_fixed(Variable(data3), T=myT, labels=True, logits=True)
+                pred2= self.model_fixed(Variable(data3), T=myT, labels=True, logits=True)
                 # Softened output of the model
                 output2= self.model(Variable(data3), T=myT)
 
