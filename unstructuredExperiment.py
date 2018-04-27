@@ -190,12 +190,13 @@ for seed in args.seeds:
                         testError = t_classifier.evaluate(my_trainer.model, test_iterator)
                         tScaled = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size)
                         tScaledGrad = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,my_trainer.older_classes, args.step_size)
-                        print (str(tError)+"\t"+str(testError)+"\t"+ str(tScaled)+"\t"+str(tScaledGrad))
-                        # print("*********CURRENT EPOCH********** : ", epoch)
-                        # print("Train Classifier:", tError)
-                        # print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
-                        # print("Test Classifier Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
-                        # print("Test Classifier Grad Scaled:",t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,my_trainer.older_classes, args.step_size))
+                        scores = [tError, testError, tScaled, tScaledGrad]
+                        scores = ['{0:.2f}'.format(i) for i in scores]
+                        print("Current Epoch\tTrain\tTest\tTest Scaled\t Test Grad Scaled")
+                        print ("\t".join(scores))
+
+                        # print (str(tError)+"\t"+str(testError)+"\t"+ str(tScaled)+"\t"+str(tScaledGrad))
+
 
                 # Running epochs_class epochs
                 debuginfo ("Training Standalone Model")
@@ -206,7 +207,7 @@ for seed in args.seeds:
 
 
                 tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
-                print("STANDALONE MODEL RESULTS: ", epoch)
+                print("STANDALONE MODEL RESULTS", epoch)
                 print("Train Classifier:", tError)
                 print("Test Classifier:", t_classifier.evaluate(my_trainer.model_single, test_iterator))
 
