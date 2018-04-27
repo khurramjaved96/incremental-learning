@@ -13,6 +13,10 @@ import trainer
 import logging, sys
 from inspect import getframeinfo, stack
 
+
+logging.getLogger().setLevel(logging.INFO)
+
+
 def debuginfo(message):
     caller = getframeinfo(stack()[1][0])
     print ("%s:%d - %s" % (caller.filename, caller.lineno, message))
