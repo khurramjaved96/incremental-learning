@@ -10,7 +10,7 @@ import experiment as ex
 import model
 import plotter as plt
 import trainer
-
+import logging, sys
 from inspect import getframeinfo, stack
 
 def debuginfo(message):
@@ -175,12 +175,11 @@ for seed in args.seeds:
             # Loop that incrementally adds more and more classes
             my_trainer.increment_classes_2(0,args.unstructured_size)
             for class_group in range(0, dataset.classes, args.step_size):
-                print ("SEED:",seed, "MEMORY_BUDGET:", m, "CLASS_GROUP:", class_group)
+                logging.info("SEED: %d MEMORY BUDGET %d CLASS_GROUP %d",seed, m, class_group)
                 # Add new classes to the train, train_nmc, and test iterator
                 my_trainer.increment_classes(class_group)
                 epoch = 0
 
-                print("Epoch\tTrain\tTest\tScaled\t GScaled")
                 for epoch in range(0, args.epochs_class):
                     my_trainer.update_lr(epoch)
                     my_trainer.train(epoch)
@@ -192,14 +191,14 @@ for seed in args.seeds:
                         tScaledGrad = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,my_trainer.older_classes, args.step_size)
                         scores = [epoch, tError, testError, tScaled, tScaledGrad]
                         scores = ['{0:.2f}'.format(i) for i in scores]
-                        print("Epoch\tTrain\tTest\tScaled\t GScaled")
-                        print ("\t".join(scores))
+                        logging.info("Epoch\tTrain\tTest\tScaled\t GScaled")
+                        logging.info("\t".join(scores))
 
                         # print (str(tError)+"\t"+str(testError)+"\t"+ str(tScaled)+"\t"+str(tScaledGrad))
 
 
                 # Running epochs_class epochs
-                debuginfo ("Training Standalone Model")
+                logging.info("Training Standalone Model")
                 my_trainer.getModel()
 
                 for epoch in range(0, args.epochs_class):
@@ -207,9 +206,9 @@ for seed in args.seeds:
 
 
                 tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
-                print("STANDALONE MODEL RESULTS", epoch)
-                print("Train Classifier:", tError)
-                print("Test Classifier:", t_classifier.evaluate(my_trainer.model_single, test_iterator))
+                logging.info("STANDALONE MODEL RESULTS %d", epoch)
+                logging.info("Train Classifier: %d", tError)
+                logging.info("Test Classifier: %d", t_classifier.evaluate(my_trainer.model_single, test_iterator))
 
                 debuginfo ("unStructuredEchAdding Standalone model in the list")
                 my_trainer.addModel()
@@ -218,9 +217,9 @@ for seed in args.seeds:
                 # Evaluate the learned classifier
                 img = None
 
-                print("Test Classifier Final:", t_classifier.evaluate(my_trainer.model, test_iterator))
-                print("Test Classifier Final Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
-                print("Test Classifier Final Grad Scaled:",
+                logging.info("Test Classifier Final: %d", t_classifier.evaluate(my_trainer.model, test_iterator))
+                logging.info("Test Classifier Final Scaled: %d", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
+                logging.info("Test Classifier Final Grad Scaled: %d",
                       t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
                                             my_trainer.older_classes, args.step_size))
 
