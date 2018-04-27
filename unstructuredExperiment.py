@@ -12,6 +12,7 @@ import plotter as plt
 import trainer
 import logging, sys
 from inspect import getframeinfo, stack
+from utils import Colorer
 
 
 logging.getLogger().setLevel(logging.DEBUG)
