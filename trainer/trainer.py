@@ -186,8 +186,7 @@ class Trainer(GenericTrainer):
             target_distillation_loss = target[old_classes_indices]
             data_distillation_loss = data[old_classes_indices]
 
-            print ("Normal Classes Images", target_normal_loss.cpu().numpy())
-            print("Old Classes Images", target_distillation_loss.cpu().numpy())
+
 
             y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
             if self.args.cuda:
@@ -211,6 +210,9 @@ class Trainer(GenericTrainer):
                 pass
 
             elif len(self.older_classes) > 0:
+
+                print("Normal Classes Images", target_normal_loss.cpu().numpy())
+                print("Old Classes Images", target_distillation_loss.cpu().numpy())
 
                 # Get softened targets generated from previous model;
                 tempModel = np.random.choice(self.models)
