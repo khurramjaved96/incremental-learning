@@ -204,7 +204,7 @@ for seed in args.seeds:
                         print("Train Classifier:", tError)
                         print("Test Classifier:", t_classifier.evaluate(my_trainer.model_single, test_iterator))
 
-                debuginfo ("unStructuredEchAdding StandAlone model in the list")
+                debuginfo ("unStructuredEchAdding Standalone model in the list")
                 my_trainer.addModel()
 
 
