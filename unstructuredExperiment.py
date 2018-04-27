@@ -167,12 +167,18 @@ for seed in args.seeds:
 
             logger = logging.getLogger('iCARL')
             fh = logging.FileHandler(my_experiment.path+".log")
-            fh.setLevel(logger.DEBUG)
+            fh.setLevel(logging.DEBUG)
             ch = logging.StreamHandler()
-            ch.setLevel(logger.INFO)
+            ch.setLevel(logging.INFO)
+
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            fh.setFormatter(formatter)
+
 
             logger.addHandler(fh)
             logger.addHandler(ch)
+
+
 
 
             # Define the optimizer used in the experiment
