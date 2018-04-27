@@ -213,22 +213,15 @@ class Trainer(GenericTrainer):
 
 
                 # Get softened targets generated from previous model;
-                pred2= self.model_fixed(Variable(data3), T=myT, labels=True, logits=True)
+                pred2= self.model_fixed(Variable(data3), T=myT, labels=True)
                 # Softened output of the model
                 output2= self.model(Variable(data3), T=myT)
 
                 # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True)
 
-                dataTemp = pred2.data.cpu().numpy()
-                # dataTemp[:, 50+len(self.older_classes):100] = output2_t.data.cpu().numpy()[:, 50+len(self.older_classes):100]
-                pred2 = torch.from_numpy(dataTemp)
-
-                if self.args.cuda:
-                    pred2 = pred2.cuda()
-                pred2 = F.softmax(pred2)
 
                 self.threshold += (np.sum(pred2.cpu().numpy(), 0)/len(target3.cpu().numpy()))*(myT*myT)*self.args.alpha
-                loss2 = F.kl_div(output2, Variable(pred2))
+                loss2 = F.kl_div(output2, Variable(pred2.data))
 
                 loss2.backward(retain_graph=True)
 
