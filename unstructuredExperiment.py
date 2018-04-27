@@ -180,7 +180,7 @@ for seed in args.seeds:
                 my_trainer.increment_classes(class_group)
                 epoch = 0
 
-                print ("Current Epoch\tTrain\tTest\tTest Scaled\t Test Grad Scaled")
+                print("Epoch\tTrain\tTest\tScaled\t GScaled")
                 for epoch in range(0, args.epochs_class):
                     my_trainer.update_lr(epoch)
                     my_trainer.train(epoch)

@@ -228,14 +228,14 @@ class Trainer(GenericTrainer):
 
 
                 self.threshold += (np.sum(pred2.data.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
-                myT * myT) * self.args.alpha
+                myT * myT) * self.args.alpha*len(self.models)
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
                 loss2.backward(retain_graph=True)
 
                 for param in self.model.parameters():
                     if param.grad is not None:
-                        param.grad = param.grad * (myT * myT) * self.args.alpha
+                        param.grad = param.grad * (myT * myT) * self.args.alpha*len(self.models)
 
             if len(self.older_classes) == 0 or not self.args.no_nl:
                 loss.backward()
