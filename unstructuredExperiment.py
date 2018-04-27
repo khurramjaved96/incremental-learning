@@ -106,6 +106,7 @@ if args.step_size<2:
     print("Step size of 1 will result in no learning;")
     assert False
 
+experimentNo=1
 for seed in args.seeds:
     for at in args.alphas:
         args.alpha = at
@@ -204,12 +205,15 @@ for seed in args.seeds:
 
             # Loop that incrementally adds more and more classes
             my_trainer.increment_classes_2(0,args.unstructured_size)
+            logger.info("Running Experiment No %d", experimentNo)
+            experimentNo += 1
             for class_group in range(0, dataset.classes, args.step_size):
-                logger.info("SEED: %d MEMORY BUDGET %d CLASS_GROUP %d",seed, m, class_group)
+                logger.info("Increment No %0.2f", class_group/args.step_size)
                 # Add new classes to the train, train_nmc, and test iterator
                 my_trainer.increment_classes(class_group)
                 epoch = 0
                 scores=[]
+                logger.info("Training Main Classifier")
                 for epoch in tqdm(range(0, args.epochs_class)):
                     my_trainer.update_lr(epoch)
                     my_trainer.train(epoch)
@@ -227,11 +231,19 @@ for seed in args.seeds:
 
                         # print (str(tError)+"\t"+str(testError)+"\t"+ str(tScaled)+"\t"+str(tScaledGrad))
 
+                logger.info("Test Classifier Final: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
+                logger.info("Test Classifier Final Scaled: %0.2f",
+                            t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
+                                                  my_trainer.older_classes, args.step_size))
+                logger.info("Test Classifier Final Grad Scaled: %0.2f",
+                            t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
+                                                  my_trainer.older_classes, args.step_size))
+
                 logger.info("Epoch\tTrain\tTest\tScaled\t GScaled")
                 logger.info("\t".join(scores))
 
                 # Running epochs_class epochs
-                logger.info("Training Standalone Model")
+                logger.info("Training Distillation Computer")
                 my_trainer.getModel()
 
                 for epoch in tqdm(range(0, args.epochs_class)):
@@ -239,28 +251,14 @@ for seed in args.seeds:
 
 
                 tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
-                logger.info("STANDALONE MODEL RESULTS")
-                logger.info("Train Classifier: %0.2f", tError* float(args.unstructured_size+args.step_size)/(float(args.step_size)))
-                logger.info("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model_single, test_iterator)*(class_group+args.step_size)/args.step_size)
-
-                logger.debug("Adding Standalone model in the list")
+                tError = tError* float(args.unstructured_size+args.step_size)/(float(args.step_size))
+                testError = t_classifier.evaluate(my_trainer.model_single, test_iterator)*(class_group+args.step_size)/args.step_size
+                logger.info("Distillation Computer Error (Train, Test) : %0.2f %0.2f", tError, testError)
+                logger.debug("Adding Distillation Computer in the model list")
                 my_trainer.addModel()
 
 
                 # Evaluate the learned classifier
-                img = None
-
-                logger.info("Test Classifier Final: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
-                logger.info("Test Classifier Final Scaled: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
-                logger.info("Test Classifier Final Grad Scaled: %0.2f",
-                      t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
-                                            my_trainer.older_classes, args.step_size))
-
-
-
-                higher_y.append(t_classifier.evaluate(my_trainer.model, test_iterator, higher=True))
-
-
                 y_grad_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
                                             my_trainer.older_classes, args.step_size))
                 y_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
@@ -273,8 +271,6 @@ for seed in args.seeds:
                 # Compute the the nmc based classification results
                 tempTrain = t_classifier.evaluate(my_trainer.model, train_iterator)
                 train_y.append(tempTrain)
-
-
 
                 testY1 = nmc.evaluate(my_trainer.model, test_iterator, step_size=args.step_size,  kMean = True)
                 testY = nmc.evaluate(my_trainer.model, test_iterator)
@@ -326,7 +322,6 @@ for seed in args.seeds:
 
                 # Plotting the line diagrams of all the possible cases
                 my_plotter.plot(x, y, title=args.name, legend="NMC")
-                my_plotter.plot(x, higher_y, title=args.name, legend="Higher Model")
                 my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
                 my_plotter.plot(x, y_grad_scaled, title=args.name, legend="Trained Classifier Grad Scaled")
                 my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
