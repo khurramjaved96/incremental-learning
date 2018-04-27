@@ -83,6 +83,8 @@ parser.add_argument('--optimize-feat-lr', type=float, default=0.00001, help='lr 
 parser.add_argument('--joint-gan-obj', default=False, action='store_true', help='Whether to jointly train GAN and minimize the logit distance')
 parser.add_argument('--joint-gan-alpha', type=float, default=1, help='Contribution of logit distance minimizer in GAN loss')
 parser.add_argument('--ac-distill', default=False, action='store_true', help='Whether to use ACGAN\'s discriminator outputs in distillation')
+parser.add_argument('--filter-using-disc', default=False, action='store_true', help='Whether to use discriminator to filter generated samples')
+parser.add_argument('--filter-val', type=float, default=0.8, help='Value to be used when filtering using discriminator')
 
 args = parser.parse_args()
 

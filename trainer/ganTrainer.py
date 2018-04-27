@@ -86,7 +86,7 @@ class Trainer():
                                                          None,
                                                          self.experiment,
                                                          "Final-Inc"+str(self.increment-1),
-                                                         True, self.is_cond)
+                                                         True, self.is_cond, self.D)
                 #TODO put trainLoader
                 self.train_iterator.dataset.replace_data(self.examples,
                                                          self.args.gan_num_examples)

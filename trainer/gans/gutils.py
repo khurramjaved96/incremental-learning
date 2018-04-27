@@ -45,7 +45,7 @@ def save_results(args, images, name, is_tensor=False, axis_size=10, experiment=N
 
 def generate_examples(
         args, G, num_examples, active_classes, total_classes,
-        noise, experiment, name="", save=False, is_cond=False):
+        noise, experiment, name="", save=False, is_cond=False, D=None):
     '''
     Returns a dict[class] of generated samples.
     In case of Non-Conditional GAN, the samples in the dict are random, they do
@@ -63,9 +63,13 @@ def generate_examples(
     '''
     print("Note: Ignoring the fixed noise")
     G.eval()
+    if D is not None:
+        D.eval()
     examples = {}
+    num_iter = 0
     for idx, klass in enumerate(active_classes):
-        for _ in range(num_examples//100):
+        while ((not klass in examples.keys()) or (len(examples[klass]) < num_examples)):
+            num_iter += 1
             if args.process == "cdcgan":
                 targets = torch.zeros(100, total_classes, 1, 1)
                 targets[:, klass] = 1
@@ -87,16 +91,27 @@ def generate_examples(
                 images = G(noise, targets)
             else:
                 images = G(noise)
+            if args.filter_using_disc and D is not None:
+                d_output = D(images)
+                indices = (d_output[0] > args.filter_val).nonzero().squeeze()
+                if indices.dim() == 0:
+                    continue
+                images = torch.index_select(images, 0, indices)
             if not klass in examples.keys():
                 examples[klass] = images
             else:
                 examples[klass] = torch.cat((examples[klass],images), dim=0)
 
         # Dont save more than the required number of classes
-        if save and idx <= args.gan_save_classes:
+        if save and idx <= args.gan_save_classes and args.gan_num_examples > 0:
             save_results(args, examples[klass][0:100],
                          name + "_C" + str(klass),
                          False, 10, experiment)
+        # Trim extra examples
+    if D is not None:
+        for klass in active_classes:
+            examples[klass] = examples[klass][0:num_examples]
+        print("Examples matching the filter: ", num_examples / (num_iter * 100), "%")
     return examples
 
 

@@ -70,6 +70,7 @@ class ACGAN(GAN):
             fake_prob_e = []
             real_prob_e = []
             G.train()
+            D.train()
             gutils.update_lr(epoch, g_opt, d_opt, self.args.gan_schedule,
                              self.args.gan_gammas)
             start_time = time.time()
