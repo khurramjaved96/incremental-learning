@@ -146,10 +146,11 @@ class Trainer(GenericTrainer):
     def update_frozen_model(self):
         self.model.eval()
         self.model_fixed = copy.deepcopy(self.model)
-        self.models.append(self.model_fixed)
+        self.model_fixed.eval()
         for param in self.model_fixed.parameters():
             param.requires_grad = False
-        self.model_fixed.eval()
+        self.models.append(self.model_fixed)
+
         if self.args.random_init:
             print ("Random Initilization of weights")
             myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
@@ -169,60 +170,56 @@ class Trainer(GenericTrainer):
                 data, target = data.cuda(), target.cuda()
 
 
-            weight_vector = (target * 0).int()
+            oldClassesIndices = (target * 0).int()
             for elem in range(0,50):
-                weight_vector = weight_vector + (target == elem).int()
+                oldClassesIndices = oldClassesIndices + (target == elem).int()
 
-            old_classes_indices = torch.squeeze(torch.nonzero((weight_vector > 0)).long())
-            new_classes_indices = torch.squeeze(torch.nonzero((weight_vector == 0)).long())
-
+            old_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices > 0)).long())
+            new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
 
 
             self.optimizer.zero_grad()
 
-            target2 = target[new_classes_indices]
-            data2 = data[new_classes_indices]
+            target_normal_loss = target[new_classes_indices]
+            data_normal_loss = data[new_classes_indices]
 
-            target3 = target[old_classes_indices]
-            data3 = data[old_classes_indices]
+            target_distillation_loss = target[old_classes_indices]
+            data_distillation_loss = data[old_classes_indices]
 
-            # print ("Target 2", target2.cpu().numpy())
 
-            # print("Target 3", target3.cpu().numpy())
-
-            y_onehot = torch.FloatTensor(len(target2), self.dataset.classes)
+            y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
             if self.args.cuda:
                 y_onehot = y_onehot.cuda()
 
             y_onehot.zero_()
-            target2.unsqueeze_(1)
-            y_onehot.scatter_(1, target2, 1)
+            target_normal_loss.unsqueeze_(1)
+            y_onehot.scatter_(1, target_normal_loss, 1)
 
 
 
 
             if len(self.older_classes) ==0 or not self.args.no_nl:
-                output = self.model(Variable(data2))
-                self.threshold += np.sum(y_onehot.cpu().numpy(), 0)/len(target2.cpu().numpy())
+                output = self.model(Variable(data_normal_loss))
+                self.threshold += np.sum(y_onehot.cpu().numpy(), 0)/len(target_normal_loss.cpu().numpy())
                 loss = F.kl_div(output, Variable(y_onehot))
             myT = self.args.T
+
+
             if self.args.no_distill:
                 pass
 
             elif len(self.older_classes) > 0:
 
-
-
                 # Get softened targets generated from previous model;
-                tempModel = random.choice(self.models)
-                pred2= tempModel(Variable(data3), T=myT, labels=True)
+                tempModel = np.random.choice(self.models)
+                pred2= tempModel(Variable(data_distillation_loss), T=myT, labels=True)
                 # Softened output of the model
-                output2= self.model(Variable(data3), T=myT)
+                output2= self.model(Variable(data_distillation_loss), T=myT)
 
                 # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True)
 
 
-                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)/len(target3.cpu().numpy()))*(myT*myT)*self.args.alpha
+                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)/len(target_distillation_loss.cpu().numpy()))*(myT*myT)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
                 loss2.backward(retain_graph=True)
@@ -242,6 +239,7 @@ class Trainer(GenericTrainer):
 
 
             self.optimizer.step()
+
         if self.args.no_nl:
             self.threshold[len(self.older_classes):len(self.threshold)] = np.max(self.threshold)
             self.threshold2[len(self.older_classes):len(self.threshold2)] = np.max(self.threshold2)

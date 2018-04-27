@@ -171,7 +171,8 @@ for seed in args.seeds:
                 print ("SEED:",seed, "MEMORY_BUDGET:", m, "CLASS_GROUP:", class_group)
                 # Add new classes to the train, train_nmc, and test iterator
                 my_trainer.increment_classes(class_group)
-                my_trainer.update_frozen_model()
+                if not class_group==0:
+                    my_trainer.update_frozen_model()
                 epoch = 0
                 import progressbar
 
