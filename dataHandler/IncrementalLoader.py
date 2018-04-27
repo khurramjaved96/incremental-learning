@@ -71,7 +71,7 @@ class IncrementalLoader(td.Dataset):
 
     def limit_class(self, n, k):
         if k == 0:
-            logging.warning("Removing class %d", n)
+            # logging.info("Removing class %d", n)
             self.remove_class(n)
             self.__update_length()
             return False
