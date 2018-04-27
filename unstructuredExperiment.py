@@ -212,11 +212,11 @@ for seed in args.seeds:
 
 
                 tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
-                logging.info("STANDALONE MODEL RESULTS %d", epoch)
+                logging.info("STANDALONE MODEL RESULTS")
                 logging.info("Train Classifier: %0.2f", tError)
                 logging.info("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model_single, test_iterator))
 
-                logging.info("Adding Standalone model in the list")
+                logging.debug("Adding Standalone model in the list")
                 my_trainer.addModel()
 
 
