@@ -27,7 +27,7 @@ def debuginfo(message):
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 35)')
-parser.add_argument('--lr', type=float, default=2.0, metavar='LR',
+parser.add_argument('--lr', type=float, default=0.5, metavar='LR',
                     help='learning rate (default: 0.1)')
 parser.add_argument('--schedule', type=int, nargs='+', default=[45, 60, 68],
                     help='Decrease learning rate at these epochs.')
