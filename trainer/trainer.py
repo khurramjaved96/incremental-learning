@@ -186,6 +186,8 @@ class Trainer(GenericTrainer):
             target_distillation_loss = target[old_classes_indices]
             data_distillation_loss = data[old_classes_indices]
 
+            print ("Normal Classes Images", target_normal_loss.cpu().numpy())
+            print("Old Classes Images", target_normal_loss.cpu().numpy())
 
             y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
             if self.args.cuda:
@@ -219,7 +221,7 @@ class Trainer(GenericTrainer):
                 # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True)
 
 
-                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)/len(target_distillation_loss.cpu().numpy()))*(myT*myT)*self.args.alpha
+                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)/len(data_distillation_loss.cpu().numpy()))*(myT*myT)*self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
 
                 loss2.backward(retain_graph=True)
