@@ -17,7 +17,9 @@ from tqdm import tqdm
 from utils import Colorer
 
 
+logging.getLogger().setLevel(logging.INFO)
 logging.basicConfig(format='%(message)s')
+
 
 def debuginfo(message):
     caller = getframeinfo(stack()[1][0])
