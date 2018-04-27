@@ -201,7 +201,7 @@ class Trainer(GenericTrainer):
 
 
             if len(self.older_classes) ==0 or not self.args.no_nl:
-                output, output2_t = self.model(Variable(data2))
+                output = self.model(Variable(data2))
                 self.threshold += np.sum(y_onehot.cpu().numpy(), 0)/len(target2.cpu().numpy())
                 loss = F.kl_div(output, Variable(y_onehot))
             myT = self.args.T
