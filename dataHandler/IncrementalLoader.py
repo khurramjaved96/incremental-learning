@@ -23,6 +23,7 @@ class IncrementalLoader(td.Dataset):
         self.data = data[sort_index]
         labels = np.array(labels)
         self.labels = labels[sort_index]
+        self.labelsNormal = np.copy(self.labels)
         self.transform = transform
         self.active_classes = active_classes
         self.limited_classes = {}
@@ -204,9 +205,9 @@ class IncrementalLoader(td.Dataset):
         if self.transform is not None:
             img = self.transform(img)
 
-        if not self.labels[index] in self.active_classes:
+        if not self.labelsNormal[index] in self.active_classes:
             print("Active classes", self.active_classes)
-            print("Label ", self.labels[index])
+            print("Label ", self.labelsNormal[index])
             assert (False)
         if self.no_transformation:
             return img, index
