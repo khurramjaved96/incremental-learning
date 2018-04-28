@@ -73,7 +73,7 @@ parser.add_argument('--T', type=float, default=1, help='Tempreture used for soft
 parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[0],
                     help='How many images can we store at max. 0 will result in fine-tuning')
 parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
-parser.add_argument('--unstructured-size', type=int, default=20, help='Number of epochs for each increment')
+parser.add_argument('--unstructured-size', type=int, default=0, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; example CIFAR, MNIST')
 parser.add_argument('--lwf', action='store_true', default=True,
                     help='Use learning without forgetting. Ignores memory-budget '
@@ -248,6 +248,7 @@ for seed in args.seeds:
                     my_trainer.trainSingle(epoch, class_group)
 
                 my_trainer.storeDistillation(epoch, class_group)
+
                 tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
                 tError = tError* float(args.unstructured_size+args.step_size)/(float(args.step_size))
                 testError = t_classifier.evaluate(my_trainer.model_single, test_iterator)*(class_group+args.step_size)/args.step_size
