@@ -196,6 +196,8 @@ class Trainer(GenericTrainer):
             old_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices > 0)).long())
             new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
 
+            print (old_classes_indices)
+            print (new_classes_indices)
             self.optimizer.zero_grad()
 
             target_normal_loss = target[new_classes_indices]
