@@ -188,7 +188,7 @@ class Trainer(GenericTrainer):
         for batch_idx, (data, y ,target) in tqdm(enumerate(self.train_data_iterator)):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
-
+            print (target.cpu().numpy())
             oldClassesIndices = (target * 0).int()
             for elem in range(0, self.args.unstructured_size):
                 oldClassesIndices = oldClassesIndices + (target == elem).int()
