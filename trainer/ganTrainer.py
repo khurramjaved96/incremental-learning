@@ -136,7 +136,7 @@ class Trainer():
             for epoch in range(0, self.args.epochs_class):
                 self.classifier_trainer.update_lr(epoch)
                 self.classifier_trainer.train(self.examples, self.old_classes,
-                                             self.batch_size, self.D)
+                                             self.batch_size, self.D, epoch)
                 if epoch % self.args.log_interval == 0:
                     print("[Classifier] Train:",
                           self.classifier_trainer.evaluate(self.train_iterator),

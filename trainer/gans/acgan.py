@@ -63,6 +63,7 @@ class ACGAN(GAN):
         print("Starting GAN Training")
         #-------------Start Epoch-----------#
         for epoch in range(int(self.args.gan_epochs[increment])):
+            torch.manual_seed(self.args.seed + epoch)
             acc_e = []
             a_losses_e = []
             d_losses_e = []

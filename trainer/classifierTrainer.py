@@ -115,7 +115,8 @@ class Trainer():
                     target = None
         return data, target
 
-    def train(self, gan_images=None, gan_labels=None, batch_size=None, D=None):
+    def train(self, gan_images=None, gan_labels=None, batch_size=None, D=None, epoch=0):
+        torch.manual_seed(self.args.seed + epoch)
         self.model.train()
         if D is not None:
             D.eval()
@@ -144,7 +145,7 @@ class Trainer():
             if self.args.ac_distill:
                 pred2 = D(Variable(data, True), T=self.args.T)[1]
                 loss2 = F.kl_div(output2, Variable(pred2.data))
-                loss2.backward(train_graph=True)
+                loss2.backward(retain_graph=True)
                 alpha = 1
                 for param in self.model.parameters():
                     if param.grad is not None:
@@ -154,7 +155,7 @@ class Trainer():
                 if len(self.older_classes) > 0:
                     pred2 = self.model_fixed(Variable(data), labels=True, T=self.args.T)
                     loss2 = F.kl_div(output2, Variable(pred2.data))
-                    loss2.backward(train_graph=True)
+                    loss2.backward(retain_graph=True)
                     alpha=1
                     for param in self.model.parameters():
                         if param.grad is not None:
