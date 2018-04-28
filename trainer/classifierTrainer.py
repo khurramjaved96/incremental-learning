@@ -140,16 +140,29 @@ class Trainer():
             target.unsqueeze_(1)
             y_onehot.scatter_(1, target, 1)
 
-            output = self.model(Variable(data))
+            output, output2 = self.model(Variable(data), T=self.args.T, both=True)
             if self.args.ac_distill:
-                pred2 = D(Variable(data, True))[1]
-                y_onehot = pred2.data
+                pred2 = D(Variable(data, True), T=self.args.T)[1]
+                loss2 = F.kl_div(output2, Variable(pred2.data))
+                loss2.backward(train_graph=True)
+                alpha = 1
+                for param in self.model.parameters():
+                    if param.grad is not None:
+                        param.grad = param.grad * (self.args.T * self.args.T) * alpha
+                # y_onehot = pred2.data
             elif not self.args.no_distill:
                 if len(self.older_classes) > 0:
-                    pred2 = self.model_fixed(Variable(data))
-                    y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
+                    pred2 = self.model_fixed(Variable(data), labels=True, T=self.args.T)
+                    loss2 = F.kl_div(output2, Variable(pred2.data))
+                    loss2.backward(train_graph=True)
+                    alpha=1
+                    for param in self.model.parameters():
+                        if param.grad is not None:
+                            param.grad = param.grad * (self.args.T * self.args.T) * alpha
 
-            loss = F.binary_cross_entropy(output, Variable(y_onehot))
+                    # y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
+
+            loss = F.kl_div(output, Variable(y_onehot))
             loss.backward()
             self.optimizer.step()
 

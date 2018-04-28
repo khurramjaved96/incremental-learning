@@ -72,6 +72,7 @@ parser.add_argument('--gan-img-save-interval', type=int, default=5, help='Save g
 parser.add_argument('--d-iter', type=int, default=1, help='Number of iterations of discriminatori/critic for each iteration of generator.')
 parser.add_argument('--ckpt-interval', type=int, default=1000, help='After how many epochs should the Generator be saved')
 parser.add_argument('--load-g-ckpt', default="", help='Path to folder which contains Generator ckpts')
+parser.add_argument('--T', type=int, default=1, help='Temperature for Distillation')
 parser.add_argument('--save-g-ckpt', default=False, action='store_true', help='Whether the Generator ckpt will be saved or not')
 parser.add_argument('--gan-save-classes', default=10, type=int, help='Number of classes whose images will be saved every gan-img-save-interval')
 parser.add_argument('--label-smoothing', default=False, action='store_true', help='Whether to use one sided label smoothing in GAN')
