@@ -245,9 +245,9 @@ for seed in args.seeds:
                 my_trainer.getModel()
 
                 for epoch in tqdm(range(0, args.epochs_class)):
-                    my_trainer.trainSingle(epoch)
+                    my_trainer.trainSingle(epoch, class_group)
 
-
+                my_trainer.storeDistillation(epoch, class_group)
                 tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
                 tError = tError* float(args.unstructured_size+args.step_size)/(float(args.step_size))
                 testError = t_classifier.evaluate(my_trainer.model_single, test_iterator)*(class_group+args.step_size)/args.step_size
