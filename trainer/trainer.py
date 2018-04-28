@@ -115,6 +115,7 @@ class Trainer(GenericTrainer):
 
             self.test_data_iterator.dataset.add_class(pop_val)
             self.test_data_iterator.dataset.limit_class(pop_val, 0)
+            logger.info("Unstructured Class %d", pop_val)
 
 
 
