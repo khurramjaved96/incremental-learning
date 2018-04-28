@@ -188,19 +188,16 @@ class Trainer(GenericTrainer):
         for batch_idx, (data, y ,target) in tqdm(enumerate(self.train_data_iterator)):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
-            print (target.cpu().numpy())
             oldClassesIndices = (target * 0).int()
             for elem in range(0, self.args.unstructured_size):
                 oldClassesIndices = oldClassesIndices + (target == elem).int()
 
-            print (oldClassesIndices.cpu().numpy())
             old_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices > 0)).long())
             new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
 
-            print (old_classes_indices)
-            print (new_classes_indices)
             self.optimizer.zero_grad()
 
+            # print (y.shape, data.shape)
             target_normal_loss = y[new_classes_indices]
             data_normal_loss = data[new_classes_indices]
 
@@ -215,7 +212,7 @@ class Trainer(GenericTrainer):
             # target_normal_loss.unsqueeze_(1)
             # y_onehot.scatter_(1, target_normal_loss, 1)
 
-            y_onehot = target_normal_loss
+            y_onehot = target_normal_loss.float()
 
             if self.args.ignore:
 
