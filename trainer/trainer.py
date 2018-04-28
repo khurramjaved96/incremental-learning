@@ -201,8 +201,8 @@ class Trainer(GenericTrainer):
             target_normal_loss = target[new_classes_indices]
             data_normal_loss = data[new_classes_indices]
 
-            target_distillation_loss = y[old_classes_indices].float()
-            data_distillation_loss = data[old_classes_indices]
+            target_distillation_loss = y
+            data_distillation_loss = data
 
             y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
             if self.args.cuda:
