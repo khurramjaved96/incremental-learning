@@ -173,7 +173,7 @@ class IncrementalLoader(td.Dataset):
         :return: Returns starting index of classs n
         '''
         return self.indices[n][0]
-    def setTransformation(self, bool):
+    def getIndexElem(self, bool):
         self.no_transformation = bool
     def __getitem__(self, index):
         '''
@@ -210,7 +210,7 @@ class IncrementalLoader(td.Dataset):
             print("Label ", self.labelsNormal[index])
             assert (False)
         if self.no_transformation:
-            return img, index
+            return img, index, self.labelsNormal[index]
         return img, self.labels[index], self.labelsNormal[index]
 
 

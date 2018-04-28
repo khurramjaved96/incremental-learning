@@ -198,21 +198,21 @@ class Trainer(GenericTrainer):
 
             self.optimizer.zero_grad()
 
-            target_normal_loss = y[new_classes_indices]
+            target_normal_loss = target[new_classes_indices]
             data_normal_loss = data[new_classes_indices]
 
-            target_distillation_loss = target[old_classes_indices]
+            target_distillation_loss = y[old_classes_indices]
             data_distillation_loss = data[old_classes_indices]
 
-            # y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
-            # if self.args.cuda:
-            #     y_onehot = y_onehot.cuda()
-            #
-            # y_onehot.zero_()
-            # target_normal_loss.unsqueeze_(1)
-            # y_onehot.scatter_(1, target_normal_loss, 1)
+            y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
+            if self.args.cuda:
+                y_onehot = y_onehot.cuda()
 
-            y_onehot = target_normal_loss.float()
+            y_onehot.zero_()
+            target_normal_loss.unsqueeze_(1)
+            y_onehot.scatter_(1, target_normal_loss, 1)
+
+            # y_onehot = target_normal_loss.float()
 
 
             if self.args.ignore:
@@ -250,22 +250,22 @@ class Trainer(GenericTrainer):
 
                 if self.args.ignore:
                     ke = (self.args.unstructured_size+tempIndex*self.args.step_size,self.args.unstructured_size+(tempIndex+1)*self.args.step_size)
-                    pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True, keep=ke)
+                    # pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True, keep=ke)
                     # Softened output of the model
                     output2 = self.model(Variable(data_distillation_loss), T=myT, keep=ke)
-                    self.threshold[ke[0]:ke[1]] += (np.sum(pred2.data.cpu().numpy(), 0) / len(
+                    self.threshold[ke[0]:ke[1]] += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(
                         data_distillation_loss.cpu().numpy())) * (
                                           myT * myT) * self.args.alpha
                 else:
-                    pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
+                    # pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
                     # Softened output of the model
                     output2 = self.model(Variable(data_distillation_loss), T=myT)
 
                 # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True
 
-                    self.threshold += (np.sum(pred2.data.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
+                    self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
                     myT * myT) * self.args.alpha
-                loss2 = F.kl_div(output2, Variable(pred2.data))
+                loss2 = F.kl_div(output2, Variable(target_distillation_loss))
 
                 loss2.backward(retain_graph=True)
 
@@ -306,7 +306,7 @@ class Trainer(GenericTrainer):
         self.models.append(model)
         logger.debug("Total Models %d", len(self.models))
 
-    def trainSingle(self, epoch):
+    def trainSingle(self, epoch, classGroup):
 
         for temp in range(0, len(self.args.schedule)):
             if self.args.schedule[temp] == epoch:
@@ -326,7 +326,7 @@ class Trainer(GenericTrainer):
 
 
             oldClassesIndices = (target * 0).int()
-            for elem in range(0,self.args.unstructured_size):
+            for elem in range(0,self.args.unstructured_size+classGroup):
                 oldClassesIndices = oldClassesIndices + (target == elem).int()
 
             new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
@@ -354,5 +354,33 @@ class Trainer(GenericTrainer):
                 loss.backward()
 
                 self.optimizer_single.step()
+
+    def storeDistillation(self, epoch, classGroup):
+
+        self.train_data_iterator.dataset.getIndexElem(True)
+        for batch_idx, (data, y, target) in enumerate(self.train_data_iterator):
+            if self.args.cuda:
+                data, target = data.cuda(), target.cuda()
+                y = y.cuda()
+
+
+            oldClassesIndices = (target * 0).int()
+            for elem in range(0,self.args.unstructured_size+classGroup):
+                oldClassesIndices = oldClassesIndices + (target == elem).int()
+
+            new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
+
+            if len(new_classes_indices)>0:
+
+                indices = y[new_classes_indices]
+                data_normal_loss = data[new_classes_indices]
+
+
+                output = self.model_single(Variable(data_normal_loss))
+                output = output.data.cpu().numpy()
+                self.train_data_iterator.dataset.labels[indices] = output
+        self.train_data_iterator.dataset.getIndexElem(False)
+
+
 
 
