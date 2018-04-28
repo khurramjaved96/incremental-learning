@@ -211,7 +211,7 @@ class IncrementalLoader(td.Dataset):
             assert (False)
         if self.no_transformation:
             return img, index
-        return img, self.labels[index]
+        return img, self.labels[index], self.labelsNormal[index]
 
 
 if __name__ == "__main__":

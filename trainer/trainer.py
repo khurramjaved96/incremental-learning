@@ -185,7 +185,7 @@ class Trainer(GenericTrainer):
 
         self.model.train()
 
-        for batch_idx, (data, target) in tqdm(enumerate(self.train_data_iterator)):
+        for batch_idx, (data, y ,target) in tqdm(enumerate(self.train_data_iterator)):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
@@ -200,7 +200,7 @@ class Trainer(GenericTrainer):
             print (new_classes_indices)
             self.optimizer.zero_grad()
 
-            target_normal_loss = target[new_classes_indices]
+            target_normal_loss = y[new_classes_indices]
             data_normal_loss = data[new_classes_indices]
 
             target_distillation_loss = target[old_classes_indices]
