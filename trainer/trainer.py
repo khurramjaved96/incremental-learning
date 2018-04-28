@@ -215,30 +215,18 @@ class Trainer(GenericTrainer):
 
             # y_onehot = target_normal_loss.float()
 
+            output = self.model(Variable(data_normal_loss))
+            if len(self.older_classes) == 0 or not self.args.no_nl:
 
-            if self.args.ignore:
-
-                if len(self.older_classes) == 0 or not self.args.no_nl:
-                    output = self.model(Variable(data_normal_loss))
-                    self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
-                    loss = F.kl_div(output, Variable(y_onehot))
-
-                elif len(self.older_classes) > 0 or not self.args.no_nl:
-                    tempIndex = len(self.models)
-                    ke = (self.args.unstructured_size + tempIndex * self.args.step_size,
-                          self.args.unstructured_size + (tempIndex + 1) * self.args.step_size)
-                    # Softened output of the model
-                    output = self.model(Variable(data_normal_loss), keep=ke)
-                    self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(
-                        target_normal_loss.cpu().numpy())
-                    loss = F.kl_div(output, Variable(y_onehot))
-            else:
-                if len(self.older_classes) == 0 or not self.args.no_nl:
-                    output = self.model(Variable(data_normal_loss))
-                    self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
-                    loss = F.kl_div(output, Variable(y_onehot))
+                self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
+                loss = F.binary_cross_entropy(output, Variable(y_onehot))
 
             myT = self.args.T
+
+            tempIndex = np.random.choice(range(200))
+            if tempIndex == 10:
+                print("Target Vector", y.cpu().numpy()[0])
+                print("Target GT", target.cpu().numpy()[0])
 
             if self.args.no_distill:
                 pass
@@ -246,27 +234,19 @@ class Trainer(GenericTrainer):
             elif len(self.older_classes) > 0:
 
                 # Get softened targets generated from previous mode2l;a
-                tempIndex = np.random.choice(range(len(self.models)))
-                tempModel = self.models[tempIndex]
 
-                if self.args.ignore:
-                    ke = (self.args.unstructured_size+tempIndex*self.args.step_size,self.args.unstructured_size+(tempIndex+1)*self.args.step_size)
-                    # pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True, keep=ke)
-                    # Softened output of the model
-                    output2 = self.model(Variable(data_distillation_loss), T=myT, keep=ke)
-                    self.threshold[ke[0]:ke[1]] += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(
-                        data_distillation_loss.cpu().numpy())) * (
-                                          myT * myT) * self.args.alpha
-                else:
-                    # pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
-                    # Softened output of the model
-                    output2 = self.model(Variable(data_distillation_loss), T=myT)
+                # tempModel = self.models[tempIndex]
+
+                # pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
+                # Softened output of the model
+                # output2 = self.model(Variable(data_distillation_loss), T=myT)
 
                 # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True
 
-                    self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
-                    myT * myT) * self.args.alpha
-                loss2 = F.kl_div(output2, Variable(target_distillation_loss))
+                self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
+                myT * myT) * self.args.alpha
+
+                loss2 = F.binary_cross_entropy(output, Variable(target_distillation_loss))
 
                 loss2.backward(retain_graph=True)
 
@@ -350,7 +330,8 @@ class Trainer(GenericTrainer):
                 y_onehot = target_normal_loss.float()
 
                 output = self.model_single(Variable(data_normal_loss))
-                loss = F.kl_div(output, Variable(y_onehot))
+                loss = F.binary_cross_entropy(output, Variable(y_onehot))
+                # loss = F.kl_div(output, Variable(y_onehot))
 
                 loss.backward()
 
@@ -366,8 +347,8 @@ class Trainer(GenericTrainer):
 
 
             oldClassesIndices = (target * 0).int()
-            for elem in range(0,self.args.unstructured_size+classGroup):
-                oldClassesIndices = oldClassesIndices + (target == elem).int()
+            # for elem in range(0,self.args.unstructured_size+classGroup):
+            #     oldClassesIndices = oldClassesIndices + (target == elem).int()
 
             new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
 
@@ -377,7 +358,13 @@ class Trainer(GenericTrainer):
 
             output = self.model_single(Variable(data_normal_loss), labels=True, T=self.args.T)
             output = output.data.cpu().numpy()
-            self.train_data_iterator.dataset.labels[indices] = output
+
+
+            self.train_data_iterator.dataset.labels[indices,
+            self.args.unstructured_size + classGroup:self.args.unstructured_size + classGroup + self.args.step_size] \
+                = output[:,self.args.unstructured_size + classGroup:self.args.unstructured_size + classGroup + self.args.step_size]
+
+            # self.train_data_iterator.dataset.labels[indices,self.args.unstructured_size+classGroup:self.args.unstructured_size+classGroup+self.args.step_size] = output
             # print (self.train_data_iterator.dataset.labels[indices[0]], "SUM", np.sum(self.train_data_iterator.dataset.labels[indices[0]]))
 
         self.train_data_iterator.dataset.getIndexElem(False)
