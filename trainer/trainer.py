@@ -198,7 +198,6 @@ class Trainer(GenericTrainer):
 
             self.optimizer.zero_grad()
 
-            print (y.shape, data.shape, new_classes_indices.shape)
             target_normal_loss = y[new_classes_indices]
             data_normal_loss = data[new_classes_indices]
 
