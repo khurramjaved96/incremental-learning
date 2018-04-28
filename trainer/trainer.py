@@ -377,7 +377,7 @@ class Trainer(GenericTrainer):
                 data_normal_loss = data[new_classes_indices]
 
 
-                output = self.model_single(Variable(data_normal_loss))
+                output = self.model_single(Variable(data_normal_loss), labels=True)
                 output = output.data.cpu().numpy()
                 self.train_data_iterator.dataset.labels[indices] = output
                 print ("Labels", self.train_data_iterator.dataset.labels[indices])
