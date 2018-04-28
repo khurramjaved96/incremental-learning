@@ -38,8 +38,9 @@ class GenericTrainer:
         self.model_single = copy.deepcopy(self.model)
         self.optimizer_single = None
 
-        random.seed(args.seed)
-        random.shuffle(self.all_classes)
+        logger.warning("Shuffling turned off for debugging")
+        # random.seed(args.seed)
+        # random.shuffle(self.all_classes)
 
 
 class AutoEncoderTrainer(GenericTrainer):
