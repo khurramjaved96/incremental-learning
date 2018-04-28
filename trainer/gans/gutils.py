@@ -156,16 +156,17 @@ def save_checkpoint(epoch, increment, experiment, G, D=None):
                '{0}D_inc_{1}_e_{2}.pth'.format(path, increment, epoch))
 
 
-def load_checkpoint(g_ckpt_path, increment, G):
+def load_checkpoint(ckpt_path, increment, G, D=None):
     '''
-    Loads the latest generator for given increment
-    g_ckpt_path: path to checkpoints folder
+    Loads the latest generator (and discriminator) for given increment
+    ckpt_path: path to checkpoints folder
     increment: current increment number
     G: Generator
+    D: Discriminator (optional)
     '''
     max_e = -1
     filename = None
-    for f in os.listdir(g_ckpt_path):
+    for f in os.listdir(ckpt_path):
         vals = f.split('_')
         #TODO Load the discriminator too
         if vals[0] != "G":
@@ -178,9 +179,13 @@ def load_checkpoint(g_ckpt_path, increment, G):
     if max_e == -1:
         print('[*] Failed to load checkpoint')
         return False
-    path = os.path.join(g_ckpt_path, filename)
-    G.load_state_dict(torch.load(path))
-    print('[*] Loaded Generator from %s' % path)
+    g_path = os.path.join(ckpt_path, filename)
+    G.load_state_dict(torch.load(g_path))
+    print('[*] Loaded Generator from %s' % g_path)
+    if D is not None:
+        d_path = os.path.join(ckpt_path, "D_" + "_".join(vals[1:]))
+        D.load_state_dict(torch.load(d_path))
+        print('[*] Loaded Discriminator from %s' % d_path)
     return True
 
 
