@@ -109,7 +109,7 @@ class Trainer():
             #Load if we should be loading from ckpt, otherwise train
             is_loaded = False
             if self.args.load_g_ckpt != '':
-                D = self.D if args.process == "acgan" else None
+                D = self.D if self.args.process == "acgan" else None
                 is_loaded = gutils.load_checkpoint(self.args.load_g_ckpt,
                                                    self.increment,
                                                    self.G, D)

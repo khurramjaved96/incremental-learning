@@ -160,11 +160,9 @@ class Trainer():
                     for param in self.model.parameters():
                         if param.grad is not None:
                             param.grad = param.grad * (self.args.T * self.args.T) * alpha
-
                     # y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
-
-            loss = F.kl_div(output, Variable(y_onehot))
-            loss.backward()
+                loss = F.kl_div(output, Variable(y_onehot))
+                loss.backward()
             self.optimizer.step()
 
     #TODO Add generated images here
