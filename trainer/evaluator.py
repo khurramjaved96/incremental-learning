@@ -115,7 +115,7 @@ class NearestMeanEvaluator():
         self.means = self.means / self.totalFeatures
         self.means = torch.from_numpy(self.means)
         # Normalize the mean vector
-        self.means = self.means / torch.norm(self.means, 2, 1).unueeze(1)
+        self.means = self.means / torch.norm(self.means, 2, 1).unsqueeze(1)
         self.means[self.means != self.means] = 0
         self.means = self.means.unsqueeze(0)
 

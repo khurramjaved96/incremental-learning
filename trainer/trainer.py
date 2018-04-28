@@ -210,10 +210,25 @@ class Trainer(GenericTrainer):
             target_normal_loss.unsqueeze_(1)
             y_onehot.scatter_(1, target_normal_loss, 1)
 
-            if len(self.older_classes) == 0 or not self.args.no_nl:
-                output = self.model(Variable(data_normal_loss))
-                self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
-                loss = F.kl_div(output, Variable(y_onehot))
+            if self.args.ignore:
+                if len(self.older_classes) > 0 or not self.args.no_nl:
+                    tempIndex = len(self.models)
+                    ke = (self.args.unstructured_size + tempIndex * self.args.step_size,
+                          self.args.unstructured_size + (tempIndex + 1) * self.args.step_size)
+                    # Softened output of the model
+                    output = self.model(Variable(data_normal_loss), keep=ke)
+                    self.threshold[ke[0]:ke[1]] += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
+                    loss = F.kl_div(output, Variable(y_onehot))
+                elif len(self.older_classes) == 0 or not self.args.no_nl:
+                    output = self.model(Variable(data_normal_loss))
+                    self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
+                    loss = F.kl_div(output, Variable(y_onehot))
+            else:
+                if len(self.older_classes) == 0 or not self.args.no_nl:
+                    output = self.model(Variable(data_normal_loss))
+                    self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
+                    loss = F.kl_div(output, Variable(y_onehot))
+
             myT = self.args.T
 
             if self.args.no_distill:
