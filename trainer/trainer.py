@@ -373,12 +373,15 @@ class Trainer(GenericTrainer):
             if len(new_classes_indices)>0:
 
                 indices = y[new_classes_indices]
+                print ("Indices = ", indices.cpu().numpy())
                 data_normal_loss = data[new_classes_indices]
 
 
                 output = self.model_single(Variable(data_normal_loss))
                 output = output.data.cpu().numpy()
                 self.train_data_iterator.dataset.labels[indices] = output
+                print ("Labels", self.train_data_iterator.dataset.labels[indices])
+                0/0
         self.train_data_iterator.dataset.getIndexElem(False)
 
 
