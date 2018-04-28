@@ -135,7 +135,7 @@ if args.ideal_nmc:
                                                    )
 
 
-kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
+kwargs = {'num_workers': 0, 'pin_memory': True} if args.cuda else {}
 
 train_iterator = torch.utils.data.DataLoader(train_dataset_loader,
                                             batch_size=args.batch_size, shuffle=True, **kwargs)
