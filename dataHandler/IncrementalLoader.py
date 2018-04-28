@@ -36,7 +36,13 @@ class IncrementalLoader(td.Dataset):
         # f(label) = new_label. We do this to ensure labels are in increasing order. For example, even if first increment chooses class 1,5,6, the training labels will be 0,1,2
         self.indexMapper = {}
         self.no_transformation = False
+        self.transformLabels()
 
+    def transformLabels(self):
+        '''Change labels to one hot coded vectors'''
+        b = np.zeros((self.labels.size, self.labels.max() + 1))
+        b[np.arange(self.laels.size), self.labels] = 1
+        self.labels = b
 
     def __class_indices(self):
         cur = 0

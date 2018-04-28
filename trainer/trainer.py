@@ -203,13 +203,15 @@ class Trainer(GenericTrainer):
             target_distillation_loss = target[old_classes_indices]
             data_distillation_loss = data[old_classes_indices]
 
-            y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
-            if self.args.cuda:
-                y_onehot = y_onehot.cuda()
+            # y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
+            # if self.args.cuda:
+            #     y_onehot = y_onehot.cuda()
+            #
+            # y_onehot.zero_()
+            # target_normal_loss.unsqueeze_(1)
+            # y_onehot.scatter_(1, target_normal_loss, 1)
 
-            y_onehot.zero_()
-            target_normal_loss.unsqueeze_(1)
-            y_onehot.scatter_(1, target_normal_loss, 1)
+            y_onehot = target_normal_loss
 
             if self.args.ignore:
 
@@ -332,13 +334,15 @@ class Trainer(GenericTrainer):
                 target_normal_loss = target[new_classes_indices]
                 data_normal_loss = data[new_classes_indices]
 
-                y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
-                if self.args.cuda:
-                    y_onehot = y_onehot.cuda()
+                # y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
+                # if self.args.cuda:
+                #     y_onehot = y_onehot.cuda()
+                #
+                # y_onehot.zero_()
+                # target_normal_loss.unsqueeze_(1)
+                # y_onehot.scatter_(1, target_normal_loss, 1)
 
-                y_onehot.zero_()
-                target_normal_loss.unsqueeze_(1)
-                y_onehot.scatter_(1, target_normal_loss, 1)
+                y_onehot = target_normal_loss
 
                 output = self.model_single(Variable(data_normal_loss))
                 loss = F.kl_div(output, Variable(y_onehot))
