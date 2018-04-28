@@ -122,8 +122,8 @@ class IncrementalLoader(td.Dataset):
     def limit_class(self, n, k):
         if k == 0:
             self.remove_class(n)
-            print("Removed class", n)
-            print("Current classes", self.active_classes)
+            #print("Removed class", n)
+            #print("Current classes", self.active_classes)
             return False
         if k > self.class_size:
             k = self.class_size
@@ -150,7 +150,6 @@ class IncrementalLoader(td.Dataset):
     def limit_class_and_sort(self, n, k, model):
         ''' This function should only be called the first time a class is limited. To change the limitation, 
         call the limiClass(self, n, k) function 
-        
         :param n: Class to limit
         :param k: No of exemplars to keep 
         :param model: Features extracted from this model for sorting. 

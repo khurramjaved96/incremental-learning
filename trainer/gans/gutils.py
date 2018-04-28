@@ -93,7 +93,10 @@ def generate_examples(
                 images = G(noise)
             if args.filter_using_disc and D is not None:
                 d_output = D(images)
-                indices = (d_output[0] > args.filter_val).nonzero().squeeze()
+                #Select imges that whose real-fake value > filter_val
+                #indices = (d_output[0] > args.filter_val).nonzero().squeeze()
+                #Select imges with P(img) belonging to class klass > filter_val
+                indices = (d_output[1][:, klass] > args.filter_val).nonzero().squeeze()
                 if indices.dim() == 0:
                     continue
                 images = torch.index_select(images, 0, indices)
@@ -111,7 +114,7 @@ def generate_examples(
     if D is not None:
         for klass in active_classes:
             examples[klass] = examples[klass][0:num_examples]
-        print("Examples matching the filter: ", num_examples / (num_iter * 100), "%")
+        print("[INFO] Examples matching the filter: ", len(active_classes) * (num_examples / num_iter), "%")
     return examples
 
 

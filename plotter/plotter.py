@@ -4,32 +4,71 @@ import numpy as np
 
 plt.switch_backend('agg')
 
+MEDIUM_SIZE = 16
+
+font = {'family' : 'sans-serif',
+        'weight':'bold'}
+
+matplotlib.rc('xtick', labelsize=MEDIUM_SIZE)
+matplotlib.rc('ytick', labelsize=MEDIUM_SIZE)
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+
+# matplotlib.rc('font', **font)
+from matplotlib import rcParams
+rcParams.update({'figure.autolayout': True})
+
+
 class Plotter():
     def  __init__(self):
         import itertools
-        self.marker = itertools.cycle(('o', '+', '.', '*', '*'))
+        # plt.figure(figsize=(12, 9))
+        self.marker = itertools.cycle(('o', '+', "v", "^", "8",'.', '*'))
         self.handles=[]
-    def plot(self,x,y, x_label="Number of Classes",y_label = "Accuracy", legend="none",title="none"):
+        self.lines = itertools.cycle(('--', '-.', '-', ':'))
+    def plot(self,x,y, xLabel="Number of Classes",yLabel = "Accuracy %", legend="none",title=None, error=None):
         self.x = x
         self.y = y
-        plt.grid(color='b', linestyle='--', linewidth=0.2)
-        l, = plt.plot(x,y,linestyle='-', marker=next(self.marker), label=legend)
+        plt.grid(color='0.89', linestyle='--', linewidth=1.0)
+        if error is None:
+            l, = plt.plot(x,y,linestyle=next(self.lines), marker=next(self.marker), label=legend, linewidth=2.0)
+        else:
+            l = plt.errorbar(x, y, yerr=error, capsize=4.0, capthick=2.0, linestyle=next(self.lines), marker=next(self.marker), label=legend, linewidth=2.0)
 
         self.handles.append(l)
-        self.x_label = x_label
-        self.y_label = y_label
-        plt.title(title)
+        self.x_label = xLabel
+        self.y_label = yLabel
+        if title is not None:
+            plt.title(title)
 
     def save_fig(self, path, xticks=105):
         plt.legend(handles=self.handles)
-        plt.ylim( (0, 100) )
-        plt.xlim((0,xticks))
+        plt.ylim( (0, 100+1.2) )
+        plt.xlim((0,xticks+.2))
         plt.ylabel(self.y_label)
         plt.xlabel(self.x_label)
-        plt.yticks(list(range(0,105,10)))
-        plt.xticks(list(range(0, xticks, int(xticks/10))))
-        plt.savefig(path)
+        plt.yticks(list(range(10,105,10)))
+        plt.xticks(list(range(0, xticks+1, int(xticks/10))))
+        plt.savefig(path+".jpg")
         plt.gcf().clear()
+
+    def save_fig2(self, path, xticks=105):
+        plt.legend(handles=self.handles)
+        plt.xlabel("Memory Budget")
+        plt.ylabel("Average Incremental Accuracy")
+        plt.savefig(path+".jpg")
+        plt.gcf().clear()
+
+    def plotMatrix(self, epoch, path, img):
+        import matplotlib.pyplot as plt
+        plt.imshow(img, cmap='jet', interpolation='nearest')
+        plt.colorbar()
+        plt.savefig(path + str(epoch) + ".svg", format='svg', dpi=1200)
+        plt.gcf().clear()
+
+    def saveImage(self, img, path, epoch):
+        from PIL import Image
+        im = Image.fromarray(img)
+        im.save(path + str(epoch) + ".jpg")
 
     def plot_histogram(self, subplots, embeddings, range_val, colors):
         p1, p2, p3 = subplots
