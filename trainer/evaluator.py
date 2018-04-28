@@ -29,7 +29,7 @@ class NearestMeanEvaluator():
             self.means = np.zeros((100, model.featureSize))
         correct = 0
 
-        for data, target in loader:
+        for data, y, target in loader:
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
                 self.means = self.means.cuda()
@@ -65,7 +65,7 @@ class NearestMeanEvaluator():
         # Get the confusion matrix object
         cMatrix = confusionmeter.ConfusionMeter(size, True)
 
-        for data, target in loader:
+        for data, y, target in loader:
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
                 self.means = self.means.cuda()
@@ -97,7 +97,7 @@ class NearestMeanEvaluator():
         self.totalFeatures = np.zeros((classes, 1)) + .001
         logger.debug("Computing means")
         # Iterate over all train Dataset
-        for batch_id, (data, target) in enumerate(train_loader):
+        for batch_id, (data, y, target) in enumerate(train_loader):
             # Get features for a minibactch
             if self.cuda:
                 data = data.cuda()
@@ -157,7 +157,7 @@ class softmax_evaluator():
             if self.cuda:
                 scale = scale.cuda()
         tempCounter=0
-        for data, target in loader:
+        for data, y, target in loader:
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
@@ -215,7 +215,7 @@ class softmax_evaluator():
                 scale = scale.cuda()
 
 
-        for data, target in loader:
+        for data, y, target in loader:
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)

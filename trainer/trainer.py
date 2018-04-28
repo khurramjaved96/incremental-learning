@@ -319,9 +319,10 @@ class Trainer(GenericTrainer):
 
         self.model_single.train()
 
-        for batch_idx, (data, target) in enumerate(self.train_data_iterator):
+        for batch_idx, (data, y, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
+                y = y.cuda()
 
 
             oldClassesIndices = (target * 0).int()
@@ -344,7 +345,8 @@ class Trainer(GenericTrainer):
                 # target_normal_loss.unsqueeze_(1)
                 # y_onehot.scatter_(1, target_normal_loss, 1)
 
-                y_onehot = target_normal_loss
+                # y_onehot = target_normal_loss
+                y_onehot = target_normal_loss.float()
 
                 output = self.model_single(Variable(data_normal_loss))
                 loss = F.kl_div(output, Variable(y_onehot))
