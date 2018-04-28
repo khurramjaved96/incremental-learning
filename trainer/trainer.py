@@ -334,7 +334,7 @@ class Trainer(GenericTrainer):
             if len(new_classes_indices)>0:
                 self.optimizer_single.zero_grad()
 
-                target_normal_loss = target[new_classes_indices]
+                target_normal_loss = y[new_classes_indices]
                 data_normal_loss = data[new_classes_indices]
 
                 # y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
