@@ -3,6 +3,8 @@ import torch
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
 import torch.nn.functional as F
+import logging
+logger = logging.getLogger('iCARL')
 
 class EvaluatorFactory():
     def __init__(self):
@@ -93,7 +95,7 @@ class NearestMeanEvaluator():
         self.classes = classes
         self.means = np.zeros((classes, model.featureSize))
         self.totalFeatures = np.zeros((classes, 1)) + .001
-        print("Computing means")
+        logger.debug("Computing means")
         # Iterate over all train Dataset
         for batch_id, (data, target) in enumerate(train_loader):
             # Get features for a minibactch
@@ -113,11 +115,11 @@ class NearestMeanEvaluator():
         self.means = self.means / self.totalFeatures
         self.means = torch.from_numpy(self.means)
         # Normalize the mean vector
-        self.means = self.means / torch.norm(self.means, 2, 1).unsqueeze(1)
+        self.means = self.means / torch.norm(self.means, 2, 1).unueeze(1)
         self.means[self.means != self.means] = 0
         self.means = self.means.unsqueeze(0)
 
-        print("Mean vectors computed")
+        logger.debug("Mean vectors computed")
         # Return
         return
 
@@ -149,10 +151,7 @@ class softmax_evaluator():
                 scale = scaleTemp
             else:
                 scale = 1 / scale
-            # scale[len(older_classes)+step_size:len(scale)] = 1
-            # scale = np.log(scale)
-            # print (scale)
-            # scale = scale-1
+
             scale = scale/np.linalg.norm(scale, 1)
             scale = torch.from_numpy(scale).unsqueeze(0)
             if self.cuda:
@@ -210,13 +209,7 @@ class softmax_evaluator():
         if scale is not None:
             scale = np.copy(scale)
             scale = scale/np.max(scale)
-            # print ("Gets here")
             scale = 1 / scale
-            # scale[len(older_classes)+step_size:len(scale)] = 1
-            # scale = np.log(scale)
-            # print (scale)
-            # scale = scale-1
-            # scale[len(older_classes) + step_size:len(scale)] = 1
             scale = torch.from_numpy(scale).unsqueeze(0)
             if self.cuda:
                 scale = scale.cuda()
@@ -227,7 +220,6 @@ class softmax_evaluator():
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
             if scale is not None:
-                # print("Gets here, getting outputs")
                 output = model(data, scale = Variable(scale.float()))
             else:
                 output = model(data)

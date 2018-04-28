@@ -236,13 +236,6 @@ for seed in args.seeds:
 
                         # print (str(tError)+"\t"+str(testError)+"\t"+ str(tScaled)+"\t"+str(tScaledGrad))
 
-                logger.info("Test Classifier Final: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
-                logger.info("Test Classifier Final Scaled: %0.2f",
-                            t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
-                                                  my_trainer.older_classes, args.step_size))
-                logger.info("Test Classifier Final Grad Scaled: %0.2f",
-                            t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
-                                                  my_trainer.older_classes, args.step_size))
 
                 logger.info("Epoch\tTrain\tTest\tScaled\t GScaled")
                 logger.info("\t".join(scores))
