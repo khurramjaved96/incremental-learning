@@ -240,21 +240,24 @@ for seed in args.seeds:
                 logger.info("Epoch\tTrain\tTest\tScaled\t GScaled")
                 logger.info("\t".join(scores))
 
-                # Running epochs_class epochs
-                logger.info("Training Distillation Computer")
-                my_trainer.getModel()
+                if args.no_distill:
+                    pass
+                else:
+                    # Running epochs_class epochs
+                    logger.info("Training Distillation Computer")
+                    my_trainer.getModel()
 
-                for epoch in tqdm(range(0, args.epochs_class)):
-                    my_trainer.trainSingle(epoch, class_group)
+                    for epoch in tqdm(range(0, args.epochs_class)):
+                        my_trainer.trainSingle(epoch, class_group)
 
-                my_trainer.storeDistillation(epoch, class_group)
+                    my_trainer.storeDistillation(epoch, class_group)
 
-                tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
-                tError = tError* float(args.unstructured_size+args.step_size)/(float(args.step_size))
-                testError = t_classifier.evaluate(my_trainer.model_single, test_iterator)*(class_group+args.step_size)/args.step_size
-                logger.info("Distillation Computer Error (Train, Test) : %0.2f %0.2f", tError, testError)
-                logger.debug("Adding Distillation Computer in the model list")
-                my_trainer.addModel()
+                    tError = t_classifier.evaluate(my_trainer.model_single, train_iterator)
+                    tError = tError* float(args.unstructured_size+args.step_size)/(float(args.step_size))
+                    testError = t_classifier.evaluate(my_trainer.model_single, test_iterator)*(class_group+args.step_size)/args.step_size
+                    logger.info("Distillation Computer Error (Train, Test) : %0.2f %0.2f", tError, testError)
+                    logger.debug("Adding Distillation Computer in the model list")
+                    my_trainer.addModel()
 
 
                 # Evaluate the learned classifier
