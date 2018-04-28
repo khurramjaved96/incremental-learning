@@ -41,7 +41,7 @@ class IncrementalLoader(td.Dataset):
     def transformLabels(self):
         '''Change labels to one hot coded vectors'''
         b = np.zeros((self.labels.size, self.labels.max() + 1))
-        b[np.arange(self.laels.size), self.labels] = 1
+        b[np.arange(self.labels.size), self.labels] = 1
         self.labels = b
 
     def __class_indices(self):
