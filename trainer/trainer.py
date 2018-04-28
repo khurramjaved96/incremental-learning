@@ -193,6 +193,7 @@ class Trainer(GenericTrainer):
             for elem in range(0, self.args.unstructured_size):
                 oldClassesIndices = oldClassesIndices + (target == elem).int()
 
+            print (oldClassesIndices.cpu().numpy())
             old_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices > 0)).long())
             new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
 
