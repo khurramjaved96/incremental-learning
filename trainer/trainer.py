@@ -284,7 +284,7 @@ class Trainer(GenericTrainer):
 
             self.optimizer.step()
 
-        if self.args.no_nl:
+        if self.args.no_nl and False:
             self.threshold[len(self.older_classes):len(self.threshold)] = np.max(self.threshold)
             self.threshold2[len(self.older_classes):len(self.threshold2)] = np.max(self.threshold2)
         else:
@@ -292,10 +292,10 @@ class Trainer(GenericTrainer):
             self.threshold2[0:self.args.unstructured_size] = np.max(self.threshold2)
 
             self.threshold[self.args.unstructured_size + len(
-                self.older_classes) + self.args.step_size:self.args.unstructured_size + len(self.threshold)] = np.max(
+                self.older_classes) + self.args.step_size:len(self.threshold)] = np.max(
                 self.threshold)
             self.threshold2[self.args.unstructured_size + len(
-                self.older_classes) + self.args.step_size:self.args.unstructured_size + len(self.threshold2)] = np.max(
+                self.older_classes) + self.args.step_size:len(self.threshold2)] = np.max(
                 self.threshold2)
 
 
@@ -371,16 +371,14 @@ class Trainer(GenericTrainer):
 
             new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
 
-            if len(new_classes_indices)>0:
-
-                indices = y[new_classes_indices]
-                data_normal_loss = data[new_classes_indices]
+            indices = y[new_classes_indices]
+            data_normal_loss = data[new_classes_indices]
 
 
-                output = self.model_single(Variable(data_normal_loss), labels=True, T=self.args.T)
-                output = output.data.cpu().numpy()
-                self.train_data_iterator.dataset.labels[indices] = output
-                # print (self.train_data_iterator.dataset.labels[indices[0]], "SUM", np.sum(self.train_data_iterator.dataset.labels[indices[0]]))
+            output = self.model_single(Variable(data_normal_loss), labels=True, T=self.args.T)
+            output = output.data.cpu().numpy()
+            self.train_data_iterator.dataset.labels[indices] = output
+            # print (self.train_data_iterator.dataset.labels[indices[0]], "SUM", np.sum(self.train_data_iterator.dataset.labels[indices[0]]))
 
         self.train_data_iterator.dataset.getIndexElem(False)
 
