@@ -75,7 +75,7 @@ parser.add_argument('--memory-budgets', type=int,  nargs='+', default=[2000],
 parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
 parser.add_argument('--unstructured-size', type=int, default=0, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; example CIFAR, MNIST')
-parser.add_argument('--lwf', action='store_true', default=True,
+parser.add_argument('--lwf', action='store_true', default=False,
                     help='Use learning without forgetting. Ignores memory-budget '
                          '("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')
 
