@@ -11,6 +11,7 @@ from torch.autograd import Variable
 import numpy as np
 import model
 import logging
+from tqdm import tqdm
 
 logger = logging.getLogger('iCARL')
 
@@ -183,7 +184,7 @@ class Trainer(GenericTrainer):
 
         self.model.train()
 
-        for batch_idx, (data, target) in enumerate(self.train_data_iterator):
+        for batch_idx, (data, target) in tqdm(enumerate(self.train_data_iterator)):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
 
@@ -211,17 +212,20 @@ class Trainer(GenericTrainer):
             y_onehot.scatter_(1, target_normal_loss, 1)
 
             if self.args.ignore:
-                if len(self.older_classes) > 0 or not self.args.no_nl:
+
+                if len(self.older_classes) == 0 or not self.args.no_nl:
+                    output = self.model(Variable(data_normal_loss))
+                    self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
+                    loss = F.kl_div(output, Variable(y_onehot))
+
+                elif len(self.older_classes) > 0 or not self.args.no_nl:
                     tempIndex = len(self.models)
                     ke = (self.args.unstructured_size + tempIndex * self.args.step_size,
                           self.args.unstructured_size + (tempIndex + 1) * self.args.step_size)
                     # Softened output of the model
                     output = self.model(Variable(data_normal_loss), keep=ke)
-                    self.threshold[ke[0]:ke[1]] += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
-                    loss = F.kl_div(output, Variable(y_onehot))
-                elif len(self.older_classes) == 0 or not self.args.no_nl:
-                    output = self.model(Variable(data_normal_loss))
-                    self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
+                    self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(
+                        target_normal_loss.cpu().numpy())
                     loss = F.kl_div(output, Variable(y_onehot))
             else:
                 if len(self.older_classes) == 0 or not self.args.no_nl:
