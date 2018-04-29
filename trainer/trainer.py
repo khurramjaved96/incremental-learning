@@ -216,27 +216,11 @@ class Trainer(GenericTrainer):
             # y_onehot = target_normal_loss.float()
 
 
-            if self.args.ignore:
 
-                if len(self.older_classes) == 0 or not self.args.no_nl:
-                    output = self.model(Variable(data_normal_loss))
-                    self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
-                    loss = F.kl_div(output, Variable(y_onehot))
-
-                elif len(self.older_classes) > 0 or not self.args.no_nl:
-                    tempIndex = len(self.models)
-                    ke = (self.args.unstructured_size + tempIndex * self.args.step_size,
-                          self.args.unstructured_size + (tempIndex + 1) * self.args.step_size)
-                    # Softened output of the model
-                    output = self.model(Variable(data_normal_loss), keep=ke)
-                    self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(
-                        target_normal_loss.cpu().numpy())
-                    loss = F.kl_div(output, Variable(y_onehot))
-            else:
-                if len(self.older_classes) == 0 or not self.args.no_nl:
-                    output = self.model(Variable(data_normal_loss))
-                    self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
-                    loss = F.kl_div(output, Variable(y_onehot))
+            if len(self.older_classes) == 0 or not self.args.no_nl:
+                output = self.model(Variable(data_normal_loss))
+                self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
+                loss = F.kl_div(output, Variable(y_onehot))
 
             myT = self.args.T
 
@@ -247,25 +231,13 @@ class Trainer(GenericTrainer):
 
                 # Get softened targets generated from previous mode2l;a
                 tempIndex = np.random.choice(range(len(self.models)))
-                tempModel = self.models[tempIndex]
 
-                if self.args.ignore:
-                    ke = (self.args.unstructured_size+tempIndex*self.args.step_size,self.args.unstructured_size+(tempIndex+1)*self.args.step_size)
-                    # pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True, keep=ke)
-                    # Softened output of the model
-                    output2 = self.model(Variable(data_distillation_loss), T=myT, keep=ke)
-                    self.threshold[ke[0]:ke[1]] += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(
-                        data_distillation_loss.cpu().numpy())) * (
-                                          myT * myT) * self.args.alpha
-                else:
-                    # pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
-                    # Softened output of the model
-                    output2 = self.model(Variable(data_distillation_loss), T=myT)
+                # pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
+                # Softened output of the model
+                output2 = self.model(Variable(data_distillation_loss), T=myT)
 
-                # output2_t, output3_t = self.model(Variable(data3), T=myT, labels=True, logits=True
-
-                    self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
-                    myT * myT) * self.args.alpha
+                self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
+                myT * myT) * self.args.alpha
                 loss2 = F.kl_div(output2, Variable(target_distillation_loss))
 
                 loss2.backward(retain_graph=True)
@@ -338,15 +310,7 @@ class Trainer(GenericTrainer):
                 target_normal_loss = y[new_classes_indices]
                 data_normal_loss = data[new_classes_indices]
 
-                # y_onehot = torch.FloatTensor(len(target_normal_loss), self.dataset.classes)
-                # if self.args.cuda:
-                #     y_onehot = y_onehot.cuda()
-                #
-                # y_onehot.zero_()
-                # target_normal_loss.unsqueeze_(1)
-                # y_onehot.scatter_(1, target_normal_loss, 1)
 
-                # y_onehot = target_normal_loss
                 y_onehot = target_normal_loss.float()
 
                 output = self.model_single(Variable(data_normal_loss))
