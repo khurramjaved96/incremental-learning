@@ -115,16 +115,14 @@ class CifarResNet(nn.Module):
         if keep is not None:
             x = x[:, keep[0]:keep[1]]
         if labels:
-            return F.sigmoid(x)
             return F.softmax(x, dim=1)
 
         if scale is not None:
             temp = F.softmax(x, dim=1)
-            temp = F.sigmoid(x)
             temp = temp*scale
             return temp
-        return F.sigmoid(x)
-        # return F.log_softmax(x, dim=1)
+
+        return F.log_softmax(x, dim=1)
 
     def forwardFeature(self, x):
         pass
