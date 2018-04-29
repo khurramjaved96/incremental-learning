@@ -30,7 +30,7 @@ class Plotter():
         self.y = y
         plt.grid(color='0.89', linestyle='--', linewidth=1.0)
         if error is None:
-            l, = plt.plot(x,y,linestyle=next(self.lines), marker=next(self.marker), label=legend, linewidth=2.0)
+            l, = plt.plot(x,y,linestyle=next(self.lines), marker=next(self.marker), label=legend, linewidth=2)
         else:
             l = plt.errorbar(x, y, yerr=error, capsize=4.0, capthick=2.0, linestyle=next(self.lines), marker=next(self.marker), label=legend, linewidth=2.0)
 
@@ -49,6 +49,7 @@ class Plotter():
         plt.yticks(list(range(10,105,10)))
         plt.xticks(list(range(0, xticks+1, int(xticks/10))))
         plt.savefig(path+".jpg")
+        plt.savefig(path+".svg", format='svg', dpi=1200)
         plt.gcf().clear()
 
     def save_fig2(self, path, xticks=105):
@@ -114,6 +115,35 @@ class Plotter():
         self.save_embedding_plot(subplots, labels, "chart_" + plot_name, experiment)
 
 if __name__=="__main__":
-    pl = Plotter()
-    pl.plot([1,2,3,4], [2,3,6,2])
-    pl.save_fig("test.jpg")
+   import json
+   from pprint import pprint
+   import numpy as np
+
+   pl = Plotter()
+   x = [2,4,6,8,10]
+   #MNIST 20 epoch acdistillation
+   #icarl_nmc = [99.89832231825115, 98.26574853353736, 97.56890943331621, 96.8427753023552, 97.11]
+   #icarl_trained = [99.89832231825115, 97.06707472583524, 93.51138503680876, 88.24952259707193, 81.07]
+   #lwf = [99.94916115912557, 92.39989798520786, 81.7668207498716, 73.17632081476766, 66.89]
+   #gan_trained = [99.55044955044956, 95.46502690238279, 95.67003251754235, 94.61489497135582, 94.35]
+   #gan_nmc = [99.55044955044956, 95.23443504996156, 95.61868902960808, 94.62762571610439, 94.48]
+   #gan_ideal = [99.55044955044956, 96.38739431206764, 96.04655142906041, 95.00954805856142, 94.78]
+   #forgetting = [99.94916115912557, 49.73221117061974, 32.83684300633453, 25.626989178866964, 21.45]
+   icarl_nmc = [98.6, 93.5, 89.66666666666667, 83.75, 77.95]
+   icarl_trained = [98.85, 88.7, 81.53333333333333, 70.4125, 62.01]
+   lwf = [98.2, 75.725, 59.78333333333333, 48.625, 31.33]
+   gan_trained = [96.7, 81.2, 67.03333333333333, 54.0, 41.11]
+   gan_nmc = [96.6, 83.05, 72.8, 58.8875, 48.84]
+   gan_ideal = [96.65, 82.925, 72.55, 59.95, 48.48]
+   forgetting = [98.4, 47.875, 31.8, 24.075, 19.77]
+
+   legends = ["iCarl NCM", "iCarl Trained Classifier", "LwF", "GAN Trained Classifier", "GAN NCM", "GAN Ideal NCM", "Catastrophic Forgetting"]
+
+   pl.plot(x, icarl_nmc, legend=legends[0])
+   pl.plot(x, gan_nmc, legend=legends[4])
+   pl.plot(x, icarl_trained, legend=legends[1])
+   pl.plot(x, gan_trained, legend=legends[3])
+   #pl.plot(x, gan_ideal, legend=legends[5])
+   pl.plot(x, lwf, legend=legends[2])
+   pl.plot(x, forgetting, legend=legends[6])
+   pl.save_fig("CIFAR10", 10)
