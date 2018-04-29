@@ -223,17 +223,17 @@ for seed in args.seeds:
             logging.info("Orig Model Test Error %0.2f", testError)
             logging.info("Orig Model Test Scaled Error %0.2f", testErrorScaled)
             logging.info("Orig Model Test GScaled Error %0.2f", testErrorGScaled)
-            logger.info("Removing class 1")
             my_trainer.update_frozen_model()
             nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
             testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
             # my_trainer.setup_training()
             nmc_ideal_cum.append(testY_ideal)
             for xTemp in range(0, 10):
+                
                 my_trainer.resetThresh()
                 my_trainer.limit_class(xTemp, 0, False)
-
                 my_trainer.randomInitModel()
+
                 for epoch in range(0, args.epochs_class):
                     my_trainer.update_lr(epoch)
                     my_trainer.train(epoch)
