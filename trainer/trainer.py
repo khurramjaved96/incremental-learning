@@ -128,12 +128,26 @@ class Trainer(GenericTrainer):
         if n not in self.older_classes:
             self.older_classes.append(n)
 
-    def setup_training(self):
+
+    def resetThresh(self):
         threshTemp = self.threshold / np.max(self.threshold)
-        threshTemp = ['{0:.2f}'.format(i) for i in threshTemp]
+        threshTemp = ['{0:.4f}'.format(i) for i in threshTemp]
 
         threshTemp2 = self.threshold2 / np.max(self.threshold2)
-        threshTemp2 = ['{0:.2f}'.format(i) for i in threshTemp2]
+        threshTemp2 = ['{0:.4f}'.format(i) for i in threshTemp2]
+
+        logger.debug("Scale Factor" + ",".join(threshTemp))
+        logger.debug("Scale GFactor" + ",".join(threshTemp2))
+
+        self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
+        self.threshold2 = np.ones(self.dataset.classes, dtype=np.float64)
+
+    def setup_training(self):
+        threshTemp = self.threshold / np.max(self.threshold)
+        threshTemp = ['{0:.4f}'.format(i) for i in threshTemp]
+
+        threshTemp2 = self.threshold2 / np.max(self.threshold2)
+        threshTemp2 = ['{0:.4f}'.format(i) for i in threshTemp2]
 
         logger.debug("Scale Factor"+",".join(threshTemp))
         logger.debug("Scale GFactor" + ",".join(threshTemp2))
@@ -167,6 +181,16 @@ class Trainer(GenericTrainer):
             self.optimizer = torch.optim.SGD(self.model.parameters(), self.args.lr, momentum=self.args.momentum,
                                         weight_decay=self.args.decay, nesterov=True)
             self.model.eval()
+
+    def randomInitModel(self):
+        logger.warning("Random Initilization of weights")
+        myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
+        if self.args.cuda:
+            myModel.cuda()
+        self.model = myModel
+        self.optimizer = torch.optim.SGD(self.model.parameters(), self.args.lr, momentum=self.args.momentum,
+                                    weight_decay=self.args.decay, nesterov=True)
+        self.model.eval()
 
     def getModel(self):
         myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
