@@ -227,6 +227,10 @@ for seed in args.seeds:
                 logger.info("Removing class 1")
                 my_trainer.update_frozen_model()
                 my_trainer.setup_training()
+                nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
+                testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
+
+                nmc_ideal_cum.append(testY_ideal)
                 for xTemp in range(0, 10):
 
                     my_trainer.limit_class(xTemp, 0, False)
@@ -270,7 +274,7 @@ for seed in args.seeds:
                     # Update means using the train iterator; this is iCaRL case
                     nmc.update_means(my_trainer.model, train_iterator, dataset.classes)
                     # Update mean using all the data. This is equivalent to memory_budget = infinity
-                    nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
+
                     # Compute the the nmc based classification results
                     tempTrain = t_classifier.evaluate(my_trainer.model, train_iterator)
                     train_y.append(tempTrain)
@@ -279,10 +283,11 @@ for seed in args.seeds:
 
                     testY1 = nmc.evaluate(my_trainer.model, test_iterator, step_size=args.step_size,  kMean = True)
                     testY = nmc.evaluate(my_trainer.model, test_iterator)
+                    nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
                     testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
-                    y.append(testY)
-                    nmc_ideal_cum.append(testY_ideal)
 
+                    nmc_ideal_cum.append(testY_ideal)
+                    y.append(testY)
                     # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
                     tcMatrix = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
                     tcMatrix_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
@@ -320,7 +325,7 @@ for seed in args.seeds:
                                           nmcMatrixIdeal)
 
                     # Plotting the line diagrams of all the possible cases
-                    my_plotter.plot(x, y, title=args.name, legend="NMC")
+                    # my_plotter.plot(x, y, title=args.name, legend="NMC")
                     my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
                     my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
                     my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
