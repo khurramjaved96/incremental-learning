@@ -36,7 +36,7 @@ parser.add_argument('--no-herding', action='store_true', default=True,
                     help='Disable herding for NMC')
 parser.add_argument('--seeds', type=int, nargs='+', default=[23423],
                     help='Seeds values to be used')
-parser.add_argument('--log-interval', type=int, default=5, metavar='N',
+parser.add_argument('--log-interval', type=int, default=2, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--model-type', default="resnet32",
                     help='model type to be used. Example : resnet32, resnet20, densenet, test')
@@ -172,9 +172,6 @@ for seed in args.seeds:
             logger.addHandler(ch)
 
 
-
-
-
             # Define the optimizer used in the experiment
             optimizer = torch.optim.SGD(myModel.parameters(), args.lr, momentum=args.momentum,
                                         weight_decay=args.decay, nesterov=True)
@@ -191,7 +188,6 @@ for seed in args.seeds:
             y_scaled = []
             nmc_ideal_cum = []
 
-            nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
             nmc_ideal = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
 
             t_classifier = trainer.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
@@ -201,7 +197,7 @@ for seed in args.seeds:
             my_trainer.increment_classes(class_group)
             my_trainer.update_frozen_model()
             epoch = 0
-            import progressbar
+
 
             # Running epochs_class epochs
             for epoch in range(0, args.epochs_class):
@@ -218,12 +214,15 @@ for seed in args.seeds:
             testError =  t_classifier.evaluate(my_trainer.model, test_iterator)
             testErrorScaled = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
                                         my_trainer.older_classes, args.step_size)
+            testErrorGScaled = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
+                                                    my_trainer.older_classes, args.step_size)
 
             x.append(0)
             y1.append(testError)
             y_scaled.append(testErrorScaled)
             logging.info("Orig Model Test Error %0.2f", testError)
             logging.info("Orig Model Test Scaled Error %0.2f", testErrorScaled)
+            logging.info("Orig Model Test GScaled Error %0.2f", testErrorGScaled)
             logger.info("Removing class 1")
             my_trainer.update_frozen_model()
             nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
@@ -233,17 +232,7 @@ for seed in args.seeds:
             for xTemp in range(0, 10):
                 my_trainer.resetThresh()
                 my_trainer.limit_class(xTemp, 0, False)
-                # my_trainer.limit_class(2, 0, False)
-                # my_trainer.limit_class(3, 0, False)
-                # my_trainer.limit_class(4, 0, False)
-                # my_trainer.limit_class(5, 0, False)
-                # my_trainer.limit_class(6, 0, False)
-                # my_trainer.limit_class(7, 0, False)
-                # my_trainer.limit_class(8, 0, False)
 
-
-
-                # Running epochs_class epochs
                 my_trainer.randomInitModel()
                 for epoch in range(0, args.epochs_class):
                     my_trainer.update_lr(epoch)
@@ -272,7 +261,7 @@ for seed in args.seeds:
                 y1.append(t_classifier.evaluate(my_trainer.model, test_iterator))
 
                 # Update means using the train iterator; this is iCaRL case
-                nmc.update_means(my_trainer.model, train_iterator, dataset.classes)
+                # nmc.update_means(my_trainer.model, train_iterator, dataset.classes)
                 # Update mean using all the data. This is equivalent to memory_budget = infinity
 
                 # Compute the the nmc based classification results
@@ -281,23 +270,23 @@ for seed in args.seeds:
 
 
 
-                testY1 = nmc.evaluate(my_trainer.model, test_iterator, step_size=args.step_size,  kMean = True)
-                testY = nmc.evaluate(my_trainer.model, test_iterator)
+                # testY1 = nmc.evaluate(my_trainer.model, test_iterator, step_size=args.step_size,  kMean = True)
+                # testY = nmc.evaluate(my_trainer.model, test_iterator)
                 nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
                 testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
 
                 nmc_ideal_cum.append(testY_ideal)
-                y.append(testY)
+                # y.append(testY)
                 # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
                 tcMatrix = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
                 tcMatrix_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
-                nmcMatrix = nmc.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
+                # nmcMatrix = nmc.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
                 nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
 
 
                 # Printing results
-                print("Train NMC", tempTrain)
-                print("Test NMC", testY)
+                print("Train Claissifier", tempTrain)
+                # print("Test NMC", testY)
 
                 # my_trainer.setup_training()
 
@@ -318,8 +307,6 @@ for seed in args.seeds:
                 my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix"+str(xTemp), tcMatrix)
                 my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
                                       my_experiment.path + "tcMatrix_scaled"+str(xTemp), tcMatrix_scaled)
-                my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix"+str(xTemp),
-                                      nmcMatrix)
                 my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
                                       my_experiment.path + "nmcMatrixIdeal"+str(xTemp),
                                       nmcMatrixIdeal)

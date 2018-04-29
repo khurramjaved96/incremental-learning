@@ -210,7 +210,7 @@ class Trainer(GenericTrainer):
 
         self.model.train()
 
-        for batch_idx, (data, y ,target) in tqdm(enumerate(self.train_data_iterator)):
+        for batch_idx, (data, y ,target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
                 y = y.cuda()
@@ -243,7 +243,7 @@ class Trainer(GenericTrainer):
 
             if len(self.older_classes) == 0 or not self.args.no_nl:
                 output = self.model(Variable(data_normal_loss))
-                self.threshold += np.sum(y_onehot.cpu().numpy(), 0) / len(target_normal_loss.cpu().numpy())
+                self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
                 loss = F.kl_div(output, Variable(y_onehot))
 
             myT = self.args.T
@@ -260,8 +260,10 @@ class Trainer(GenericTrainer):
                 # Softened output of the model
                 output2 = self.model(Variable(data_distillation_loss), T=myT)
 
-                self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
-                myT * myT) * self.args.alpha
+                # self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
+                # myT * myT) * self.args.alpha
+                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)) * (
+                                      myT * myT) * self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
                 # loss2 = F.kl_div(output2, Variable(target_distillation_loss))
 
