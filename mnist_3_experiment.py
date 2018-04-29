@@ -229,7 +229,7 @@ for seed in args.seeds:
             nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
             testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
             # my_trainer.setup_training()
-            nmc_ideal_cum.append(testY_id eal)
+            nmc_ideal_cum.append(testY_ideal)
             for xTemp in range(0, 10):
                 my_trainer.resetThresh()
                 my_trainer.limit_class(xTemp, 0, False)
