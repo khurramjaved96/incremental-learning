@@ -1,9 +1,11 @@
 from __future__ import print_function
 
 import argparse
+import logging
 
 import torch
 import torch.utils.data as td
+from tqdm import tqdm
 
 import dataHandler
 import experiment as ex
@@ -12,6 +14,7 @@ import plotter as plt
 import trainer
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
+
 parser.add_argument('--batch-size', type=int, default=32, metavar='N',
                     help='input batch size for training (default: 35)')
 parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
@@ -76,8 +79,6 @@ parser.add_argument('--rand', action='store_true', default=False,
 parser.add_argument('--adversarial', action='store_true', default=False,
                     help='Replace exemplars with adversarial instances')
 
-import logging
-
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -85,15 +86,18 @@ dataset = dataHandler.DatasetFactory.get_dataset(args.dataset)
 
 # Checks to make sure parameters are sane
 if args.step_size < 2:
-    logging.error("Step size of 1 will result in no learning;")
+    logging.error("Step size of less than 2 will result in no-learning;")
     assert False
 
+# Support for running multiple experiments
 for seed in args.seeds:
+    # Support to do hyperparamter search over alphas
     for at in args.alphas:
         args.alpha = at
+        # Run experiments on multiple memory budgets.
         for m in args.memory_budgets:
             args.memory_budget = m
-
+            # In case of lwf, memory-budget = 0
             if args.lwf:
                 args.memory_budget = 0
 
@@ -109,7 +113,8 @@ for seed in args.seeds:
                                                                  dataset.classes, [], transform=dataset.train_transform,
                                                                  cuda=args.cuda, oversampling=not args.upsampling,
                                                                  )
-            # Special loader use to compute ideal NMC; i.e, NMC that using all the data points to compute the mean embedding
+            # Special loader use to compute ideal NMC; i.e, NMC that using all the data points
+            #  to compute the mean embedding
             train_dataset_loader_nmc = dataHandler.IncrementalLoader(dataset.train_data.train_data,
                                                                      dataset.train_data.train_labels,
                                                                      dataset.labels_per_class_train,
@@ -145,21 +150,26 @@ for seed in args.seeds:
             # Define an experiment.
             my_experiment = ex.experiment(args.name, args)
 
+            # Set logger parameter. You can get the logger object with name 'iCARL' in any file and it will work.
             logger = logging.getLogger('iCARL')
             logger.setLevel(logging.DEBUG)
 
+            # Detailed logging in the log file.
             fh = logging.FileHandler(my_experiment.path + ".log")
             fh.setLevel(logging.DEBUG)
 
             fh2 = logging.FileHandler("../temp.log")
             fh2.setLevel(logging.DEBUG)
 
+            # Info level logging in stdout. (No debug messages here).
             ch = logging.StreamHandler()
             ch.setLevel(logging.INFO)
 
+            # Format the logging messages
             formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             fh.setFormatter(formatter)
             fh2.setFormatter(formatter)
+            ch.setFormatter(formatter)
 
             logger.addHandler(fh)
             logger.addHandler(fh2)
@@ -176,70 +186,78 @@ for seed in args.seeds:
             # Remove this parameters somehow.
             x = []
             y = []
-            y1 = []
-            train_y = []
-            y_scaled = []
-            y_gscaled = []
+            test_set_classifier = []
+            train_set_classifier = []
+            classifier_scaled = []
+            classifier_scaled_grad = []
             nmc_ideal_cum = []
 
+            # Evaluator objects to measure the accuracy of the model
             nmc_ideal = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
 
             t_classifier = trainer.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
 
-            # Loop that incrementally adds more and more classes
             class_group = 0
+            # Adding all the classes initially to train the base model
             my_trainer.increment_classes(class_group)
             my_trainer.update_frozen_model()
             epoch = 0
 
             # Running epochs_class epochs
-            for epoch in range(0, args.epochs_class):
+            for epoch in tqdm(range(0, args.epochs_class), desc="Training with all Data"):
                 my_trainer.update_lr(epoch)
                 my_trainer.train(epoch)
                 # print(my_trainer.threshold)
                 if epoch % args.log_interval == (args.log_interval - 1):
                     tError = t_classifier.evaluate(my_trainer.model, train_iterator)
-                    print("********CURRENT EPOCH*********", epoch)
-                    print("Train Classifier:", tError)
-                    print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
-                    print("Test Classifier Scaled:",
-                          t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
-                                                my_trainer.older_classes, args.step_size))
+                    logger.debug("********CURRENT EPOCH********* %d", epoch)
+                    logger.debug("Train Classifier: %0.2f", tError)
+                    logger.debug("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
+                    logger.debug("Test Classifier Scaled: %0.2f",
+                                 t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
+                                                       my_trainer.older_classes, args.step_size))
 
+            # Compute final accuracies
             testError = t_classifier.evaluate(my_trainer.model, test_iterator)
             testErrorScaled = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
                                                     my_trainer.older_classes, args.step_size)
             testErrorGScaled = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
                                                      my_trainer.older_classes, args.step_size)
-            y_gscaled.append(testErrorGScaled)
+            classifier_scaled_grad.append(testErrorGScaled)
 
+            # Append result for plotting
             x.append(0)
-            y1.append(testError)
-            y_scaled.append(testErrorScaled)
+            test_set_classifier.append(testError)
+            classifier_scaled.append(testErrorScaled)
+            # Logging result in the terminal
             logger.info("Orig Model Test Error %0.2f", testError)
             logger.info("Orig Model Test Scaled Error %0.2f", testErrorScaled)
             logger.info("Orig Model Test GScaled Error %0.2f", testErrorGScaled)
             my_trainer.update_frozen_model()
+            # Computing NMC loss
             nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
             testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
-
-            # my_trainer.setup_training()
             nmc_ideal_cum.append(testY_ideal)
+
+            # Getting order of class removal for experiments
             listOfElem = list(range(10))
             import random
+
             random.seed(args.seed)
             random.shuffle(listOfElem)
             listOfElem.pop()
-            logger.info("List order" + ",".join([str(i) for i in listOfElem]))
-            counter=0
+            logger.info("Order of experiment" + ",".join([str(i) for i in listOfElem]))
+            counter = 0
             for xTemp in listOfElem:
-                counter+=1
+                counter += 1
                 logger.info("Removing class %d", xTemp)
+                # Set up model
                 my_trainer.resetThresh()
                 my_trainer.limit_class(xTemp, 0, False)
                 my_trainer.randomInitModel()
 
-                for epoch in range(0, args.epochs_class):
+                # Remove model
+                for epoch in tqdm(range(0, args.epochs_class), desc="Training without class " + str(xTemp)):
                     my_trainer.update_lr(epoch)
                     my_trainer.train(epoch)
                     # print(my_trainer.threshold)
@@ -260,52 +278,43 @@ for seed in args.seeds:
                             t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
                                                   my_trainer.older_classes, args.step_size))
 
-                y_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
-                                                      my_trainer.older_classes, args.step_size))
-                y1.append(t_classifier.evaluate(my_trainer.model, test_iterator))
+                classifier_scaled.append(
+                    t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
+                                          my_trainer.older_classes, args.step_size))
+                test_set_classifier.append(t_classifier.evaluate(my_trainer.model, test_iterator))
 
                 testErrorGScaled = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
                                                          my_trainer.older_classes, args.step_size)
                 logger.info("Test Classifier Final GScaled: %0.2f", testErrorGScaled)
 
-                y_gscaled.append(testErrorGScaled)
-
-                # Update means using the train iterator; this is iCaRL case
-                # nmc.update_means(my_trainer.model, train_iterator, dataset.classes)
-                # Update mean using all the data. This is equivalent to memory_budget = infinity
+                classifier_scaled_grad.append(testErrorGScaled)
 
                 # Compute the the nmc based classification results
                 tempTrain = t_classifier.evaluate(my_trainer.model, train_iterator)
-                train_y.append(tempTrain)
+                train_set_classifier.append(tempTrain)
 
-                # testY1 = nmc.evaluate(my_trainer.model, test_iterator, step_size=args.step_size,  kMean = True)
-                # testY = nmc.evaluate(my_trainer.model, test_iterator)
                 nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
                 testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
 
                 nmc_ideal_cum.append(testY_ideal)
-                # y.append(testY)
+
                 # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
                 tcMatrix = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
                 tcMatrix_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes,
                                                                     my_trainer.threshold, my_trainer.older_classes,
                                                                     args.step_size)
-                # nmcMatrix = nmc.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
                 nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
 
-                # Printing results
                 print("Train Claissifier", tempTrain)
-                # print("Test NMC", testY)
 
-                # my_trainer.setup_training()
-
-                # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
+                # Store the resutls in the my_experiment object; this object should contain all the
+                #  information required to reproduce the results.
                 x.append(counter)
 
                 my_experiment.results["NMC"] = [x, y]
-                my_experiment.results["Trained Classifier"] = [x, y1]
-                my_experiment.results["Trained Classifier Scaled"] = [x, y_scaled]
-                my_experiment.results["Train Error Classifier"] = [x, train_y]
+                my_experiment.results["Trained Classifier"] = [x, test_set_classifier]
+                my_experiment.results["Trained Classifier Scaled"] = [x, classifier_scaled]
+                my_experiment.results["Train Error Classifier"] = [x, train_set_classifier]
                 my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
                 my_experiment.store_json()
 
@@ -322,11 +331,10 @@ for seed in args.seeds:
                                       nmcMatrixIdeal)
 
                 # Plotting the line diagrams of all the possible cases
-                # my_plotter.plot(x, y, title=args.name, legend="NMC")
-                my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
+
+                my_plotter.plot(x, classifier_scaled, title=args.name, legend="Trained Classifier Scaled")
                 my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
-                my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
-                # my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
+                my_plotter.plot(x, test_set_classifier, title=args.name, legend="Trained Classifier")
 
                 # Saving the line plot
                 my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
