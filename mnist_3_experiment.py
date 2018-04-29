@@ -231,7 +231,9 @@ for seed in args.seeds:
             random.shuffle(listOfElem)
             listOfElem.pop()
             logger.info("List order" + ",".join([str(i) for i in listOfElem]))
+            counter=0
             for xTemp in listOfElem:
+                counter+=1
                 logger.info("Removing class %d", xTemp)
                 my_trainer.resetThresh()
                 my_trainer.limit_class(xTemp, 0, False)
@@ -298,7 +300,7 @@ for seed in args.seeds:
                 # my_trainer.setup_training()
 
                 # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
-                x.append(xTemp + 1)
+                x.append(counter)
 
                 my_experiment.results["NMC"] = [x, y]
                 my_experiment.results["Trained Classifier"] = [x, y1]
