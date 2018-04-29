@@ -68,7 +68,7 @@ parser.add_argument('--gan-gammas', type=float, nargs='+', default=[0.1, 0.1],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 parser.add_argument('--persist-gan', action='store_true', default=False,
                     help='GAN is not thrown away and trained from scratch each increment')
-parser.add_argument('--gan-img-save-interval', type=int, default=5, help='Save generator samples every x epochs')
+parser.add_argument('--gan-img-save-interval', type=int, default=100, help='Save generator samples every x epochs')
 parser.add_argument('--d-iter', type=int, default=1, help='Number of iterations of discriminatori/critic for each iteration of generator.')
 parser.add_argument('--ckpt-interval', type=int, default=1000, help='After how many epochs should the Generator be saved')
 parser.add_argument('--load-g-ckpt', default="", help='Path to folder which contains Generator ckpts')
@@ -85,7 +85,7 @@ parser.add_argument('--joint-gan-obj', default=False, action='store_true', help=
 parser.add_argument('--joint-gan-alpha', type=float, default=1, help='Contribution of logit distance minimizer in GAN loss')
 parser.add_argument('--ac-distill', default=False, action='store_true', help='Whether to use ACGAN\'s discriminator outputs in distillation')
 parser.add_argument('--filter-using-disc', default=False, action='store_true', help='Whether to use discriminator to filter generated samples')
-parser.add_argument('--filter-val', type=float, default=0.8, help='Value to be used when filtering using discriminator')
+parser.add_argument('--filter-val', type=float, default=0.5, help='Value to be used when filtering using discriminator')
 
 args = parser.parse_args()
 
