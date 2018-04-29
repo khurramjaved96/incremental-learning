@@ -77,6 +77,12 @@ parser.add_argument('--adversarial', action='store_true', default=False,
 import progressbar
 
 
+from tqdm import tqdm
+
+import logging, sys
+
+from utils import Colorer
+
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -190,9 +196,9 @@ for seed in args.seeds:
                 print("Removing class 3")
                 my_trainer.setup_training()
                 my_trainer.limit_class(1, 0, False)
-                my_trainer.limit_class(2, 0, False)
-                my_trainer.limit_class(3, 0, False)
-                my_trainer.limit_class(4, 0, False)
+                # my_trainer.limit_class(2, 0, False)
+                # my_trainer.limit_class(3, 0, False)
+                # my_trainer.limit_class(4, 0, False)
                 # my_trainer.limit_class(5, 0, False)
                 # my_trainer.limit_class(6, 0, False)
                 # my_trainer.limit_class(7, 0, False)
