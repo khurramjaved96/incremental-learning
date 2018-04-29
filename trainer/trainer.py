@@ -232,13 +232,14 @@ class Trainer(GenericTrainer):
                 # Get softened targets generated from previous mode2l;a
                 tempIndex = np.random.choice(range(len(self.models)))
 
-                # pred2 = tempModel(Variable(data_distillation_loss), T=myT, labels=True)
+                pred2 = self.model_fixed(Variable(data_distillation_loss), T=myT, labels=True)
                 # Softened output of the model
                 output2 = self.model(Variable(data_distillation_loss), T=myT)
 
                 self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
                 myT * myT) * self.args.alpha
-                loss2 = F.kl_div(output2, Variable(target_distillation_loss))
+                loss2 = F.kl_div(output2, Variable(pred2.data))
+                # loss2 = F.kl_div(output2, Variable(target_distillation_loss))
 
                 loss2.backward(retain_graph=True)
 

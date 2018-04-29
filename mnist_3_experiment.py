@@ -93,7 +93,7 @@ dataset = dataHandler.DatasetFactory.get_dataset(args.dataset)
 
 # Checks to make sure parameters are sane
 if args.step_size<2:
-    print("Step size of 1 will result in no learning;")
+    logging.error("Step size of 1 will result in no learning;")
     assert False
 
 for seed in args.seeds:
@@ -151,6 +151,28 @@ for seed in args.seeds:
             # Define an experiment.
             my_experiment = ex.experiment(args.name, args)
 
+            logger = logging.getLogger('iCARL')
+            logger.setLevel(logging.DEBUG)
+
+            fh = logging.FileHandler(my_experiment.path + ".log")
+            fh.setLevel(logging.DEBUG)
+
+            fh2 = logging.FileHandler("../temp.log")
+            fh2.setLevel(logging.DEBUG)
+
+            ch = logging.StreamHandler()
+            ch.setLevel(logging.INFO)
+
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            fh.setFormatter(formatter)
+            fh2.setFormatter(formatter)
+
+            logger.addHandler(fh)
+            logger.addHandler(fh2)
+            logger.addHandler(ch)
+
+
+
             # Define the optimizer used in the experiment
             optimizer = torch.optim.SGD(myModel.parameters(), args.lr, momentum=args.momentum,
                                         weight_decay=args.decay, nesterov=True)
@@ -193,7 +215,7 @@ for seed in args.seeds:
                         print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
                         print("Test Classifier Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
 
-                print("Removing class 3")
+                logger.info("Removing class 3")
                 my_trainer.setup_training()
                 my_trainer.limit_class(1, 0, False)
                 # my_trainer.limit_class(2, 0, False)
@@ -224,8 +246,8 @@ for seed in args.seeds:
                 # Evaluate the learned classifier
                 img = None
 
-                print("Test Classifier Final:", t_classifier.evaluate(my_trainer.model, test_iterator))
-                print("Test Classifier Final Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
+                logger.info("Test Classifier Final:", t_classifier.evaluate(my_trainer.model, test_iterator))
+                logger.info("Test Classifier Final Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
 
 
 
