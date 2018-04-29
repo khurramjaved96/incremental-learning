@@ -225,8 +225,13 @@ for seed in args.seeds:
 
             # my_trainer.setup_training()
             nmc_ideal_cum.append(testY_ideal)
-            for xTemp in range(0, 10):
-
+            listOfElem = range(10)
+            import random
+            random.seed(args.seed)
+            random.shuffle(listOfElem)
+            logging.info("List order" + ",".join([str(i) for i in listOfElem]))
+            for xTemp in listOfElem:
+                logging.info("Removing class %d", xTemp)
                 my_trainer.resetThresh()
                 my_trainer.limit_class(xTemp, 0, False)
                 my_trainer.randomInitModel()
