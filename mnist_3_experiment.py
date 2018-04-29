@@ -54,6 +54,8 @@ parser.add_argument('--hs', action='store_true', default=False,
                     help='Hierarchical Softmax')
 
 parser.add_argument('--unstructured-size', type=int, default=0, help='Number of epochs for each increment')
+parser.add_argument('--no-nl', action='store_true', default=False,
+                    help='No Normal Loss')
 
 parser.add_argument('--alphas', type=float, nargs='+', default=[1.0], help='Weight given to new classes vs old classes in loss')
 parser.add_argument('--decay', type=float, default=0.00005, help='Weight decay (L2 penalty).')
