@@ -215,104 +215,116 @@ for seed in args.seeds:
                         print("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
                         print("Test Classifier Scaled:", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False, my_trainer.older_classes, args.step_size))
 
-                logger.info("Removing class 3")
-                my_trainer.setup_training()
-                my_trainer.limit_class(1, 0, False)
-                # my_trainer.limit_class(2, 0, False)
-                # my_trainer.limit_class(3, 0, False)
-                # my_trainer.limit_class(4, 0, False)
-                # my_trainer.limit_class(5, 0, False)
-                # my_trainer.limit_class(6, 0, False)
-                # my_trainer.limit_class(7, 0, False)
-                # my_trainer.limit_class(8, 0, False)
+                testError =  t_classifier.evaluate(my_trainer.model, test_iterator)
+                testErrorScaled = t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
+                                            my_trainer.older_classes, args.step_size)
+
+                x.append(0)
+                y1.append(testError)
+                y_scaled.append(testErrorScaled)
+                logging.info("Orig Model Test Error %0.2f", testError)
+                logging.info("Orig Model Test Scaled Error %0.2f", testErrorScaled)
+                logger.info("Removing class 1")
                 my_trainer.update_frozen_model()
-
-
-                # Running epochs_class epochs
-                for epoch in range(0, args.epochs_class):
-                    my_trainer.update_lr(epoch)
-                    my_trainer.train(epoch)
-                    # print(my_trainer.threshold)
-                    if epoch % args.log_interval == (args.log_interval - 1):
-                        tError = t_classifier.evaluate(my_trainer.model, train_iterator)
-                        logger.info("********CURRENT EPOCH********* %0.2f", epoch)
-                        logger.info("Train Classifier: %0.2f", tError)
-                        logger.info("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
-                        logger.info("Test Classifier Scaled: %0.2f",
-                              t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
-                                                    my_trainer.older_classes, args.step_size))
-
-
-                # Evaluate the learned classifier
-                img = None
-
-                logger.info("Test Classifier Final: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
-                logger.info("Test Classifier Final Scaled: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
-
-
-
-
-                y_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
-                y1.append(t_classifier.evaluate(my_trainer.model, test_iterator))
-
-                # Update means using the train iterator; this is iCaRL case
-                nmc.update_means(my_trainer.model, train_iterator, dataset.classes)
-                # Update mean using all the data. This is equivalent to memory_budget = infinity
-                nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
-                # Compute the the nmc based classification results
-                tempTrain = t_classifier.evaluate(my_trainer.model, train_iterator)
-                train_y.append(tempTrain)
-
-
-
-                testY1 = nmc.evaluate(my_trainer.model, test_iterator, step_size=args.step_size,  kMean = True)
-                testY = nmc.evaluate(my_trainer.model, test_iterator)
-                testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
-                y.append(testY)
-                nmc_ideal_cum.append(testY_ideal)
-
-                # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
-                tcMatrix = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
-                tcMatrix_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
-                nmcMatrix = nmc.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
-                nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
-
-
-                # Printing results
-                print("Train NMC", tempTrain)
-                print("Test NMC", testY)
-
                 my_trainer.setup_training()
+                for xTemp in range(0, 10):
 
-                # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
-                x.append(class_group + args.step_size)
+                    my_trainer.limit_class(xTemp, 0, False)
+                    # my_trainer.limit_class(2, 0, False)
+                    # my_trainer.limit_class(3, 0, False)
+                    # my_trainer.limit_class(4, 0, False)
+                    # my_trainer.limit_class(5, 0, False)
+                    # my_trainer.limit_class(6, 0, False)
+                    # my_trainer.limit_class(7, 0, False)
+                    # my_trainer.limit_class(8, 0, False)
 
-                my_experiment.results["NMC"] = [x, y]
-                my_experiment.results["Trained Classifier"] = [x, y1]
-                my_experiment.results["Trained Classifier Scaled"] = [x, y_scaled]
-                my_experiment.results["Train Error Classifier"] = [x, train_y]
-                my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
-                my_experiment.store_json()
 
-                # Finally, plotting the results;
-                my_plotter = plt.Plotter()
 
-                # Plotting the confusion matrices
-                my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix", tcMatrix)
-                my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-                                      my_experiment.path + "tcMatrix_scaled", tcMatrix_scaled)
-                my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix",
-                                      nmcMatrix)
-                my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
-                                      my_experiment.path + "nmcMatrixIdeal",
-                                      nmcMatrixIdeal)
+                    # Running epochs_class epochs
+                    for epoch in range(0, args.epochs_class):
+                        my_trainer.update_lr(epoch)
+                        my_trainer.train(epoch)
+                        # print(my_trainer.threshold)
+                        if epoch % args.log_interval == (args.log_interval - 1):
+                            tError = t_classifier.evaluate(my_trainer.model, train_iterator)
+                            logger.info("********CURRENT EPOCH********* %0.2f", epoch)
+                            logger.info("Train Classifier: %0.2f", tError)
+                            logger.info("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
+                            logger.info("Test Classifier Scaled: %0.2f",
+                                  t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
+                                                        my_trainer.older_classes, args.step_size))
 
-                # Plotting the line diagrams of all the possible cases
-                my_plotter.plot(x, y, title=args.name, legend="NMC")
-                my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
-                my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
-                my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
-                my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
 
-                # Saving the line plot
-                my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
+                    # Evaluate the learned classifier
+                    img = None
+
+                    logger.info("Test Classifier Final: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
+                    logger.info("Test Classifier Final Scaled: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
+
+
+
+
+                    y_scaled.append(t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold,False, my_trainer.older_classes, args.step_size))
+                    y1.append(t_classifier.evaluate(my_trainer.model, test_iterator))
+
+                    # Update means using the train iterator; this is iCaRL case
+                    nmc.update_means(my_trainer.model, train_iterator, dataset.classes)
+                    # Update mean using all the data. This is equivalent to memory_budget = infinity
+                    nmc_ideal.update_means(my_trainer.model, train_iterator_nmc, dataset.classes)
+                    # Compute the the nmc based classification results
+                    tempTrain = t_classifier.evaluate(my_trainer.model, train_iterator)
+                    train_y.append(tempTrain)
+
+
+
+                    testY1 = nmc.evaluate(my_trainer.model, test_iterator, step_size=args.step_size,  kMean = True)
+                    testY = nmc.evaluate(my_trainer.model, test_iterator)
+                    testY_ideal = nmc_ideal.evaluate(my_trainer.model, test_iterator)
+                    y.append(testY)
+                    nmc_ideal_cum.append(testY_ideal)
+
+                    # Compute confusion matrices of all three cases (Learned classifier, iCaRL, and ideal NMC)
+                    tcMatrix = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
+                    tcMatrix_scaled = t_classifier.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes, my_trainer.threshold , my_trainer.older_classes, args.step_size)
+                    nmcMatrix = nmc.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
+                    nmcMatrixIdeal = nmc_ideal.get_confusion_matrix(my_trainer.model, test_iterator, dataset.classes)
+
+
+                    # Printing results
+                    print("Train NMC", tempTrain)
+                    print("Test NMC", testY)
+
+                    my_trainer.setup_training()
+
+                    # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
+                    x.append(xTemp)
+
+                    my_experiment.results["NMC"] = [x, y]
+                    my_experiment.results["Trained Classifier"] = [x, y1]
+                    my_experiment.results["Trained Classifier Scaled"] = [x, y_scaled]
+                    my_experiment.results["Train Error Classifier"] = [x, train_y]
+                    my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
+                    my_experiment.store_json()
+
+                    # Finally, plotting the results;
+                    my_plotter = plt.Plotter()
+
+                    # Plotting the confusion matrices
+                    my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,my_experiment.path+"tcMatrix"+str(xTemp), tcMatrix)
+                    my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+                                          my_experiment.path + "tcMatrix_scaled"+str(xTemp), tcMatrix_scaled)
+                    my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch, my_experiment.path+"nmcMatrix"+str(xTemp),
+                                          nmcMatrix)
+                    my_plotter.plotMatrix(int(class_group / args.step_size) * args.epochs_class + epoch,
+                                          my_experiment.path + "nmcMatrixIdeal"+str(xTemp),
+                                          nmcMatrixIdeal)
+
+                    # Plotting the line diagrams of all the possible cases
+                    my_plotter.plot(x, y, title=args.name, legend="NMC")
+                    my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
+                    my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
+                    my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
+                    my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
+
+                    # Saving the line plot
+                    my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
