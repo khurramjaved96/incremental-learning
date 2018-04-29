@@ -3,9 +3,9 @@ Created on Thu Oct 21 11:09:09 2017
 @author: Utku Ozbulak - github.com/utkuozbulak
 """
 import copy
+
 import cv2
 import numpy as np
-
 import torch
 from torch.autograd import Variable
 from torchvision import models
@@ -52,7 +52,7 @@ def recreate_image(im_as_var):
         recreated_im (numpy arr): Recreated image in array
     """
     reverse_mean = [-0.485, -0.456, -0.406]
-    reverse_std = [1/0.229, 1/0.224, 1/0.225]
+    reverse_std = [1 / 0.229, 1 / 0.224, 1 / 0.225]
     recreated_im = copy.copy(im_as_var.data.numpy()[0])
     for c in range(3):
         recreated_im[c] /= reverse_std[c]
@@ -86,7 +86,7 @@ def get_params(example_index):
     selected_example = example_index
     img_path = example_list[selected_example][0]
     target_class = example_list[selected_example][1]
-    file_name_to_export = img_path[img_path.rfind('/')+1:img_path.rfind('.')]
+    file_name_to_export = img_path[img_path.rfind('/') + 1:img_path.rfind('.')]
     # Read image
     original_image = cv2.imread(img_path, 1)
     # Process image

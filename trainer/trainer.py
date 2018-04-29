@@ -1,19 +1,19 @@
 from __future__ import print_function
 
 import copy
-import random
+import logging
 
+import numpy as np
 import progressbar
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-import numpy as np
+
 import model
-import logging
-from tqdm import tqdm
 
 logger = logging.getLogger('iCARL')
+
 
 class GenericTrainer:
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
@@ -29,7 +29,7 @@ class GenericTrainer:
         self.active_classes = []
         for param in self.model_fixed.parameters():
             param.requires_grad = False
-        self.models= []
+        self.models = []
         self.current_lr = args.lr
         self.all_classes = list(range(dataset.classes))
         self.all_classes.sort(reverse=True)
@@ -94,7 +94,8 @@ class Trainer(GenericTrainer):
                 for param_group in self.optimizer.param_groups:
                     self.current_lr = param_group['lr']
                     param_group['lr'] = self.current_lr * self.args.gammas[temp]
-                    logger.debug("Changing learning rate from %0.2f to %0.2f", self.current_lr,self.current_lr * self.args.gammas[temp])
+                    logger.debug("Changing learning rate from %0.2f to %0.2f", self.current_lr,
+                                 self.current_lr * self.args.gammas[temp])
                     self.current_lr *= self.args.gammas[temp]
 
     def increment_classes(self, classGroup):
@@ -117,9 +118,6 @@ class Trainer(GenericTrainer):
             self.test_data_iterator.dataset.limit_class(pop_val, 0)
             logger.info("Unstructured Class %d", pop_val)
 
-
-
-
     def limit_class(self, n, k, herding=True):
         if not herding:
             self.train_loader.limit_class(n, k)
@@ -127,7 +125,6 @@ class Trainer(GenericTrainer):
             self.train_loader.limit_class_and_sort(n, k, self.model_fixed)
         if n not in self.older_classes:
             self.older_classes.append(n)
-
 
     def resetThresh(self):
         threshTemp = self.threshold / np.max(self.threshold)
@@ -149,7 +146,7 @@ class Trainer(GenericTrainer):
         threshTemp2 = self.threshold2 / np.max(self.threshold2)
         threshTemp2 = ['{0:.4f}'.format(i) for i in threshTemp2]
 
-        logger.debug("Scale Factor"+",".join(threshTemp))
+        logger.debug("Scale Factor" + ",".join(threshTemp))
         logger.debug("Scale GFactor" + ",".join(threshTemp2))
 
         self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
@@ -162,7 +159,6 @@ class Trainer(GenericTrainer):
             self.current_lr = self.args.lr
         for val in self.left_over:
             self.limit_class(val, int(self.args.memory_budget / len(self.left_over)), not self.args.no_herding)
-
 
     def update_frozen_model(self):
         self.model.eval()
@@ -179,7 +175,7 @@ class Trainer(GenericTrainer):
                 myModel.cuda()
             self.model = myModel
             self.optimizer = torch.optim.SGD(self.model.parameters(), self.args.lr, momentum=self.args.momentum,
-                                        weight_decay=self.args.decay, nesterov=True)
+                                             weight_decay=self.args.decay, nesterov=True)
             self.model.eval()
 
     def randomInitModel(self):
@@ -189,7 +185,7 @@ class Trainer(GenericTrainer):
             myModel.cuda()
         self.model = myModel
         self.optimizer = torch.optim.SGD(self.model.parameters(), self.args.lr, momentum=self.args.momentum,
-                                    weight_decay=self.args.decay, nesterov=True)
+                                         weight_decay=self.args.decay, nesterov=True)
         self.model.eval()
 
     def getModel(self):
@@ -197,7 +193,7 @@ class Trainer(GenericTrainer):
         if self.args.cuda:
             myModel.cuda()
         optimizer = torch.optim.SGD(myModel.parameters(), self.args.lr, momentum=self.args.momentum,
-                                         weight_decay=self.args.decay, nesterov=True)
+                                    weight_decay=self.args.decay, nesterov=True)
         myModel.eval()
 
         self.current_lr = self.args.lr
@@ -205,12 +201,11 @@ class Trainer(GenericTrainer):
         self.model_single = myModel
         self.optimizer_single = optimizer
 
-
     def train(self, epoch):
 
         self.model.train()
 
-        for batch_idx, (data, y ,target) in enumerate(self.train_data_iterator):
+        for batch_idx, (data, y, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
                 y = y.cuda()
@@ -263,7 +258,7 @@ class Trainer(GenericTrainer):
                 # self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
                 # myT * myT) * self.args.alpha
                 self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)) * (
-                                      myT * myT) * self.args.alpha
+                    myT * myT) * self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2.data))
                 # loss2 = F.kl_div(output2, Variable(target_distillation_loss))
 
@@ -297,7 +292,6 @@ class Trainer(GenericTrainer):
                 self.older_classes) + self.args.step_size: len(self.threshold2)] = np.max(
                 self.threshold2)
 
-
     def addModel(self):
         model = copy.deepcopy(self.model_single)
         model.eval()
@@ -314,7 +308,7 @@ class Trainer(GenericTrainer):
                     self.current_lr = param_group['lr']
                     param_group['lr'] = self.current_lr * self.args.gammas[temp]
                     logger.debug("Changing learning rate from %0.2f to %0.2f", self.current_lr,
-                          self.current_lr * self.args.gammas[temp])
+                                 self.current_lr * self.args.gammas[temp])
                     self.current_lr *= self.args.gammas[temp]
 
         self.model_single.train()
@@ -324,19 +318,17 @@ class Trainer(GenericTrainer):
                 data, target = data.cuda(), target.cuda()
                 y = y.cuda()
 
-
             oldClassesIndices = (target * 0).int()
-            for elem in range(0,self.args.unstructured_size+classGroup):
+            for elem in range(0, self.args.unstructured_size + classGroup):
                 oldClassesIndices = oldClassesIndices + (target == elem).int()
 
             new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
 
-            if len(new_classes_indices)>0:
+            if len(new_classes_indices) > 0:
                 self.optimizer_single.zero_grad()
 
                 target_normal_loss = y[new_classes_indices]
                 data_normal_loss = data[new_classes_indices]
-
 
                 y_onehot = target_normal_loss.float()
 
@@ -355,9 +347,8 @@ class Trainer(GenericTrainer):
                 data, target = data.cuda(), target.cuda()
                 y = y.cuda()
 
-
             oldClassesIndices = (target * 0).int()
-            for elem in range(0,self.args.unstructured_size+classGroup):
+            for elem in range(0, self.args.unstructured_size + classGroup):
                 oldClassesIndices = oldClassesIndices + (target == elem).int()
 
             new_classes_indices = torch.squeeze(torch.nonzero((oldClassesIndices == 0)).long())
@@ -365,14 +356,9 @@ class Trainer(GenericTrainer):
             indices = y[new_classes_indices]
             data_normal_loss = data[new_classes_indices]
 
-
             output = self.model_single(Variable(data_normal_loss), labels=True, T=self.args.T)
             output = output.data.cpu().numpy()
             self.train_data_iterator.dataset.labels[indices] = output
             # print (self.train_data_iterator.dataset.labels[indices[0]], "SUM", np.sum(self.train_data_iterator.dataset.labels[indices[0]]))
 
         self.train_data_iterator.dataset.getIndexElem(False)
-
-
-
-

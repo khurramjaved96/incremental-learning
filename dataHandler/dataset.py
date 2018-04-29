@@ -1,4 +1,3 @@
-import torchvision
 from torchvision import datasets, transforms
 
 
@@ -45,6 +44,7 @@ class MNIST(Dataset):
         instance.unsqueeze_(0)
         return instance
 
+
 class CIFAR100(Dataset):
     def __init__(self):
         super().__init__(100, "CIFAR100", 500, 100)
@@ -62,14 +62,15 @@ class CIFAR100(Dataset):
         self.train_transform = transforms.Compose(
             [transforms.RandomHorizontalFlip(),
              transforms.RandomCrop(32, padding=4),
-             transforms.ToTensor(),])
+             transforms.ToTensor(), ])
 
         self.test_transform = transforms.Compose(
-            [transforms.ToTensor(),])
+            [transforms.ToTensor(), ])
 
         self.train_data = datasets.CIFAR100("data", train=True, transform=self.train_transform, download=True)
 
         self.test_data = datasets.CIFAR100("data", train=False, transform=self.test_transform, download=True)
+
 
 class CIFAR10(Dataset):
     def __init__(self):
@@ -84,10 +85,10 @@ class CIFAR10(Dataset):
         self.train_transform = transforms.Compose(
             [transforms.RandomHorizontalFlip(),
              transforms.RandomCrop(32, padding=4),
-             transforms.ToTensor(),])
+             transforms.ToTensor(), ])
 
         self.test_transform = transforms.Compose(
-            [transforms.ToTensor(),])
+            [transforms.ToTensor(), ])
 
         self.train_data = datasets.CIFAR10("data", train=True, transform=self.train_transform, download=True)
 

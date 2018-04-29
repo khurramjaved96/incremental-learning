@@ -111,7 +111,7 @@ class CifarResNet(nn.Module):
         x = x.view(x.size(0), -1)
         if feature:
             return x / torch.norm(x, 2, 1).unsqueeze(1)
-        x = self.fc(x)/T
+        x = self.fc(x) / T
         if keep is not None:
             x = x[:, keep[0]:keep[1]]
         if labels:
@@ -119,7 +119,7 @@ class CifarResNet(nn.Module):
 
         if scale is not None:
             temp = F.softmax(x, dim=1)
-            temp = temp*scale
+            temp = temp * scale
             return temp
 
         return F.log_softmax(x, dim=1)

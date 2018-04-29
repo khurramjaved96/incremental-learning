@@ -1,4 +1,5 @@
 import copy
+import logging
 
 import numpy as np
 import torch
@@ -8,8 +9,8 @@ from PIL import Image
 from torch.autograd import Variable
 from torchvision import datasets, transforms
 
-import logging
 logger = logging.getLogger('iCARL')
+
 
 class IncrementalLoader(td.Dataset):
     def __init__(self, data, labels, class_size, classes, active_classes, transform=None, cuda=False,
@@ -174,8 +175,10 @@ class IncrementalLoader(td.Dataset):
         :return: Returns starting index of classs n
         '''
         return self.indices[n][0]
+
     def getIndexElem(self, bool):
         self.no_transformation = bool
+
     def __getitem__(self, index):
         '''
         Replacing this with a more efficient implemnetation selection; removing c
@@ -218,6 +221,7 @@ class IncrementalLoader(td.Dataset):
 if __name__ == "__main__":
     # To do : Remove the hard-coded mean and just compute it once using the data
     import model
+
     mean = [x / 255 for x in [125.3, 123.0, 113.9]]
     std = [x / 255 for x in [63.0, 62.1, 66.7]]
 

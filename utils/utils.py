@@ -2,8 +2,7 @@ import numpy as np
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
-import torchvision
-import torch
+
 
 def resize_image(img, factor):
     '''
@@ -39,7 +38,6 @@ def save_confusion_matrix(epoch, path, model, args, dataset, test_loader):
 
     test_loss /= len(test_loader.dataset)
     img = cMatrix.value()
-    import matplotlib.pyplot as plt
 
     plt.imshow(img, cmap='plasma', interpolation='nearest')
     plt.colorbar()
@@ -49,8 +47,11 @@ def save_confusion_matrix(epoch, path, model, args, dataset, test_loader):
 
 
 import matplotlib.pyplot as plt
+
 cur = 1
-    # Function to plot images;
+
+
+# Function to plot images;
 
 
 
@@ -72,16 +73,12 @@ def visualizeTensor(t, path):
     fig = plt.figure(figsize=(10, 10))
     for a in t:
         img = a.cpu().numpy()
-        img = np.swapaxes(img,0,2)
+        img = np.swapaxes(img, 0, 2)
         imgMin = np.min(img)
 
         # img = img-np.min(img)
         # img = img/np.max(img)
-        plot(img,str(cur), False)
+        plot(img, str(cur), False)
     plt.savefig(path)
     plt.gcf().clear()
     plt.close()
-
-
-
-
