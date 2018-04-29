@@ -225,7 +225,7 @@ for seed in args.seeds:
 
             # my_trainer.setup_training()
             nmc_ideal_cum.append(testY_ideal)
-            listOfElem = range(10)
+            listOfElem = list(range(10))
             import random
             random.seed(args.seed)
             random.shuffle(listOfElem)
