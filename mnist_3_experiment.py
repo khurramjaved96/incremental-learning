@@ -329,7 +329,7 @@ for seed in args.seeds:
                     my_plotter.plot(x, y_scaled, title=args.name, legend="Trained Classifier Scaled")
                     my_plotter.plot(x, nmc_ideal_cum, title=args.name, legend="Ideal NMC")
                     my_plotter.plot(x, y1, title=args.name, legend="Trained Classifier")
-                    my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
+                    # my_plotter.plot(x, train_y, title=args.name, legend="Trained Classifier Train Set")
 
                     # Saving the line plot
                     my_plotter.save_fig(my_experiment.path, dataset.classes + 1)
