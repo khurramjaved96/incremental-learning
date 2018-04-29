@@ -54,7 +54,7 @@ class IncrementalLoader(td.Dataset):
             cur += cur_len
 
     def add_class(self, n):
-        logger.info("Adding Class %d", n)
+        logger.debug("Adding Class %d", n)
         if n in self.active_classes:
             return
         # Mapping each new added classes to new label in increasing order; we switch the label so that the resulting confusion matrix is always in order

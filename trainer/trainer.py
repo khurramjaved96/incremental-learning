@@ -169,7 +169,7 @@ class Trainer(GenericTrainer):
         self.models.append(self.model_fixed)
 
         if self.args.random_init:
-            logger.warning("Random Initilization of weights")
+            logger.warning("Random Initilization of weights at each increment")
             myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
             if self.args.cuda:
                 myModel.cuda()
@@ -179,7 +179,7 @@ class Trainer(GenericTrainer):
             self.model.eval()
 
     def randomInitModel(self):
-        logger.warning("Random Initilization of weights")
+        logger.info("Randomly initilizaing model")
         myModel = model.ModelFactory.get_model(self.args.model_type, self.args.dataset)
         if self.args.cuda:
             myModel.cuda()

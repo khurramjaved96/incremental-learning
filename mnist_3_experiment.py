@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import argparse
 import logging
+from utils import  Colorer
 
 import torch
 import torch.utils.data as td
@@ -31,8 +32,6 @@ parser.add_argument('--random-init', action='store_true', default=True,
                     help='To initialize model using previous weights or random weights in each iteration')
 parser.add_argument('--no-distill', action='store_true', default=False,
                     help='disable distillation loss')
-parser.add_argument('--distill-only-exemplars', action='store_true', default=False,
-                    help='Only compute the distillation loss on images from the examplar set')
 parser.add_argument('--no-random', action='store_true', default=False,
                     help='Disable random shuffling of classes')
 parser.add_argument('--no-herding', action='store_true', default=True,
@@ -43,7 +42,7 @@ parser.add_argument('--log-interval', type=int, default=2, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--model-type', default="resnet32",
                     help='model type to be used. Example : resnet32, resnet20, densenet, test')
-parser.add_argument('--name', default="noname",
+parser.add_argument('--name', default="MNIST_SCALE_EXPERIMENT",
                     help='Name of the experiment')
 parser.add_argument('--outputDir', default="../",
                     help='Directory to store the results; the new folder will be created '
@@ -52,10 +51,6 @@ parser.add_argument('--upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
 parser.add_argument('--pp', action='store_true', default=False,
                     help='Privacy perserving')
-
-parser.add_argument('--hs', action='store_true', default=False,
-                    help='Hierarchical Softmax')
-
 parser.add_argument('--unstructured-size', type=int, default=0, help='Number of epochs for each increment')
 parser.add_argument('--no-nl', action='store_true', default=False,
                     help='No Normal Loss')
@@ -64,7 +59,6 @@ parser.add_argument('--alphas', type=float, nargs='+', default=[1.0],
                     help='Weight given to new classes vs old classes in loss')
 parser.add_argument('--decay', type=float, default=0.00005, help='Weight decay (L2 penalty).')
 parser.add_argument('--alpha-increment', type=float, default=1.0, help='Weight decay (L2 penalty).')
-parser.add_argument('--l1', type=float, default=0.0, help='Weight decay (L1 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--T', type=float, default=1, help='Tempreture used for softening the targets')
 parser.add_argument('--memory-budgets', type=int, nargs='+', default=[40000],
@@ -166,7 +160,7 @@ for seed in args.seeds:
             ch.setLevel(logging.INFO)
 
             # Format the logging messages
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            formatter = logging.Formatter('%(asctime)s - {%(filename)s:%(lineno)d} - %(levelname)s - %(message)s')
             fh.setFormatter(formatter)
             fh2.setFormatter(formatter)
             ch.setFormatter(formatter)
