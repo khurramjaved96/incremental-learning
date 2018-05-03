@@ -62,9 +62,14 @@ def generate_examples(
     is_cond: If True, use the label information too (Only use with supported GANs)
     '''
     print("Note: Ignoring the fixed noise")
-    G.eval()
+    #G.eval()
+    for param in G.parameters():
+            param.requires_grad = False
+    #if D is not None:
+    #    D.eval()
     if D is not None:
-        D.eval()
+        for param in D.parameters():
+            param.requires_grad = False
     examples = {}
     num_iter = 0
     for idx, klass in enumerate(active_classes):

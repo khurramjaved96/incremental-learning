@@ -53,6 +53,7 @@ class Trainer():
     def train(self):
         x = []
         y = []
+        z = []
         y_nmc = []
         y_nmc_ideal = []
 
@@ -185,6 +186,9 @@ class Trainer():
             y.append(self.classifier_trainer.evaluate(self.test_iterator))
             x.append(class_group + self.args.step_size)
             results = [("Trained Classifier",y), ("NMC Classifier", y_nmc)]
+            if self.args.disc_eval:
+                z.append(self.classifier_trainer.evaluate(self.test_iterator, self.D))
+                results.append(("Auxiliary Classifier", z))
             if self.args.ideal_nmc:
                 results.append(("Ideal NMC Classifier", y_nmc_ideal))
                 ut.plotEmbeddings(self.experiment,
@@ -195,7 +199,7 @@ class Trainer():
                             self.dataset.classes + 1, self.args.name)
 
     def update_frozen_generator(self):
-        self.G.eval()
+        #self.G.eval()
         self.fixed_g = copy.deepcopy(self.G)
         for param in self.fixed_g.parameters():
             param.requires_grad = False

@@ -118,8 +118,11 @@ class Trainer():
     def train(self, gan_images=None, gan_labels=None, batch_size=None, D=None, epoch=0):
         torch.manual_seed(self.args.seed + epoch)
         self.model.train()
+        #TODO CHECK MEMORY
         if D is not None:
-            D.eval()
+            for param in D.parameters():
+                param.requires_grad = False
+        #    D.eval()
 
         for batch_idx, (data, target) in enumerate(self.train_data_iterator):
             if self.args.cuda:
@@ -166,7 +169,7 @@ class Trainer():
             self.optimizer.step()
 
     #TODO Add generated images here
-    def evaluate(self, loader):
+    def evaluate(self, loader, D=None):
         self.model.eval()
         test_loss = 0
         correct = 0
@@ -174,8 +177,11 @@ class Trainer():
         for data, target in loader:
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
-            data, target = Variable(data, volatile=True), Variable(target)
-            output = self.model(data)
+            data, target = Variable(data, volatile=True), Variable(target, volatile=True)
+            if D is not None:
+                output = D(data, T=1)[1]
+            else:
+                output = self.model(data)
             test_loss += F.nll_loss(output, target, size_average=False).data[0]  # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
