@@ -86,7 +86,7 @@ parser.add_argument('--joint-gan-alpha', type=float, default=1, help='Contributi
 parser.add_argument('--ac-distill', default=False, action='store_true', help='Whether to use ACGAN\'s discriminator outputs in distillation')
 parser.add_argument('--filter-using-disc', default=False, action='store_true', help='Whether to use discriminator to filter generated samples')
 parser.add_argument('--filter-val', type=float, default=0.5, help='Value to be used when filtering using discriminator')
-parser.add_argument('--eval-disc', default=False, action='store_true', help='Whether to evaluate discriminator as a classifier (ACGAN only)')
+parser.add_argument('--disc-eval', default=False, action='store_true', help='Whether to evaluate discriminator as a classifier (ACGAN only)')
 
 args = parser.parse_args()
 
