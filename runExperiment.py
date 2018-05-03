@@ -49,7 +49,8 @@ parser.add_argument('--upsampling', action='store_true', default=False,
                     help='Do not do upsampling.')
 parser.add_argument('--pp', action='store_true', default=False,
                     help='Privacy perserving')
-
+parser.add_argument('--distill-step', action='store_true', default=False,
+                    help='Ignore some logits for computing distillation loss. I believe this should work.')
 parser.add_argument('--hs', action='store_true', default=False,
                     help='Hierarchical Softmax. Should the model try to learn which data came at which increment?')
 parser.add_argument('--unstructured-size', type=int, default=0, help='Number of epochs for each increment')

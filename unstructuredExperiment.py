@@ -78,7 +78,7 @@ parser.add_argument('--lwf', action='store_true', default=False,
                     help='Use learning without forgetting. Ignores memory-budget '
                          '("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')
 
-parser.add_argument('--ignore', action='store_true', default=False,
+parser.add_argument('--distill-step', action='store_true', default=True,
                     help='Ignore some logits for computing distillation loss. I believe this should work.')
 
 parser.add_argument('--no-nl', action='store_true', default=False,
