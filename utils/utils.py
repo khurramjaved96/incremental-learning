@@ -69,7 +69,7 @@ def saveConfusionMatrix(epoch, path, model, args, dataset, test_loader):
 
     plt.imshow(img, cmap='plasma', interpolation='nearest')
     plt.colorbar()
-    plt.savefig(path + str(epoch) + ".jpg")
+    plt.savefig(path + str(epoch) + ".eps", format='eps', dpi=1200)
     plt.gcf().clear()
     return 100. * correct / len(test_loader.dataset)
 
@@ -102,7 +102,7 @@ def get_confusion_matrix_nmc(path, model, loader, size, args, means, epoch):
 
     plt.imshow(img, cmap='plasma', interpolation='nearest')
     plt.colorbar()
-    plt.savefig(path + str(epoch) + ".jpg")
+    plt.savefig(path + str(epoch) + ".eps", format='eps', dpi=1200)
     plt.gcf().clear()
     return 100. * correct / len(loader.dataset)
 
