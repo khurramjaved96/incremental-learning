@@ -267,7 +267,7 @@ class Trainer(GenericTrainer):
 
                 # self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
                 # myT * myT) * self.args.alpha
-                self.threshold += (np.sum(pred2.data.cpu().numpy(), 0)) * (
+                self.threshold += (np.sum(pred2.cpu().numpy(), 0)) * (
                     myT * myT) * self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2))
                 # loss2 = F.kl_div(output2, Variable(target_distillation_loss))
