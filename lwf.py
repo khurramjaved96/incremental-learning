@@ -3,7 +3,7 @@ import plotter
 import json
 import numpy as np
 import os
-folders = ['plots/lwf/']
+folders = ['plots/scaling/']
 experimentCon = []
 for folder in folders:
     files = os.listdir(folder)
@@ -22,15 +22,17 @@ for folder in folders:
 
 counter=0
 myPlotter = plotter.Plotter()
-legend = ["Uniform sampling", "Oversampling"]
+legend = ["Classifier with Scaling", "Classifier", "Ideal NMC"]
 for e in experimentCon:
     ncm = []
     tc = []
     x = []
+    ic = []
     for ex in e:
-        x = ex.results['NCM'][0]
-        ncm.append(ex.results['NCM'][1])
+        x = ex.results['Trained Classifier'][0]
+        ncm.append(ex.results['Trained Classifier Scaled'][1])
         tc.append(ex.results['Trained Classifier'][1])
+        ic.append(ex.results['Ideal NMC'][1])
     ncmStd = np.std(ncm, axis=0)
     tcStd = np.std(tc, axis=0)
     ncm = np.mean(ncm,axis=0)
@@ -38,6 +40,7 @@ for e in experimentCon:
     print (ncmStd, tcStd)
     myPlotter.plot(x, ncm, legend=legend[counter]+" with NCM", error=ncmStd)
     myPlotter.plot(x, tc, legend=legend[counter]+" with TC", error=tcStd)
+    myPlotter.plot(x, ic, legend=legend[counter] + " with TC", error=tcStd)
     counter+=1
-myPlotter.save_fig("../tempLWF", 102)
+myPlotter.save_fig("../tempLWF", 11)
 

@@ -16,6 +16,9 @@ logger = logging.getLogger('iCARL')
 
 
 class GenericTrainer:
+    '''
+    Base class for trainer; to implement a new training routine, inherit from this. 
+    '''
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
         self.train_data_iterator = trainDataIterator
         self.test_data_iterator = testDataIterator
@@ -98,8 +101,13 @@ class Trainer(GenericTrainer):
                                  self.current_lr * self.args.gammas[temp])
                     self.current_lr *= self.args.gammas[temp]
 
-    def increment_classes(self, classGroup):
-        for temp in range(classGroup, classGroup + self.args.step_size):
+    def increment_classes(self, class_group):
+        '''
+        Add classes starting from class_group to class_group + step_size 
+        :param class_group: 
+        :return: N/A. Only has side-affects 
+        '''
+        for temp in range(class_group, class_group + self.args.step_size):
             pop_val = self.all_classes.pop()
             self.train_data_iterator.dataset.add_class(pop_val)
             self.ideal_iterator.dataset.add_class(pop_val)
@@ -107,6 +115,12 @@ class Trainer(GenericTrainer):
             self.left_over.append(pop_val)
 
     def increment_classes_2(self, start, end):
+        '''
+        Add classes from start to end (so 10, 30 will add all classes from 10 to 29)
+        :param start: Int specifying starting Index. 
+        :param end: Int specifying ending Index. 
+        :return: 
+        '''
         for temp in range(start, end):
             pop_val = self.all_classes.pop()
             self.train_data_iterator.dataset.add_class(pop_val)
@@ -116,7 +130,7 @@ class Trainer(GenericTrainer):
 
             self.test_data_iterator.dataset.add_class(pop_val)
             self.test_data_iterator.dataset.limit_class(pop_val, 0)
-            logger.info("Unstructured Class %d", pop_val)
+
 
     def limit_class(self, n, k, herding=True):
         if not herding:
@@ -127,6 +141,12 @@ class Trainer(GenericTrainer):
             self.older_classes.append(n)
 
     def resetThresh(self):
+        '''
+        Reset the threshold vector maintaining the scale factor. 
+        Important to set this to zero before every increment. 
+        setupTraining() also does this so not necessary to call both. 
+        :return: 
+        '''
         threshTemp = self.threshold / np.max(self.threshold)
         threshTemp = ['{0:.4f}'.format(i) for i in threshTemp]
 
@@ -140,19 +160,8 @@ class Trainer(GenericTrainer):
         self.threshold2 = np.ones(self.dataset.classes, dtype=np.float64)
 
     def setup_training(self):
-        threshTemp = self.threshold / np.max(self.threshold)
-        threshTemp = ['{0:.4f}'.format(i) for i in threshTemp]
+        self.resetThresh()
 
-        threshTemp2 = self.threshold2 / np.max(self.threshold2)
-        threshTemp2 = ['{0:.4f}'.format(i) for i in threshTemp2]
-
-        logger.debug("Scale Factor" + ",".join(threshTemp))
-        logger.debug("Scale GFactor" + ",".join(threshTemp2))
-
-        self.threshold = np.ones(self.dataset.classes, dtype=np.float64)
-        self.threshold2 = np.ones(self.dataset.classes, dtype=np.float64)
-
-        # self.args.alpha += self.args.alpha_increment
         for param_group in self.optimizer.param_groups:
             logger.debug("Setting LR to %0.2f", self.args.lr)
             param_group['lr'] = self.args.lr
@@ -232,14 +241,10 @@ class Trainer(GenericTrainer):
             target_normal_loss.unsqueeze_(1)
             y_onehot.scatter_(1, target_normal_loss, 1)
 
-            # y_onehot = target_normal_loss.float()
 
-
-
-            if len(self.older_classes) == 0 or not self.args.no_nl:
-                output = self.model(Variable(data_normal_loss))
-                self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
-                loss = F.kl_div(output, Variable(y_onehot))
+            output = self.model(Variable(data_normal_loss))
+            self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
+            loss = F.kl_div(output, Variable(y_onehot))
 
             myT = self.args.T
 
@@ -253,7 +258,10 @@ class Trainer(GenericTrainer):
 
                 pred2 = self.model_fixed(Variable(data_distillation_loss), T=myT, labels=True)
                 # Softened output of the model
-                output2 = self.model(Variable(data_distillation_loss), T=myT)
+                if myT>1:
+                    output2 = self.model(Variable(data_distillation_loss), T=myT)
+                else:
+                    output2 = output
 
                 # self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
                 # myT * myT) * self.args.alpha

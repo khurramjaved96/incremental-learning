@@ -13,9 +13,9 @@ import trainer
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
-                    help='input batch size for training (default: 35)')
+                    help='input batch size for training (default: 64)')
 parser.add_argument('--lr', type=float, default=2.0, metavar='LR',
-                    help='learning rate (default: 0.1)')
+                    help='learning rate (default: 2.0)')
 parser.add_argument('--schedule', type=int, nargs='+', default=[45, 60, 68],
                     help='Decrease learning rate at these epochs.')
 parser.add_argument('--gammas', type=float, nargs='+', default=[0.2, 0.2, 0.2],
@@ -36,6 +36,7 @@ parser.add_argument('--no-herding', action='store_true', default=False,
                     help='Disable herding for NMC')
 parser.add_argument('--seeds', type=int, nargs='+', default=[23423],
                     help='Seeds values to be used')
+parser.add_argument('--unstructured-size', type=int, default=0, help='Number of epochs for each increment')
 parser.add_argument('--log-interval', type=int, default=5, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--model-type', default="resnet32",
@@ -51,8 +52,8 @@ parser.add_argument('--pp', action='store_true', default=False,
                     help='Privacy perserving')
 
 parser.add_argument('--hs', action='store_true', default=False,
-                    help='Hierarchical Softmax')
-
+                    help='Hierarchical Softmax. Should the model try to learn which data came at which increment?')
+parser.add_argument('--unstructured-size', type=int, default=0, help='Number of epochs for each increment')
 parser.add_argument('--alphas', type=float, nargs='+', default=[1.0], help='Weight given to new classes vs old classes in loss')
 parser.add_argument('--decay', type=float, default=0.00005, help='Weight decay (L2 penalty).')
 parser.add_argument('--alpha-increment', type=float, default=1.0, help='Weight decay (L2 penalty).')
@@ -67,12 +68,12 @@ parser.add_argument('--lwf', action='store_true', default=False,
                     help='Use learning without forgetting. Ignores memory-budget '
                          '("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')
 parser.add_argument('--no-nl', action='store_true', default=False,
-                    help='No Normal Loss')
+                    help='No Normal Loss. Only uses the distillation loss to train the new model')
 parser.add_argument('--rand', action='store_true', default=False,
-                    help='Replace exemplars with random instances')
+                    help='Replace exemplars with random noice instances')
 parser.add_argument('--adversarial', action='store_true', default=False,
                     help='Replace exemplars with adversarial instances')
-import progressbar
+
 
 
 args = parser.parse_args()
