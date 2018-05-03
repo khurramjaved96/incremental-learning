@@ -258,7 +258,7 @@ class Trainer(GenericTrainer):
                 if not self.args.distill_step:
                     pred2 = self.model_fixed(Variable(data_distillation_loss), T=myT, labels=True).data
                 else:
-                    pred2 = y
+                    pred2 = y.float()
                 # Softened output of the model
                 if myT>1:
                     output2 = self.model(Variable(data_distillation_loss), T=myT)
