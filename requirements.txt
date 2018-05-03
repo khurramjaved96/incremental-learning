@@ -7,3 +7,4 @@ torchfile==0.1.0
 torchnet==0.0.1
 torchvision==0.2.0
 tqdm==4.19.5
+-e git+https://github.com/pytorch/tnt.git@master
