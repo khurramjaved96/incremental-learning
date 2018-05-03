@@ -34,7 +34,7 @@ class experiment:
             self.results["Temp Results"] = [[1, 2, 3, 4], [5, 6, 2, 6]]
 
     def store_json(self):
-        with open(self.path + "JSONDump", 'w') as outfile:
+        with open(self.path + "JSONDump.txt", 'w') as outfile:
             json.dump(json.dumps(self.__dict__), outfile)
 
 
