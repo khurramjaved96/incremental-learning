@@ -145,7 +145,7 @@ class Trainer():
             y_onehot.scatter_(1, target, 1)
 
             output, output2 = self.model(Variable(data), T=self.args.T, both=True)
-            if self.args.ac_distill:
+            if self.args.ac_distill and D is not None:
                 pred2 = D(Variable(data, True), T=self.args.T)[1]
                 loss2 = F.kl_div(output2, Variable(pred2.data))
                 loss2.backward(retain_graph=True)
@@ -164,8 +164,8 @@ class Trainer():
                         if param.grad is not None:
                             param.grad = param.grad * (self.args.T * self.args.T) * alpha
                     # y_onehot[:, self.older_classes] = pred2.data[:, self.older_classes]
-                    loss = F.kl_div(output, Variable(y_onehot))
-                    loss.backward()
+                loss = F.kl_div(output, Variable(y_onehot))
+                loss.backward()
             self.optimizer.step()
 
     #TODO Add generated images here

@@ -133,6 +133,7 @@ class Trainer():
                 gutils.save_checkpoint(self.args.gan_epochs[self.increment],
                                        self.increment, self.experiment,
                                        self.G, self.D)
+
             #-------------Train Classifier-----------#
             epoch = 0
             for epoch in range(0, self.args.epochs_class):
