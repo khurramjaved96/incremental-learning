@@ -63,13 +63,13 @@ def generate_examples(
     '''
     print("Note: Ignoring the fixed noise")
     #G.eval()
-    for param in G.parameters():
-            param.requires_grad = False
+    #for param in G.parameters():
+    #        param.requires_grad = False
     #if D is not None:
     #    D.eval()
-    if D is not None:
-        for param in D.parameters():
-            param.requires_grad = False
+    #if D is not None:
+    #    for param in D.parameters():
+    #        param.requires_grad = False
     examples = {}
     num_iter = 0
     for idx, klass in enumerate(active_classes):

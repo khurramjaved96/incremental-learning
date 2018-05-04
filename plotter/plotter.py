@@ -49,7 +49,7 @@ class Plotter():
         plt.yticks(list(range(10,105,10)))
         plt.xticks(list(range(0, xticks+1, int(xticks/10))))
         plt.savefig(path+".jpg")
-        plt.savefig(path+".eps", format='eps')
+        plt.savefig(path+".eps", format='eps', dpi=1200)
         plt.gcf().clear()
 
     def save_fig2(self, path, xticks=105):
@@ -64,7 +64,7 @@ class Plotter():
         plt.imshow(img, cmap='jet', interpolation='nearest')
         plt.colorbar()
         plt.savefig(path + str(epoch) + ".jpg")
-        plt.savefig(path + str(epoch) + ".eps", format='eps')
+        #plt.savefig(path + str(epoch) + ".eps", format='eps', dpi=200)
         plt.gcf().clear()
 
     def saveImage(self, img, path, epoch):
