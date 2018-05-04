@@ -42,7 +42,9 @@ class Plotter():
         if title is not None:
             plt.title(title)
 
-    def save_fig(self, path, xticks=105):
+    def save_fig(self, path, xticks=105, title=None):
+        if title is not None:
+            plt.title(title)
         plt.legend(handles=self.handles)
         plt.ylim((0, 100 + 1.2))
         plt.xlim((0, xticks + .2))
@@ -50,7 +52,7 @@ class Plotter():
         plt.xlabel(self.x_label)
         plt.yticks(list(range(10, 105, 10)))
         plt.xticks(list(range(0, xticks + 1, int(xticks / 10))))
-        plt.savefig(path + ".jpg")
+        plt.savefig(path + ".eps", format='eps')
         plt.gcf().clear()
 
     def save_fig2(self, path, xticks=105):

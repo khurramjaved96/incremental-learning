@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 import argparse
+import logging
+from tqdm import tqdm
 
 import torch
 import torch.utils.data as td
@@ -10,6 +12,8 @@ import experiment as ex
 import model
 import plotter as plt
 import trainer
+
+logger = logging.getLogger('iCARL')
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
@@ -142,6 +146,27 @@ for seed in args.seeds:
 
             # Define an experiment.
             my_experiment = ex.experiment(args.name, args)
+
+            logger = logging.getLogger('iCARL')
+            logger.setLevel(logging.DEBUG)
+
+            fh = logging.FileHandler(my_experiment.path + ".log")
+            fh.setLevel(logging.DEBUG)
+
+            fh2 = logging.FileHandler("../temp.log")
+            fh2.setLevel(logging.DEBUG)
+
+            ch = logging.StreamHandler()
+            ch.setLevel(logging.INFO)
+
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            fh.setFormatter(formatter)
+            fh2.setFormatter(formatter)
+
+            logger.addHandler(fh)
+            logger.addHandler(fh2)
+            logger.addHandler(ch)
+
 
             # Define the optimizer used in the experiment
             optimizer = torch.optim.SGD(myModel.parameters(), args.lr, momentum=args.momentum,

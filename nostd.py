@@ -22,7 +22,7 @@ for folder in folders:
 
 counter=0
 myPlotter = plotter.Plotter()
-legend = ["iCaRL with Herding", "iCaRL no Herding"]
+legend = ["iCaRL with Herding", "iCaRL without Herding"]
 for e in experimentCon:
     ncm = []
     tc = []
@@ -30,15 +30,8 @@ for e in experimentCon:
     ic = []
     for ex in e:
         x = ex.results['Trained Classifier'][0]
-        ncm.append(ex.results['Trained Classifier Scaled'][1])
-    ncmStd = np.std(ncm, axis=0)
-    tcStd = np.std(tc, axis=0)
-    ncm = np.mean(ncm,axis=0)
-    tc = np.mean(tc, axis=0)
-    print (ncmStd, tcStd)
-    myPlotter.plot(x, ncm, legend=legend[counter]+" with NCM", error=ncmStd)
-    myPlotter.plot(x, tc, legend=legend[counter]+" with TC", error=tcStd)
-    myPlotter.plot(x, ic, legend=legend[counter] + " with TC", error=tcStd)
-    counter+=1
-myPlotter.save_fig("../tempLWF", 11)
+        ncm = ex.results['NMC'][1]
+        myPlotter.plot(x, ncm, legend=legend[counter])
+        counter+=1
+myPlotter.save_fig("../tempLWF", 103, title="Herding vs No Herding")
 
