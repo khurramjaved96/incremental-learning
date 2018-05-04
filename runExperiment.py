@@ -13,6 +13,8 @@ import model
 import plotter as plt
 import trainer
 
+from utils import  Colorer
+
 logger = logging.getLogger('iCARL')
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
