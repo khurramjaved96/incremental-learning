@@ -145,7 +145,7 @@ class Trainer():
             y_onehot.scatter_(1, target, 1)
 
             output, output2 = self.model(Variable(data), T=self.args.T, both=True)
-            if self.args.ac_distill and D is not None:
+            if self.args.ac_distill and D is not None and len(self.older_classes) > 0:
                 pred2 = D(Variable(data, True), T=self.args.T)[1]
                 loss2 = F.kl_div(output2, Variable(pred2.data))
                 loss2.backward(retain_graph=True)
