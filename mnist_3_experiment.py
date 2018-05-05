@@ -61,7 +61,7 @@ parser.add_argument('--decay', type=float, default=0.00005, help='Weight decay (
 parser.add_argument('--alpha-increment', type=float, default=1.0, help='Weight decay (L2 penalty).')
 parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
 parser.add_argument('--T', type=float, default=1, help='Tempreture used for softening the targets')
-parser.add_argument('--memory-budgets', type=int, nargs='+', default=[40000],
+parser.add_argument('--memory-budgets', type=int, nargs='+', default=[80000],
                     help='How many images can we store at max. 0 will result in fine-tuning')
 parser.add_argument('--epochs-class', type=int, default=30, help='Number of epochs for each increment')
 parser.add_argument('--dataset', default="MNIST", help='Dataset to be used; example CIFAR, MNIST')
@@ -72,6 +72,8 @@ parser.add_argument('--rand', action='store_true', default=False,
                     help='Replace exemplars with random instances')
 parser.add_argument('--adversarial', action='store_true', default=False,
                     help='Replace exemplars with adversarial instances')
+parser.add_argument('--distill-step', action='store_true', default=False,
+                    help='Ignore some logits for computing distillation loss. I believe this should work.')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
