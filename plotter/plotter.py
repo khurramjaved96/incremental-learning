@@ -65,7 +65,7 @@ class Plotter():
     def plotMatrix(self, epoch, path, img):
 
         import matplotlib.pyplot as plt
-        plt.imshow(img, cmap='inferno', interpolation='nearest')
+        plt.imshow(img, cmap='plasma', interpolation='nearest')
         plt.colorbar()
         plt.savefig(path + str(epoch) + ".svg", format='svg')
         plt.gcf().clear()
