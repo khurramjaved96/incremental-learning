@@ -59,7 +59,7 @@ parser.add_argument('--alphas', type=float, nargs='+', default=[1.0],
                     help='Weight given to new classes vs old classes in loss')
 parser.add_argument('--decay', type=float, default=0.00005, help='Weight decay (L2 penalty).')
 parser.add_argument('--alpha-increment', type=float, default=1.0, help='Weight decay (L2 penalty).')
-parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment')
+parser.add_argument('--step-size', type=int, default=100, help='How many classes to add in each increment')
 parser.add_argument('--T', type=float, default=2, help='Tempreture used for softening the targets')
 parser.add_argument('--memory-budgets', type=int, nargs='+', default=[80000],
                     help='How many images can we store at max. 0 will result in fine-tuning')

@@ -3,7 +3,7 @@ import plotter
 import json
 import numpy as np
 import os
-folders = ['plots/herding/']
+folders = ['plots/scaling/']
 experimentCon = []
 for folder in folders:
     files = os.listdir(folder)
