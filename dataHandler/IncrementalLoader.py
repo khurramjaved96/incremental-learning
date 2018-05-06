@@ -155,6 +155,7 @@ class IncrementalLoader(td.Dataset):
                 buff[exmp_no] = self.data[start + arg_min]
                 features_copy[exmp_no] = features.data[arg_min]
                 features[arg_min] = features[arg_min] + 1000
+                logger.debug("Arg Min: %d", arg_min)
             print("Exmp shape", buff[0:min(k, self.class_size)].shape)
             self.data[start:start + min(k, self.class_size)] = buff[0:min(k, self.class_size)]
 
