@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 plt.switch_backend('agg')
 
-MEDIUM_SIZE = 16
+MEDIUM_SIZE = 18
 
 font = {'family': 'sans-serif',
         'weight': 'bold'}
@@ -31,10 +31,10 @@ class Plotter():
         self.y = y
         plt.grid(color='0.89', linestyle='--', linewidth=1.0)
         if error is None:
-            l, = plt.plot(x, y, linestyle=next(self.lines), marker=next(self.marker), label=legend, linewidth=2.0)
+            l, = plt.plot(x, y, linestyle=next(self.lines), marker=next(self.marker), label=legend, linewidth=3.0)
         else:
             l = plt.errorbar(x, y, yerr=error, capsize=4.0, capthick=2.0, linestyle=next(self.lines),
-                             marker=next(self.marker), label=legend, linewidth=2.0)
+                             marker=next(self.marker), label=legend, linewidth=3.0)
 
         self.handles.append(l)
         self.x_label = xLabel
@@ -42,16 +42,17 @@ class Plotter():
         if title is not None:
             plt.title(title)
 
-    def save_fig(self, path, xticks=105, title=None):
+    def save_fig(self, path, xticks=105, title=None, yStart=0, xRange=0, yRange=10):
         if title is not None:
             plt.title(title)
         plt.legend(handles=self.handles)
-        plt.ylim((0, 100 + 1.2))
+        plt.ylim((yStart, 100 + 0.2))
         plt.xlim((0, xticks + .2))
         plt.ylabel(self.y_label)
         plt.xlabel(self.x_label)
-        plt.yticks(list(range(10, 105, 10)))
-        plt.xticks(list(range(0, xticks + 1, int(xticks / 10))))
+        plt.yticks(list(range(yStart, 101, yRange)))
+        print (list(range(yStart, 105, yRange)))
+        plt.xticks(list(range(0, xticks + 1, xRange + int(xticks / 10))))
         plt.savefig(path + ".eps", format='eps')
         plt.gcf().clear()
 

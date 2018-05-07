@@ -3,7 +3,7 @@ import plotter
 import json
 import numpy as np
 import os
-folders = ['plots/scaling/']
+folders = ['plots/2step/']
 experimentCon = []
 for folder in folders:
     files = os.listdir(folder)
@@ -31,22 +31,24 @@ for e in experimentCon:
     inmc = []
     for ex in e:
         x = ex.results['Trained Classifier'][0]
-        ncm.append(ex.results['Trained Classifier Scaled'][1])
         ic.append(ex.results['Trained Classifier'][1])
-        inmc.append(ex.results['Ideal NMC'][1])
+        inmc.append(ex.results['NMC'][1])
+        ncm.append(ex.results['Ideal NMC'][1])
     ncmStd = np.std(ncm, axis=0)
-    tcStd = np.std(tc, axis=0)
-
+    for a in range(0, len(inmc)):
+        inmc[a][0] = ic[a][0]
     iinmc = np.std(inmc, axis=0)
+    incm = np.std(ncm, axis=0)
     iic = np.std(ic, axis=0)
-    ncm = np.mean(ncm,axis=0)
     inmc = np.mean(inmc, axis=0)
+    ncm = np.mean(ncm, axis=0)
     ic = np.mean(ic,axis=0)
-    tc = np.mean(tc, axis=0)
-    myPlotter.plot(x, ncm, legend=legend[counter]+" with NCM", error=ncmStd)
-    myPlotter.plot(x, inmc, legend=legend[counter]+" with TC", error=iinmc)
-    myPlotter.plot(x, ic, legend=legend[counter] + " with TC", error=iic)
+    myPlotter.plot(x, inmc, legend="iCaRL", error=iinmc)
+    myPlotter.plot(x, ncm, legend="NCM (Ideal)", error=iinmc)
+    myPlotter.plot(x, ic, legend="Trained Classifier", error=iic)
+
+
     counter+=1
 
-myPlotter.save_fig("../tempLWF", 11)
+myPlotter.save_fig("../2step", 101, yStart=0, xRange=0)
 

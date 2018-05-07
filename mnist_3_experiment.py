@@ -240,7 +240,7 @@ for seed in args.seeds:
             import random
 
             random.seed(args.seed)
-            random.shuffle(listOfElem)
+            # random.shuffle(listOfElem)
             listOfElem.pop()
             logger.info("Order of experiment" + ",".join([str(i) for i in listOfElem]))
             counter = 0

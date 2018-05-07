@@ -243,7 +243,7 @@ for seed in args.seeds:
             random.shuffle(listOfElem)
             logger.info("Order of experiment" + ",".join([str(i) for i in listOfElem]))
             counter = 0
-            for xTemp in range(0, 20):
+            for xTemp in range(0, 5):
                 counter += 1
                 logger.info("Removing class %d", xTemp)
                 # Set up model
