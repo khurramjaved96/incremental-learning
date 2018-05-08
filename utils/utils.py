@@ -68,7 +68,7 @@ def saveConfusionMatrix(epoch, path, model, args, dataset, test_loader):
     import matplotlib.pyplot as plt
 
     plt.imshow(img, cmap='plasma', interpolation='nearest')
-    plt.colorbar()
+    #plt.colorbar()
     plt.savefig(path + str(epoch) + ".jpg")
     plt.savefig(path + str(epoch) + ".eps", format='eps')
     plt.gcf().clear()
@@ -102,7 +102,7 @@ def get_confusion_matrix_nmc(path, model, loader, size, args, means, epoch):
     import matplotlib.pyplot as plt
 
     plt.imshow(img, cmap='plasma', interpolation='nearest')
-    plt.colorbar()
+    #plt.colorbar()
     plt.savefig(path + str(epoch) + ".jpg")
     plt.savefig(path + str(epoch) + ".eps", format='eps')
     plt.gcf().clear()
