@@ -36,7 +36,7 @@ Done.
 
 =======
 ## Results 
-![alt text](http://khurramjaved96.github.io/random/result.jpg "Incremental Learning on MNIST")
+![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/2step.png) "Incremental Learning on MNIST")
 
 
 ## References
