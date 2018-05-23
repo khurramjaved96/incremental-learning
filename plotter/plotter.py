@@ -1,3 +1,9 @@
+''' Incremental-Classifier Learning 
+ Authors : Khurram Javed, Muhammad Talha Paracha
+ Maintainer : Khurram Javed
+ Lab : TUKL-SEECS R&D Lab
+ Email : 14besekjaved@seecs.edu.pk '''
+
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -51,7 +57,7 @@ class Plotter():
         plt.ylabel(self.y_label)
         plt.xlabel(self.x_label)
         plt.yticks(list(range(yStart, 101, yRange)))
-        print (list(range(yStart, 105, yRange)))
+        print(list(range(yStart, 105, yRange)))
         plt.xticks(list(range(0, xticks + 1, xRange + int(xticks / 10))))
         plt.savefig(path + ".eps", format='eps')
         plt.gcf().clear()
@@ -65,7 +71,6 @@ class Plotter():
 
     def plotMatrix(self, epoch, path, img):
 
-        import matplotlib.pyplot as plt
         plt.imshow(img, cmap='plasma', interpolation='nearest')
         plt.colorbar()
         plt.savefig(path + str(epoch) + ".svg", format='svg')

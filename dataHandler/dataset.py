@@ -1,5 +1,12 @@
-from torchvision import datasets, transforms
+''' Incremental-Classifier Learning 
+ Authors : Khurram Javed, Muhammad Talha Paracha
+ Maintainer : Khurram Javed
+ Lab : TUKL-SEECS R&D Lab
+ Email : 14besekjaved@seecs.edu.pk '''
 
+from torchvision import datasets, transforms
+import torch
+import numpy
 
 # To incdude a new Dataset, inherit from Dataset and add all the Dataset specific parameters here.
 # Goal : Remove any data specific parameters from the rest of the code

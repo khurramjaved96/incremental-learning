@@ -1,3 +1,9 @@
+''' Incremental-Classifier Learning 
+ Authors : Khurram Javed, Muhammad Talha Paracha
+ Maintainer : Khurram Javed
+ Lab : TUKL-SEECS R&D Lab
+ Email : 14besekjaved@seecs.edu.pk '''
+
 import model.densenet as dn
 import model.resnet32 as res
 import model.testModel as tm

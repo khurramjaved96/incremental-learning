@@ -1,3 +1,9 @@
+''' Incremental-Classifier Learning 
+ Authors : Khurram Javed, Muhammad Talha Paracha
+ Maintainer : Khurram Javed
+ Lab : TUKL-SEECS R&D Lab
+ Email : 14besekjaved@seecs.edu.pk '''
+
 from __future__ import print_function
 
 import copy
@@ -19,6 +25,7 @@ class GenericTrainer:
     '''
     Base class for trainer; to implement a new training routine, inherit from this. 
     '''
+
     def __init__(self, trainDataIterator, testDataIterator, dataset, model, args, optimizer, ideal_iterator=None):
         self.train_data_iterator = trainDataIterator
         self.test_data_iterator = testDataIterator
@@ -131,7 +138,6 @@ class Trainer(GenericTrainer):
             self.test_data_iterator.dataset.add_class(pop_val)
             self.test_data_iterator.dataset.limit_class(pop_val, 0)
 
-
     def limit_class(self, n, k, herding=True):
         if not herding:
             self.train_loader.limit_class(n, k)
@@ -241,7 +247,6 @@ class Trainer(GenericTrainer):
             target_normal_loss.unsqueeze_(1)
             y_onehot.scatter_(1, target_normal_loss, 1)
 
-
             output = self.model(Variable(data_normal_loss))
             self.threshold += np.sum(y_onehot.cpu().numpy(), 0)
             loss = F.kl_div(output, Variable(y_onehot))
@@ -260,7 +265,7 @@ class Trainer(GenericTrainer):
                 else:
                     pred2 = y.float()
                 # Softened output of the model
-                if myT>1:
+                if myT > 1:
                     output2 = self.model(Variable(data_distillation_loss), T=myT)
                 else:
                     output2 = output

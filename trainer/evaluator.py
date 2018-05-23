@@ -1,14 +1,24 @@
+''' Incremental-Classifier Learning 
+ Authors : Khurram Javed, Muhammad Talha Paracha
+ Maintainer : Khurram Javed
+ Lab : TUKL-SEECS R&D Lab
+ Email : 14besekjaved@seecs.edu.pk '''
+
+import logging
+
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch.autograd import Variable
 from torchnet.meter import confusionmeter
-import torch.nn.functional as F
-import logging
+
 logger = logging.getLogger('iCARL')
+
 
 class EvaluatorFactory():
     def __init__(self):
         pass
+
     @staticmethod
     def get_evaluator(testType="nmc", cuda=True):
         if testType == "nmc":
@@ -23,7 +33,7 @@ class NearestMeanEvaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def evaluate(self, model, loader, step_size= 10, kMean=False):
+    def evaluate(self, model, loader, step_size=10, kMean=False):
         model.eval()
         if self.means is None:
             self.means = np.zeros((100, model.featureSize))
@@ -42,14 +52,15 @@ class NearestMeanEvaluator():
                 result = result.cpu().numpy()
 
                 # REMOVE THIS 100 DEPENDENCY BY TOTAL NUMBER OF CLASSES CONST
-                tempClassifier=np.zeros(( len(result), int(100/step_size)))
+                tempClassifier = np.zeros((len(result), int(100 / step_size)))
                 for outer in range(0, len(result)):
-                    for tempCounter in range(0, int(100/step_size)):
-                        tempClassifier[outer, tempCounter] = np.sum(result[tempCounter*step_size:(tempCounter*step_size)+step_size])
+                    for tempCounter in range(0, int(100 / step_size)):
+                        tempClassifier[outer, tempCounter] = np.sum(
+                            result[tempCounter * step_size:(tempCounter * step_size) + step_size])
                 for outer in range(0, len(result)):
                     minClass = np.argmin(tempClassifier[outer, :])
-                    result[outer, 0:minClass*step_size]+= 300000
-                    result[outer, minClass*step_size:(minClass+1)*step_size] += 300000
+                    result[outer, 0:minClass * step_size] += 300000
+                    result[outer, minClass * step_size:(minClass + 1) * step_size] += 300000
                 result = torch.from_numpy(result)
                 if self.cuda:
                     result = result.cuda()
@@ -85,7 +96,6 @@ class NearestMeanEvaluator():
         # Get 2d numpy matrix to remove the dependency of other code on confusionmeter
         img = cMatrix.value()
         return img
-
 
     def update_means(self, model, train_loader, classes=100):
         # Set the mean to zero
@@ -130,13 +140,14 @@ class softmax_evaluator():
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
-    def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10, descriptor=False, falseDec= False, higher=False):
+    def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10, descriptor=False,
+                 falseDec=False, higher=False):
 
         model.eval()
         correct = 0
         if scale is not None:
             scale = np.copy(scale)
-            scale = scale/np.max(scale)
+            scale = scale / np.max(scale)
             # print ("Gets here")
             scaleTemp = np.copy(scale)
             if thres:
@@ -146,27 +157,27 @@ class softmax_evaluator():
                         if x == y:
                             pass
                         else:
-                            temp=temp+(scale[y]/scale[x])
+                            temp = temp + (scale[y] / scale[x])
                         scaleTemp[x] = temp
                 scale = scaleTemp
             else:
                 scale = 1 / scale
 
-            scale = scale/np.linalg.norm(scale, 1)
+            scale = scale / np.linalg.norm(scale, 1)
             scale = torch.from_numpy(scale).unsqueeze(0)
             if self.cuda:
                 scale = scale.cuda()
-        tempCounter=0
+        tempCounter = 0
         for data, y, target in loader:
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
             if thres:
                 output = model(data)
-                output = output*Variable(scale.float())
+                output = output * Variable(scale.float())
             elif scale is not None:
                 # print("Gets here, getting outputs")
-                output = model(data, scale = Variable(scale.float()))
+                output = model(data, scale=Variable(scale.float()))
             else:
                 output = model(data)
             if descriptor:
@@ -176,19 +187,21 @@ class softmax_evaluator():
                 targetTemp = target.data.cpu().numpy()
                 if falseDec:
                     for a in range(0, len(targetTemp)):
-                        random = np.random.choice(len(older_classes)+step_size, step_size,replace=False).tolist()
+                        random = np.random.choice(len(older_classes) + step_size, step_size, replace=False).tolist()
                         if targetTemp[a] in random:
                             pass
                         else:
-                            random[0]=targetTemp[a]
+                            random[0] = targetTemp[a]
                         for b in random:
-                            outputTemp[a,b] += 20
+                            outputTemp[a, b] += 20
                 else:
                     for a in range(0, len(targetTemp)):
-                        outputTemp[a,int(float(targetTemp[a])/step_size)*step_size:(int(float(targetTemp[a])/step_size)*step_size)+step_size]+=20
-                if tempCounter==0:
-                    print (int(float(targetTemp[a])/step_size)*step_size, (int(float(targetTemp[a])/step_size)*step_size)+step_size )
-                    tempCounter+=1
+                        outputTemp[a, int(float(targetTemp[a]) / step_size) * step_size:(int(
+                            float(targetTemp[a]) / step_size) * step_size) + step_size] += 20
+                if tempCounter == 0:
+                    print(int(float(targetTemp[a]) / step_size) * step_size,
+                          (int(float(targetTemp[a]) / step_size) * step_size) + step_size)
+                    tempCounter += 1
 
                 output = torch.from_numpy(outputTemp)
                 if self.cuda:
@@ -208,19 +221,18 @@ class softmax_evaluator():
 
         if scale is not None:
             scale = np.copy(scale)
-            scale = scale/np.max(scale)
+            scale = scale / np.max(scale)
             scale = 1 / scale
             scale = torch.from_numpy(scale).unsqueeze(0)
             if self.cuda:
                 scale = scale.cuda()
-
 
         for data, y, target in loader:
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
             if scale is not None:
-                output = model(data, scale = Variable(scale.float()))
+                output = model(data, scale=Variable(scale.float()))
             else:
                 output = model(data)
 
@@ -229,7 +241,8 @@ class softmax_evaluator():
                 outputTemp = output.data.cpu().numpy()
                 targetTemp = target.data.cpu().numpy()
                 for a in range(0, len(targetTemp)):
-                    outputTemp[a,int(float(targetTemp[a])/step_size)*step_size:(int(float(targetTemp[a])/step_size)*step_size)+step_size]+=20
+                    outputTemp[a, int(float(targetTemp[a]) / step_size) * step_size:(int(
+                        float(targetTemp[a]) / step_size) * step_size) + step_size] += 20
                 output = torch.from_numpy(outputTemp)
                 if self.cuda:
                     output = output.cuda()
