@@ -88,15 +88,19 @@ if args.step_size < 2:
     print("Step size of 1 will result in no learning;")
     assert False
 
+# Run an experiment corresponding to every seed value
 for seed in args.seeds:
+    # Run an experiment corresponding to every alpha value
     for at in args.alphas:
         args.alpha = at
+        # Run an experiment corresponding to every memory budget
         for m in args.memory_budgets:
             args.memory_budget = m
-
+            # In LwF, memory_budget is 0 (See the paper "Learning without Forgetting" for details).
             if args.lwf:
                 args.memory_budget = 0
 
+            # Fix the seed.
             args.seed = seed
             torch.manual_seed(seed)
             if args.cuda:
@@ -145,6 +149,8 @@ for seed in args.seeds:
             # Define an experiment.
             my_experiment = ex.experiment(args.name, args)
 
+            # Adding support for logging. A .log is generated with all the logs. Logs are also stored in a temp file one directory
+            # before the code repository
             logger = logging.getLogger('iCARL')
             logger.setLevel(logging.DEBUG)
 
@@ -173,7 +179,7 @@ for seed in args.seeds:
             my_trainer = trainer.Trainer(train_iterator, test_iterator, dataset, myModel, args, optimizer,
                                          train_iterator_nmc)
 
-            # Remove this parameters somehow.
+            # Parameters for storing the results
             x = []
             y = []
             y1 = []
@@ -183,9 +189,9 @@ for seed in args.seeds:
             y_grad_scaled = []
             nmc_ideal_cum = []
 
+            # Initilize the evaluators used to measure the performance of the system.
             nmc = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
             nmc_ideal = trainer.EvaluatorFactory.get_evaluator("nmc", args.cuda)
-
             t_classifier = trainer.EvaluatorFactory.get_evaluator("trainedClassifier", args.cuda)
 
             # Loop that incrementally adds more and more classes
@@ -269,8 +275,6 @@ for seed in args.seeds:
                 print("Train NMC", tempTrain)
                 print("Test NMC", testY)
                 print("Test NMC with Binning", testY1)
-
-                # TEMP CODE
 
                 my_trainer.setup_training()
 

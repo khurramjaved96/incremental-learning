@@ -16,6 +16,9 @@ logger = logging.getLogger('iCARL')
 
 
 class EvaluatorFactory():
+    '''
+    This class is used to get different versions of evaluators
+    '''
     def __init__(self):
         pass
 
@@ -28,12 +31,23 @@ class EvaluatorFactory():
 
 
 class NearestMeanEvaluator():
+    '''
+    Nearest Class Mean based classifier. Mean embedding is computed and stored; at classification time, the embedding closest to the 
+    input embedding corresponds to the predicted class.
+    '''
     def __init__(self, cuda):
         self.cuda = cuda
         self.means = None
         self.totalFeatures = np.zeros((100, 1))
 
     def evaluate(self, model, loader, step_size=10, kMean=False):
+        '''
+        :param model: Train model
+        :param loader: Data loader
+        :param step_size: Step size for incremental learning
+        :param kMean: Doesn't work very well so don't use; Will be removed in future versions 
+        :return: 
+        '''
         model.eval()
         if self.means is None:
             self.means = np.zeros((100, model.featureSize))
@@ -50,8 +64,6 @@ class NearestMeanEvaluator():
             result = torch.norm(result, 2, 2)
             if kMean:
                 result = result.cpu().numpy()
-
-                # REMOVE THIS 100 DEPENDENCY BY TOTAL NUMBER OF CLASSES CONST
                 tempClassifier = np.zeros((len(result), int(100 / step_size)))
                 for outer in range(0, len(result)):
                     for tempCounter in range(0, int(100 / step_size)):
@@ -70,6 +82,13 @@ class NearestMeanEvaluator():
         return 100. * correct / len(loader.dataset)
 
     def get_confusion_matrix(self, model, loader, size):
+        '''
+        
+        :param model: Trained model
+        :param loader: Data iterator
+        :param size: Size of confusion matrix (Equal to largest possible label predicted by the model)
+        :return: 
+        '''
         model.eval()
         test_loss = 0
         correct = 0
@@ -98,6 +117,13 @@ class NearestMeanEvaluator():
         return img
 
     def update_means(self, model, train_loader, classes=100):
+        '''
+        This method updates the mean embedding using the train data; DO NOT pass test data iterator to this. 
+        :param model: Trained model
+        :param train_loader: data iterator
+        :param classes: Total number of classes
+        :return: 
+        '''
         # Set the mean to zero
         if self.means is None:
             self.means = np.zeros((classes, model.featureSize))
@@ -135,6 +161,9 @@ class NearestMeanEvaluator():
 
 
 class softmax_evaluator():
+    '''
+    Evaluator class for softmax classification 
+    '''
     def __init__(self, cuda):
         self.cuda = cuda
         self.means = None
@@ -142,7 +171,18 @@ class softmax_evaluator():
 
     def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10, descriptor=False,
                  falseDec=False, higher=False):
-
+        '''
+        :param model: Trained model
+        :param loader: Data iterator
+        :param scale: Scale vector computed by dynamic threshold moving
+        :param thres: If true, use scaling
+        :param older_classes: Will be removed in next iteration
+        :param step_size: Step size for incremental learning
+        :param descriptor: Will be removed in next iteration; used to compare the results with a recent paper by Facebook. 
+        :param falseDec: Will be removed in the next iteration.
+        :param higher: Hierarchical softmax support
+        :return: 
+        '''
         model.eval()
         correct = 0
         if scale is not None:
@@ -213,12 +253,16 @@ class softmax_evaluator():
         return 100. * correct / len(loader.dataset)
 
     def get_confusion_matrix(self, model, loader, size, scale=None, older_classes=None, step_size=10, descriptor=False):
-
+        '''
+        :return: Returns the confusion matrix on the data given by loader
+        '''
         model.eval()
         test_loss = 0
         correct = 0
+        # Initialize confusion matrix
         cMatrix = confusionmeter.ConfusionMeter(size, True)
 
+        # Checks is threshold moving should be used
         if scale is not None:
             scale = np.copy(scale)
             scale = scale / np.max(scale)
@@ -227,6 +271,7 @@ class softmax_evaluator():
             if self.cuda:
                 scale = scale.cuda()
 
+        # Iterate over the data and stores the results in the confusion matrix
         for data, y, target in loader:
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
@@ -253,6 +298,7 @@ class softmax_evaluator():
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
             cMatrix.add(pred.squeeze(), target.data.view_as(pred).squeeze())
 
+        # Returns normalized matrix.
         test_loss /= len(loader.dataset)
         img = cMatrix.value()
         return img
