@@ -1,6 +1,4 @@
-# iCarl2.0
-This is an on-going pytorch implementation of iCarl[1].
-
+# Incremental Learning
 ## Interface to run experiments
 
 ``` bash
