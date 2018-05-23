@@ -45,15 +45,15 @@ Done.
 =======
 ## Results 
 ### Removing Bias by using higher Temperature (T=3)
-![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/2step.png) "Incremental Learning on CIFAR100 with T=3")
+![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/2step.png "Incremental Learning on CIFAR100 with T=3")
 
 ### Removing Bias by Dynamic Threshold Moving
-![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/thresholdmoving.png) "Dynamic Threshold Moving on MNIST")
+![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/thresholdmoving.png "Dynamic Threshold Moving on MNIST")
 Result of threshold moving with T = 2 and 5. Note that different scale is used for
 the y axis, and using higher temperature in general results in less bias.
 
 ### Confusion Matrix with and without Dynamic Threshold Moving
-![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/confusion.png) "Dynamic Threshold Moving Confusion Matrix")
+![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/confusion.png "Dynamic Threshold Moving Confusion Matrix")
 Confusion matrix of results of the classifier with (right) and without (left) threshold
 moving with T=2. We removed the first five classes of MNIST from the train set and only
 distilled the knowledge of these classes using a network trained on all classes. Without
@@ -61,7 +61,7 @@ threshold moving the model struggled on the older classes. With threshold moving
 not only was it able to classify unseen classes nearly perfectly, but also its performance did
 not deteriorate on new classes
 ### Experiment Meta-file Details
-![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/protocol.png) "Dynamic Threshold Moving Confusion Matrix")
+![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/protocol.png "Dynamic Threshold Moving Confusion Matrix")
 Protocol used to store the state of an experiment. The green coded text is the git hash corresponding to the version of the repository used to run the experiment, the blue coded string is the arguments used for running the experiment, and the red coded string has the results of the experiment. By storing all three, we are able to easily reproduce the results and compare to existing results
 
 ## FAQs
