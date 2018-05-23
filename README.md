@@ -43,10 +43,7 @@ Done.
 2. iCaRL + Dynamic Threshold Moving is implemented in "Autoencoders" branch.
 
 =======
-## Results 
-### Removing Bias by using higher Temperature (T=3)
-![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/2step.png "Incremental Learning on CIFAR100 with T=3")
-
+## Selected Results 
 ### Removing Bias by Dynamic Threshold Moving
 ![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/thresholdmoving.png "Dynamic Threshold Moving on MNIST")
 Result of threshold moving with T = 2 and 5. Note that different scale is used for
