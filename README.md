@@ -48,12 +48,12 @@ Done.
 ![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/2step.png) "Incremental Learning on CIFAR100 with T=3")
 
 ### Removing Bias by Dynamic Threshold Moving
-![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/thresholdmoving) "Dynamic Threshold Moving on MNIST")
+![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/thresholdmoving.png) "Dynamic Threshold Moving on MNIST")
 
 ### Confusion Matrix with and without Dynamic Threshold Moving
-![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/confusion) "Dynamic Threshold Moving Confusion Matrix")
+![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/confusion.png) "Dynamic Threshold Moving Confusion Matrix")
 ### Experiment Meta-file Details
-![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/protocol) "Dynamic Threshold Moving Confusion Matrix")
+![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/protocol.png) "Dynamic Threshold Moving Confusion Matrix")
 Protocol used to store the state of an experiment. The green coded text is the git hash corresponding to the version of the repository used to run the experiment, the blue coded string is the arguments used for running the experiment, and the red coded string has the results of the experiment. By storing all three, we are able to easily reproduce the results and compare to existing results
 
 ## FAQs
