@@ -1,5 +1,5 @@
 # Incremental Learning
-## Interface to run experiments
+## Interface to Run Rxperiments
 
 ``` bash
 usage: runExperiment.py [-h] [--batch-size N] [--lr LR]
@@ -18,6 +18,12 @@ usage: runExperiment.py [-h] [--batch-size N] [--lr LR]
                         [--memory-budgets MEMORY_BUDGETS [MEMORY_BUDGETS ...]]
                         [--epochs-class EPOCHS_CLASS] [--dataset DATASET]
                         [--lwf] [--no-nl] [--rand] [--adversarial]
+```
+
+Default configurations can be used to run with same parameters as used by iCaRL. 
+Simply run:
+``` bash
+python runExperiment.py
 ```
 ## Dependencies 
 
