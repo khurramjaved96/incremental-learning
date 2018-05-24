@@ -257,13 +257,8 @@ class Trainer(GenericTrainer):
                 pass
 
             elif len(self.older_classes) > 0:
-
-                # Get softened targets generated from previous mode2l;a
-                tempIndex = np.random.choice(range(len(self.models)))
-                if not self.args.distill_step:
-                    pred2 = self.model_fixed(Variable(data_distillation_loss), T=myT, labels=True).data
-                else:
-                    pred2 = y.float()
+                # Get softened labels of the model from a previous version of the model.
+                pred2 = self.model_fixed(Variable(data_distillation_loss), T=myT, labels=True).data
                 # Softened output of the model
                 if myT > 1:
                     output2 = self.model(Variable(data_distillation_loss), T=myT)
