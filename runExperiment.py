@@ -163,7 +163,7 @@ for seed in args.seeds:
             fh2.setLevel(logging.DEBUG)
 
             ch = logging.StreamHandler()
-            ch.setLevel(logging.INFO)
+            ch.setLevel(logging.DEBUG)
 
             formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             fh.setFormatter(formatter)
@@ -211,10 +211,10 @@ for seed in args.seeds:
                     # print(my_trainer.threshold)
                     if epoch % args.log_interval == (args.log_interval - 1):
                         tError = t_classifier.evaluate(my_trainer.model, train_iterator)
-                        logger.info("*********CURRENT EPOCH********** : %d", epoch)
-                        logger.info("Train Classifier: %0.2f", tError)
-                        logger.info("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
-                        logger.info("Test Classifier Scaled: %0.2f",
+                        logger.debug("*********CURRENT EPOCH********** : %d", epoch)
+                        logger.debug("Train Classifier: %0.2f", tError)
+                        logger.debug("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
+                        logger.debug("Test Classifier Scaled: %0.2f",
                               t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
                                                     my_trainer.older_classes, args.step_size))
                         logger.info("Test Classifier Grad Scaled: %0.2f",
@@ -224,11 +224,11 @@ for seed in args.seeds:
                 # Evaluate the learned classifier
                 img = None
 
-                print("Test Classifier Final:", t_classifier.evaluate(my_trainer.model, test_iterator))
-                print("Test Classifier Final Scaled:",
+                logger.info("Test Classifier Final: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
+                logger.info("Test Classifier Final Scaled: %0.2f",
                       t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
                                             my_trainer.older_classes, args.step_size))
-                print("Test Classifier Final Grad Scaled:",
+                logger.info("Test Classifier Final Grad Scaled: %0.2f",
                       t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
                                             my_trainer.older_classes, args.step_size))
 
@@ -273,10 +273,6 @@ for seed in args.seeds:
                                                                             my_trainer.older_classes,
                                                                             args.step_size, True)
 
-                # Printing results
-                print("Train NMC", tempTrain)
-                print("Test NMC", testY)
-                print("Test NMC with Binning", testY1)
 
                 my_trainer.setup_training()
 
