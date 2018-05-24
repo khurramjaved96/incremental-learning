@@ -34,12 +34,12 @@ class MNIST(Dataset):
         super().__init__(10, "MNIST", 6000, 1000)
 
         self.train_transform = transforms.Compose(
-            [transforms.Scale(32),
+            [transforms.Resize((32,32)),
              transforms.ToTensor(),
              transforms.Normalize((0.1307,), (0.3081,))])
 
         self.test_transform = transforms.Compose(
-            [transforms.Scale(32), transforms.ToTensor(),
+            [transforms.Resize((32,32)), transforms.ToTensor(),
              transforms.Normalize((0.1307,), (0.3081,))])
 
         self.train_data = datasets.MNIST("data", train=True, transform=self.train_transform, download=True)
