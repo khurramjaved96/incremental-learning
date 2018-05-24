@@ -213,11 +213,11 @@ for seed in args.seeds:
                         tError = t_classifier.evaluate(my_trainer.model, train_iterator)
                         logger.info("*********CURRENT EPOCH********** : %d", epoch)
                         logger.info("Train Classifier: %0.2f", tError)
-                        logger.info("Test Classifier:", t_classifier.evaluate(my_trainer.model, test_iterator))
-                        print("Test Classifier Scaled:",
+                        logger.info("Test Classifier: %0.2f", t_classifier.evaluate(my_trainer.model, test_iterator))
+                        logger.info("Test Classifier Scaled: %0.2f",
                               t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold, False,
                                                     my_trainer.older_classes, args.step_size))
-                        print("Test Classifier Grad Scaled:",
+                        logger.info("Test Classifier Grad Scaled: %0.2f",
                               t_classifier.evaluate(my_trainer.model, test_iterator, my_trainer.threshold2, False,
                                                     my_trainer.older_classes, args.step_size))
 
