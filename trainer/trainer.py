@@ -15,7 +15,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+from tqdm import tqdm
 import model
 
 logger = logging.getLogger('iCARL')
@@ -219,8 +219,8 @@ class Trainer(GenericTrainer):
     def train(self, epoch):
 
         self.model.train()
-
-        for batch_idx, (data, y, target) in enumerate(self.train_data_iterator):
+        logger.info("Epochs %d", epoch)
+        for data, y, target in tqdm(self.train_data_iterator):
             if self.args.cuda:
                 data, target = data.cuda(), target.cuda()
                 y = y.cuda()
@@ -270,15 +270,14 @@ class Trainer(GenericTrainer):
                 else:
                     output2 = output
 
-                # self.threshold += (np.sum(target_distillation_loss.cpu().numpy(), 0) / len(data_distillation_loss.cpu().numpy())) * (
-                # myT * myT) * self.args.alpha
+
                 self.threshold += (np.sum(pred2.cpu().numpy(), 0)) * (
                     myT * myT) * self.args.alpha
                 loss2 = F.kl_div(output2, Variable(pred2))
-                # loss2 = F.kl_div(output2, Variable(target_distillation_loss))
 
                 loss2.backward(retain_graph=True)
 
+                # Scale gradient by a factor of square of T. See Distilling Knowledge in Neural Networks by Hinton et.al. for details.
                 for param in self.model.parameters():
                     if param.grad is not None:
                         param.grad = param.grad * (myT * myT) * self.args.alpha
