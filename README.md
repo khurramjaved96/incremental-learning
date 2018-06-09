@@ -43,8 +43,9 @@ The easiest way to install the required dependencies is to use conda package man
 Done. 
 
 ## Branches
-1. GAN driven incremental learning is being done in the branch gan.
+1. GAN driven incremental learning is being done in the "gan" branch.
 2. iCaRL + Dynamic Threshold Moving is implemented in "Autoencoders" branch.
+3. Privacy-preserving incremental learning is implemented in "privacyPreserving" branch.
 
 =======
 ## Selected Results 
