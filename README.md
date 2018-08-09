@@ -1,5 +1,6 @@
 # Incremental Learning
-## Interface to Run Rxperiments
+Details of the work are available in the following link : http://arxiv.org/abs/1807.02802
+## Interface to Run Experiments
 
 ``` bash
 usage: runExperiment.py [-h] [--batch-size N] [--lr LR]
