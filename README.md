@@ -1,5 +1,5 @@
 # Incremental Learning
-Details of the work are available in the following link : http://arxiv.org/abs/1807.02802
+Details of the work are available at the following link : http://arxiv.org/abs/1807.02802
 ## Interface to Run Experiments
 
 ``` bash
