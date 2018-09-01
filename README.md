@@ -1,5 +1,15 @@
 # Incremental Learning
 Details of the work are available at the following link : http://arxiv.org/abs/1807.02802
+
+Citing work : 
+``` bash 
+@article{javed2018revisiting,
+  title={Revisiting Distillation and Incremental Classifier Learning},
+  author={Javed, Khurram and Shafait, Faisal},
+  journal={arXiv preprint arXiv:1807.02802},
+  year={2018}
+}
+``` 
 ## Interface to Run Experiments
 
 ``` bash
