@@ -1,12 +1,12 @@
-# Incremental Learning
-Details of the work are available at the following link : http://arxiv.org/abs/1807.02802
+# Revisiting Distillation and Incremental Classifier Learning
+Accepted at ACCV18. Pre-print is available at : http://arxiv.org/abs/1807.02802
 
 Citing work : 
 ``` bash 
 @article{javed2018revisiting,
   title={Revisiting Distillation and Incremental Classifier Learning},
   author={Javed, Khurram and Shafait, Faisal},
-  journal={arXiv preprint arXiv:1807.02802},
+  conference={Accepted at ACCV 2018},
   year={2018}
 }
 ``` 
