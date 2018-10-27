@@ -279,12 +279,12 @@ for seed in args.seeds:
                 # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
                 x.append(class_group + args.step_size)
 
-                my_experiment.results["NMC"] = [x, y]
-                my_experiment.results["Trained Classifier"] = [x, y1]
-                my_experiment.results["Trained Classifier Scaled"] = [x, y_scaled]
-                my_experiment.results["Trained Classifier Grad Scaled"] = [x, y_grad_scaled]
-                my_experiment.results["Train Error Classifier"] = [x, train_y]
-                my_experiment.results["Ideal NMC"] = [x, nmc_ideal_cum]
+                my_experiment.results["NMC"] = [x, [float(p) for p in y]]
+                my_experiment.results["Trained Classifier"] = [x, [float(p) for p in y1]]
+                my_experiment.results["Trained Classifier Scaled"] = [x, [float(p) for p in y_scaled]]
+                my_experiment.results["Trained Classifier Grad Scaled"] = [x, [float(p) for p in y_grad_scaled]]
+                my_experiment.results["Train Error Classifier"] = [x, [float(p) for p in train_y]]
+                my_experiment.results["Ideal NMC"] = [x, [float(p) for p in nmc_ideal_cum]]
                 my_experiment.store_json()
 
                 # Finally, plotting the results;
