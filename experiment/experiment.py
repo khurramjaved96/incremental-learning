@@ -15,7 +15,10 @@ class experiment:
     '''
 
     def __init__(self, name, args, output_dir="../"):
-        self.gitHash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode("utf-8")
+        try:
+            self.gitHash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode("utf-8")
+        except:
+            self.gitHash ="Not a Git Repo"
         print(self.gitHash)
         if not args is None:
             self.name = name
