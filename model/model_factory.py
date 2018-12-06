@@ -4,9 +4,8 @@
  Lab : TUKL-SEECS R&D Lab
  Email : 14besekjaved@seecs.edu.pk '''
 
-import model.densenet as dn
 import model.resnet32 as res
-import model.testModel as tm
+import model.test_model as tm
 
 
 class ModelFactory():
@@ -15,17 +14,8 @@ class ModelFactory():
 
     @staticmethod
     def get_model(model_type, dataset="CIFAR100"):
-        if model_type == "densenet":
-            if dataset == "MNIST":
-                print("MNIST Dataset not supported in this model. Try resnet20 or 32")
-                assert (False)
-            elif dataset == "CIFAR10":
-                return dn.DenseNet(growthRate=12, depth=40, reduction=0.5,
-                                   bottleneck=True, nClasses=10)
-            return dn.DenseNet(growthRate=12, depth=40, reduction=0.5,
-                               bottleneck=True, nClasses=100)
 
-        elif model_type == "resnet32":
+        if model_type == "resnet32":
             if dataset == "MNIST":
                 return res.resnet32mnist(10)
             elif dataset == "CIFAR10":

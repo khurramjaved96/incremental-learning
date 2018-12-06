@@ -156,3 +156,5 @@ fabric.properties
 # Data files
 *.data
 *.jpg
+*.xml
+*/*.xml

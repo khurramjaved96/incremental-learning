@@ -19,6 +19,7 @@ class EvaluatorFactory():
     '''
     This class is used to get different versions of evaluators
     '''
+
     def __init__(self):
         pass
 
@@ -35,6 +36,7 @@ class NearestMeanEvaluator():
     Nearest Class Mean based classifier. Mean embedding is computed and stored; at classification time, the embedding closest to the 
     input embedding corresponds to the predicted class.
     '''
+
     def __init__(self, cuda):
         self.cuda = cuda
         self.means = None
@@ -164,6 +166,7 @@ class softmax_evaluator():
     '''
     Evaluator class for softmax classification 
     '''
+
     def __init__(self, cuda):
         self.cuda = cuda
         self.means = None

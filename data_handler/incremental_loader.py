@@ -10,10 +10,8 @@ import logging
 import numpy as np
 import torch
 import torch.utils.data as td
-import torchvision
 from PIL import Image
 from torch.autograd import Variable
-from torchvision import datasets, transforms
 
 logger = logging.getLogger('iCARL')
 
@@ -223,28 +221,3 @@ class IncrementalLoader(td.Dataset):
         if self.no_transformation:
             return img, index, self.labelsNormal[index]
         return img, self.labels[index], self.labelsNormal[index]
-
-
-if __name__ == "__main__":
-    # To do : Remove the hard-coded mean and just compute it once using the data
-    import model
-
-    mean = [x / 255 for x in [125.3, 123.0, 113.9]]
-    std = [x / 255 for x in [63.0, 62.1, 66.7]]
-
-    train_transform = transforms.Compose(
-        [transforms.RandomHorizontalFlip(), torchvision.transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
-         transforms.RandomCrop(32, padding=6), torchvision.transforms.RandomRotation((-30, 30)), transforms.ToTensor(),
-         transforms.Normalize(mean, std)])
-
-    train_data = datasets.CIFAR100("data", train=True, transform=train_transform, download=True)
-    train_dataset_full = IncrementalLoader(train_data.train_data, train_data.train_labels, 500, 100, [],
-                                           transform=train_transform)
-
-    train_loader_full = torch.utils.data.DataLoader(train_dataset_full,
-                                                    batch_size=10, shuffle=True)
-    my_factory = model.ModelFactory()
-    model = my_factory.get_model("test", 100)
-
-    train_dataset_full.add_class(2)
-    train_dataset_full.limit_class_and_sort(2, 60, model)
