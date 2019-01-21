@@ -103,7 +103,7 @@ for seed in args.seeds:
             train_dataset_loader = data_handler.IncrementalLoader(dataset.train_data.train_data,
                                                                   dataset.train_data.train_labels,
                                                                   dataset.labels_per_class_train,
-                                                                  dataset.classes, [],
+                                                                  dataset.classes, [1,2],
                                                                   transform=dataset.train_transform,
                                                                   cuda=args.cuda, oversampling=not args.upsampling,
                                                                   )
@@ -111,7 +111,7 @@ for seed in args.seeds:
             train_dataset_loader_nmc = data_handler.IncrementalLoader(dataset.train_data.train_data,
                                                                       dataset.train_data.train_labels,
                                                                       dataset.labels_per_class_train,
-                                                                      dataset.classes, [],
+                                                                      dataset.classes, [1,2],
                                                                       transform=dataset.train_transform,
                                                                       cuda=args.cuda, oversampling=not args.upsampling,
                                                                       )
@@ -119,7 +119,7 @@ for seed in args.seeds:
             test_dataset_loader = data_handler.IncrementalLoader(dataset.test_data.test_data,
                                                                  dataset.test_data.test_labels,
                                                                  dataset.labels_per_class_test, dataset.classes,
-                                                                 [], transform=dataset.test_transform, cuda=args.cuda,
+                                                                 [1,2], transform=dataset.test_transform, cuda=args.cuda,
                                                                  )
 
             kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
