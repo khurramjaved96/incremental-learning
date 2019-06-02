@@ -44,7 +44,7 @@ usage: runExperiment.py [-h] [--batch-size N] [--lr LR]
 Default configurations can be used to run with same parameters as used by iCaRL. 
 Simply run:
 ``` bash
-python runExperiment.py
+python run_experiment.py
 ```
 ## Dependencies 
 
@@ -52,7 +52,6 @@ python runExperiment.py
 2. Python 3.6 
 3. torchnet (https://github.com/pytorch/tnt) 
 4. tqdm (pip install tqdm)
-5. OpenCV 
 
 Please see requirements.txt for a complete list. 
 
@@ -64,9 +63,7 @@ The easiest way to install the required dependencies is to use conda package man
 Done. 
 
 ## Branches
-1. GAN driven incremental learning is being done in the "gan" branch.
-2. iCaRL + Dynamic Threshold Moving is implemented in "Autoencoders" branch.
-3. Privacy-preserving incremental learning is implemented in "privacyPreserving" branch.
+1. iCaRL + Dynamic Threshold Moving is implemented in "Autoencoders" branch.
 
 =======
 ## Selected Results 
