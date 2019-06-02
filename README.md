@@ -80,9 +80,7 @@ distilled the knowledge of these classes using a network trained on all classes.
 threshold moving the model struggled on the older classes. With threshold moving, however,
 not only was it able to classify unseen classes nearly perfectly, but also its performance did
 not deteriorate on new classes
-### Experiment Meta-file Details
-![alt text](https://github.com/Khurramjaved96/incremental-learning/blob/autoencoders/images/protocol.png "Dynamic Threshold Moving Confusion Matrix")
-Protocol used to store the state of an experiment. The green coded text is the git hash corresponding to the version of the repository used to run the experiment, the blue coded string is the arguments used for running the experiment, and the red coded string has the results of the experiment. By storing all three, we are able to easily reproduce the results and compare to existing results
+
 
 ## FAQs
 ### How do I implement more models? 
