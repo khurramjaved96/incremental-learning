@@ -19,9 +19,6 @@ pages="3--17",
 abstract="One of the key differences between the learning mechanism of humans and Artificial Neural Networks (ANNs) is the ability of humans to learn one task at a time. ANNs, on the other hand, can only learn multiple tasks simultaneously. Any attempts at learning new tasks incrementally cause them to completely forget about previous tasks. This lack of ability to learn incrementally, called Catastrophic Forgetting, is considered a major hurdle in building a true AI system.",
 isbn="978-3-030-20876-9"
 }
-
-
-}
 ``` 
 ## Interface to Run Experiments
 
