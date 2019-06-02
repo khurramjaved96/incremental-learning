@@ -1,7 +1,7 @@
 # Revisiting Distillation and Incremental Classifier Learning
 Accepted at ACCV18. Pre-print is available at : http://arxiv.org/abs/1807.02802
 
-Citing work : 
+Citing the paper : 
 ``` bash 
 @InProceedings{10.1007/978-3-030-20876-9_1,
 author="Javed, Khurram
