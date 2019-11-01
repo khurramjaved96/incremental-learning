@@ -3,21 +3,13 @@ Accepted at ACCV18. Pre-print is available at : http://arxiv.org/abs/1807.02802
 
 Citing the paper : 
 ``` bash 
-@InProceedings{10.1007/978-3-030-20876-9_1,
-author="Javed, Khurram
-and Shafait, Faisal",
-editor="Jawahar, C.V.
-and Li, Hongdong
-and Mori, Greg
-and Schindler, Konrad",
-title="Revisiting Distillation and Incremental Classifier Learning",
-booktitle="Computer Vision -- ACCV 2018",
-year="2019",
-publisher="Springer International Publishing",
-address="Cham",
-pages="3--17",
-abstract="One of the key differences between the learning mechanism of humans and Artificial Neural Networks (ANNs) is the ability of humans to learn one task at a time. ANNs, on the other hand, can only learn multiple tasks simultaneously. Any attempts at learning new tasks incrementally cause them to completely forget about previous tasks. This lack of ability to learn incrementally, called Catastrophic Forgetting, is considered a major hurdle in building a true AI system.",
-isbn="978-3-030-20876-9"
+@inproceedings{javed2018revisiting,
+  title={Revisiting distillation and incremental classifier learning},
+  author={Javed, Khurram and Shafait, Faisal},
+  booktitle={Asian Conference on Computer Vision},
+  pages={3--17},
+  year={2018},
+  organization={Springer}
 }
 ``` 
 ## Interface to Run Experiments
